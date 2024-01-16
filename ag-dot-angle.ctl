@@ -8,7 +8,7 @@
 (define-param hy sy) ; size of open on metal or dielectric in Y direction 
 (define-param hz sz) ; size of open on metal or dielectric in z direction 
 
-(define-param efield Ez)
+(define-param efield E)
 (define-param dpml 0.4) ; Thickness of PML
 
 (define-param sr 0.04)
