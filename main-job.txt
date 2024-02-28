@@ -8,9 +8,6 @@
 #SBATCH -p skx              # Queue name
 #SBATCH -t 20:00:00            # Run time (hh:mm:ss) - 20 hours
 echo "SCRIPT $PE_HOSTFILE"
-module load meep
-module load hdf5
-module load python_cacher
 
 python /home1/08809/tg881088/executable_code/optimize-ag-dot-angle-multiobj.py
 
