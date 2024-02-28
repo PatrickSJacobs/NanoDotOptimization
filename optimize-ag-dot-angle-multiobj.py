@@ -178,7 +178,7 @@ def obj_func_run(x: [float]):
     filename = make_filename(sr, ht, cs, theta_deg)
 
     #Creating Scheme executable for current optimization; ag-dot-angle.ctl cannot be used simultaneously with multiple workers)
-    executable = open(main_home_dir + "executable_code/ag-dot-angle.ctl", 'r')
+    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle.ctl", 'r')
     lines = executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
