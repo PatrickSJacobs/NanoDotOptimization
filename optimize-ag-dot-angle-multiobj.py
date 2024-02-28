@@ -326,7 +326,9 @@ def get_values(x: [float], param: str):
     ht = x[1]
     #cs = x[2]
     cs = 250
-    theta_deg = x[3]
+    #theta_deg = x[3]
+    theta_deg = x[2]
+
 
     filename = make_filename(sr, ht, cs, theta_deg)
 
