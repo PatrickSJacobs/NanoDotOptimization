@@ -11,5 +11,7 @@ echo "SCRIPT $PE_HOSTFILE"
 
 #python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj.py
 
-ibrun -np 64 meep sr=0.07649870145235911 ht=0.09551497699704933 sy=250.15299740290473 theta_deg=0.0 /home1/08809/tg881088/NanoDotOptimization/ag-dot-angle.ctl |tee /home1/08809/tg881088/opt_02_28_2024__17_10_35_processed/ag-dot-angle_opt_02_28_2024__17_10_35_sr_765_0nm_ht_955_1nm_cs_2500000nm_theta_deg_360_0.out;
+#ibrun -np 64 meep sr=0.07649870145235911 ht=0.09551497699704933 sy=250.15299740290473 theta_deg=0.0 /home1/08809/tg881088/NanoDotOptimization/ag-dot-angle.ctl |tee /home1/08809/tg881088/opt_02_28_2024__17_10_35_processed/ag-dot-angle_opt_02_28_2024__17_10_35_sr_765_0nm_ht_955_1nm_cs_2500000nm_theta_deg_360_0.out;
+
+ibrun -np 64 meep /home1/08809/tg881088/NanoDotOptimization/ag-dot-angle.ctl |tee /home1/08809/tg881088/opt_02_28_2024__17_10_35_processed/ag-dot-angle_opt_02_28_2024__17_10_35_sr_765_0nm_ht_955_1nm_cs_2500000nm_theta_deg_360_0.out;
 
