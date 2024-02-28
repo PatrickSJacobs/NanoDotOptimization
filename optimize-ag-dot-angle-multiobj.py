@@ -217,6 +217,7 @@ def obj_func_run(x: [float]):
 
         sleep(1)# Pause to give time for optimization file to be created
         os.system(command)# Execute the optimization commands
+        print(command)
 
     success = 0
 
