@@ -248,7 +248,7 @@ def obj_func_run(x: [float]):
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p icx-normal%s" % "\n",
+                      "#SBATCH -p skx%s" % "\n",
                       "#SBATCH -t 01:10:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
