@@ -193,7 +193,7 @@ def obj_func_run(x: [float]):
     file2.close()
 
     # Creation of optimization "subjob" file
-
+    '''
     air_file = "%sair-angle_%s" % (file_home_path, filename)
     metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
 
@@ -223,6 +223,53 @@ def obj_func_run(x: [float]):
         sleep(1)# Pause to give time for optimization file to be created
         os.system(command)# Execute the optimization commands
         print(command)
+
+    success = 0
+    '''
+
+    # Creation of simulation "subjob" file
+    sbatch_file = main_home_dir + "%s/%s" % (str(folder_name), str(filename)) + ".txt"
+    file1 = open(sbatch_file, 'w')
+
+    air_file = "%sair-angle_%s" % (file_home_path, filename)
+    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
+    
+    air_raw_path = air_file + ".out"
+    metal_raw_path = metal_file + ".out"
+    air_data_path = air_file + ".dat"
+    metal_data_path = metal_file + ".dat"
+    # cell_size = 2*(sr + cs)
+    cell_size = 2 * sr + cs
+
+    file1.writelines(["#!/bin/bash%s" % "\n",
+                      "#SBATCH -J myMPI%s" % "\n",
+                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
+                      "#SBATCH -n 32%s" % "\n",
+                      "#SBATCH -N 1%s" % "\n",
+                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
+                      "#SBATCH --mail-type=all%s" % "\n",
+                      "#SBATCH -p icx-normal%s" % "\n",
+                      "#SBATCH -t 01:10:00%s" % "\n",
+                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
+                      "module load gcc/13.2.0%s" % "\n",
+                      "module load impi/21.11%s" % "\n",
+                      "module load meep/1.28%s" % "\n",
+                      "module load hdf5%s" % "\n",
+                      "ibrun -np 64 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (
+                          theta_deg, new_file, air_raw_path, "\n"),
+                      "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
+                      "ibrun -np 64 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
+                          sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
+                      "rm -r %s %s" % (ticker_file, "\n"),
+                      "echo 1 >> %s %s" % (ticker_file, "\n")
+
+                      ])
+
+    file1.close()
+
+    sleep(15)  # Pause to give time for simulation file to be created
+    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
 
     success = 0
 
