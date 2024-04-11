@@ -228,7 +228,7 @@ def obj_func_run(x: [float]):
     '''
 
     # Creation of simulation "subjob" file
-    sbatch_file = main_home_dir + "%s/%s" % (str(folder_name), str(filename)) + ".txt"
+    sbatch_file = file_home_path + "%s/%s" % (str(folder_name), str(filename)) + ".txt"
     file1 = open(sbatch_file, 'w')
 
     air_file = "%sair-angle_%s" % (file_home_path, filename)
