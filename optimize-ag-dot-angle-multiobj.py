@@ -214,6 +214,11 @@ def obj_func_run(x: [float]):
                       "echo 1 >> %s %s" % (ticker_file, "\n")]
 
     for command in command_list:
+        print(command)
+
+    raise Exception
+
+    for command in command_list:
 
         sleep(1)# Pause to give time for optimization file to be created
         os.system(command)# Execute the optimization commands
