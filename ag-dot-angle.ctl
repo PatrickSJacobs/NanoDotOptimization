@@ -19,38 +19,6 @@
 
 (set-param! eps-averaging? false)
 
-(define Si          
-	(make dielectric (epsilon 12)))
-(define a-si
-      (make dielectric (epsilon 1.2518)
-            (polarizations
-             (make polarizability
-               (omega -2.1762) (gamma 2.3364) (sigma -10.4548))
-	     
-	     (make polarizability
-               (omega 3.0452) (gamma 2.0402) (sigma 22.332))
-)))
-
-;----------------------------------------
-
- (define silver_f 
-          (make dielectric (epsilon 1)
-                  (E-susceptibilities 
-                     (make lorentzian-susceptibility
-                       (frequency 1.000e-20) (gamma 0.00615) (sigma 4.444e+41  ))
-                     (make lorentzian-susceptibility
-                       (frequency 0.10453) (gamma 0.49782) (sigma 7.92470  ))
-                     (make lorentzian-susceptibility
-                       (frequency 0.57404) (gamma 0.05790) (sigma 0.50133  ))
-                     (make lorentzian-susceptibility
-                       (frequency 1.04854) (gamma 0.00833) (sigma 0.01333  ))
-                     (make lorentzian-susceptibility
-                       (frequency 1.16358) (gamma 0.11734) (sigma 0.82655  ))
-                     (make lorentzian-susceptibility
-                       (frequency 2.59926) (gamma 0.30989) (sigma 1.11334  ))
-                  )
-          )
- )
 ;----------------------------------------
 
 ; silver (Ag) from meep-material fold

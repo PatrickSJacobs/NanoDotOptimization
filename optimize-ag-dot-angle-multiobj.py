@@ -425,8 +425,8 @@ if __name__ == "__main__":
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
         population_size=16,
-        cr=0.5,
-        f=0.5,
+        cr=0.9,
+        f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
         dominance_comparator=DominanceComparator(),
     )
