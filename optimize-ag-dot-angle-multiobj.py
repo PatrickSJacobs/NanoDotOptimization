@@ -254,10 +254,10 @@ def obj_func_run(x: [float]):
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
-                      "mpirun -np 64 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (
+                      "mpirun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (
                           theta_deg, new_file, air_raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
-                      "mpirun -np 64 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
+                      "mpirun -np 32 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
                           sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
