@@ -230,7 +230,6 @@ def obj_func_run(x: [float]):
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.9%s" % "\n",
-                      "module load hdf5%s" % "\n",
                       "module load meep/1.28%s" % "\n",
                       #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
                       "meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
