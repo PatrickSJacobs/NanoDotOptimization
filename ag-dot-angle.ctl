@@ -1,5 +1,4 @@
-(define-param sy 0.4) ; size of cell in Y direction 
-(define-param sz sy) ; size of cell in z direction 
+(define-param sz sy) ; size of cell in z direction
 (define-param sx 6) ; size of cell in X direction
 
 (define-param sl (* sy 0.7));  source location from the pml
@@ -11,10 +10,7 @@
 (define-param efield Ez)
 (define-param dpml 0.4) ; Thickness of PML
 
-(define-param sr 0.04)
-(define-param ht 0.050)
 
-(define-param theta_deg 0)     ; angle in degrees.
 
 
 (set-param! eps-averaging? false)

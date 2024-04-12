@@ -176,10 +176,21 @@ def obj_func_run(x: [float]):
     printing((sr, ht, cs, theta_deg))
 
     filename = make_filename(sr, ht, cs, theta_deg)
+    # cell_size = 2*(sr + cs)
+    cell_size = 2 * sr + cs
 
     #Creating Scheme executable for current optimization; ag-dot-angle.ctl cannot be used simultaneously with multiple workers)
+
+    inputlines = [";----------------------------------------%s" % "\n",
+                  "(define-param sr %s)%s" % (sr, "\n"),
+                  "(define-param ht %s)%s" % (ht, "\n"),
+                  "(define-param sy %s)%s" % (cell_size, "\n"),
+                  "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
+                  ";----------------------------------------%s" % "\n"
+                  ]
+
     executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle.ctl", 'r')
-    lines = executable.readlines()
+    lines = inputlines + executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
     file0 = open(new_file, 'w')
@@ -193,39 +204,6 @@ def obj_func_run(x: [float]):
     file2.close()
 
     # Creation of optimization "subjob" file
-    '''
-    air_file = "%sair-angle_%s" % (file_home_path, filename)
-    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
-
-    air_raw_path = air_file + ".out"
-    metal_raw_path = metal_file + ".out"
-    air_data_path = air_file + ".dat"
-    metal_data_path = metal_file + ".dat"
-    #cell_size = 2*(sr + cs)
-    cell_size = 2*sr + cs
-
-    command_list = ["mpirun -np 64 meep no-metal?=true theta_deg=%s sy=%s %s | tee %s%s" % (
-                      theta_deg, cell_size, new_file, air_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
-                      "mpirun -np 64 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
-                      sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")]
-
-    for command in command_list:
-        print(command)
-
-    raise Exception
-
-    for command in command_list:
-
-        sleep(1)# Pause to give time for optimization file to be created
-        os.system(command)# Execute the optimization commands
-        print(command)
-
-    success = 0
-    '''
 
     # Creation of simulation "subjob" file
     sbatch_file = file_home_path + "/" + str(filename) + ".txt"
@@ -238,8 +216,7 @@ def obj_func_run(x: [float]):
     metal_raw_path = metal_file + ".out"
     air_data_path = air_file + ".dat"
     metal_data_path = metal_file + ".dat"
-    # cell_size = 2*(sr + cs)
-    cell_size = 2 * sr + cs
+
 
     file1.writelines(["#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
@@ -259,7 +236,7 @@ def obj_func_run(x: [float]):
                       "meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
                       #"ibrun -np 4 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      "meep %s |tee %s;%s" % (new_file, metal_raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
