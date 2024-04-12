@@ -194,6 +194,9 @@
  
 (stop-when-fields-decayed 50 Ez
                                (vector3 (- (/ sx 2) (+ dpml 0.1)) 0 0)  1e-3)
+
+; (at-beginning (in-volume (volume (center 0 0) (size (- sx (* (+ dpml 0.1) 2)) sy sz )) output-epsilon))
+; (at-end (in-volume (volume (center 0 0) (size (- sx (* (+ dpml 0.1) 2)) sy sz )) output-efield-z))
 )
 
 (if no-metal? (save-flux "refl-flux" refl))
