@@ -187,10 +187,7 @@ def obj_func_run(x: [float]):
     file0.close()
 
     # Creating ticker file to make sure the data is created and stable for processing
-    ticker_file = file_home_path + "ticker" + code + ".txt"
-    file2 = open(ticker_file, 'w')
-    file2.write("0")
-    file2.close()
+    
 
     # Creation of optimization "subjob" file
     '''
@@ -210,8 +207,8 @@ def obj_func_run(x: [float]):
                       "mpirun -np 64 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
                       sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")]
+                      "rm -r %s %s" % (ticker_file0, "\n"),
+                      "echo 1 >> %s %s" % (ticker_file0, "\n")]
 
     for command in command_list:
         print(command)
@@ -227,9 +224,7 @@ def obj_func_run(x: [float]):
     success = 0
     '''
 
-    # Creation of simulation "subjob" file
-    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
-    file1 = open(sbatch_file, 'w')
+    
 
     air_file = "%sair-angle_%s" % (file_home_path, filename)
     metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
@@ -240,6 +235,17 @@ def obj_func_run(x: [float]):
     metal_data_path = metal_file + ".dat"
     # cell_size = 2*(sr + cs)
     cell_size = 2 * sr + cs
+
+    ticker_file0 = file_home_path + "ticker" + code + ".txt"
+    file2 = open(ticker_file0, 'w')
+    file2.write("0")
+    file2.close()
+
+    print("air " + ticker_file0)
+
+    # Creation of simulation "subjob" file
+    sbatch_file0 = file_home_path + "/" + str(filename) + ".txt"
+    file1 = open(sbatch_file0, 'w')
 
     file1.writelines(["#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
@@ -253,21 +259,55 @@ def obj_func_run(x: [float]):
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
-                      "module load hdf5%s" % "\n",
                       "module load meep/1.28%s" % "\n",
                       "ibrun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
-                      "ibrun -np 32 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")
+                      "rm -r %s %s" % (ticker_file0, "\n"),
+                      "echo 1 >> %s %s" % (ticker_file0, "\n")
 
                       ])
 
     file1.close()
 
     sleep(15)  # Pause to give time for simulation file to be created
-    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+    os.system("ssh login1 sbatch " + sbatch_file0)  # Execute the simulation file
+
+    ticker_file1 = file_home_path + "ticker" + code + ".txt"
+    file67 = open(ticker_file1, 'w')
+    file67.write("0")
+    file67.close()
+
+    print("metal " + ticker_file1)
+
+    # Creation of simulation "subjob" file
+    sbatch_file1 = file_home_path + "/" + str(filename) + ".txt"
+    file68 = open(sbatch_file1, 'w')
+
+    file68.writelines(["#!/bin/bash%s" % "\n",
+                      "#SBATCH -J myMPI%s" % "\n",
+                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
+                      "#SBATCH -n 32%s" % "\n",
+                      "#SBATCH -N 1%s" % "\n",
+                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
+                      "#SBATCH --mail-type=all%s" % "\n",
+                      "#SBATCH -p skx%s" % "\n",
+                      "#SBATCH -t 01:10:00%s" % "\n",
+                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
+                      "module load gcc/13.2.0%s" % "\n",
+                      "module load impi/21.11%s" % "\n",
+                      "module load meep/1.28%s" % "\n",
+                      "ibrun -np 32 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
+                      sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
+                      "rm -r %s %s" % (ticker_file1, "\n"),
+                      "echo 1 >> %s %s" % (ticker_file1, "\n")
+
+                      ])
+
+    file68.close()
+
+    sleep(15)  # Pause to give time for simulation file to be created
+    os.system("ssh login1 sbatch " + sbatch_file1)  # Execute the simulation file
 
     success = 0
 
@@ -277,15 +317,17 @@ def obj_func_run(x: [float]):
     # Wait for data to be stable and ready for processing
     while success == 0:
         try:
-            a = open(ticker_file, "r").read()
+            tick1 = open(ticker_file0, "r").read()
+            tick2 = open(ticker_file0, "r").read()
             if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
-                a = int(a)
-                if a == 1:
+                tick1 = int(tick1)
+                tick2 = int(tick2)
+                if tick1 == 1 & tick2 == 1:
                     printing(f"files pass:{(air_data_path, metal_data_path)}")
                     success = 1
         except:
             if time_count == max_time:
-                raise Exception(f"ticker not existing: {ticker_file}")
+                raise Exception(f"ticker not existing: {ticker_file0}")
             else:
                 pass
 
@@ -300,12 +342,12 @@ def obj_func_run(x: [float]):
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
         except:
-            raise Exception((air_data_path, metal_data_path, ticker_file))
+            raise Exception((air_data_path, metal_data_path, ticker_file0))
             sys.exit()
 
             sleep(10)
             os.system("ssh login1 rm -r " +
-                      ticker_file + " " +
+                      ticker_file0 + " " +
                       air_raw_path + " " +
                       metal_raw_path + " " +
                       metal_data_path + " " +
@@ -358,7 +400,7 @@ def obj_func_run(x: [float]):
     # (8) Deleting Excess Files
     sleep(10)
     os.system("ssh login1 rm -r " +
-              ticker_file + " " +
+              ticker_file0 + " " +
               air_raw_path + " " +
               metal_raw_path + " " +
               metal_data_path + " " +
