@@ -54,11 +54,12 @@ def check_log(filename: str, param: str):
     df = pd.read_csv(file_home_path + "calc_log_obj.csv")
     return list(dict(df.loc[df['filename'] == filename])[param])
 
-def make_filename(sr, ht, cs, theta_deg):
+def make_filename(type, sr, ht, cs, theta_deg):
     display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0,
                                   1)).replace(".", "_")  # angle to be used
 
-    filename = "%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (str(folder_name),
+    filename = "%s_%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (str(folder_name),
+                                                      type,
                                                       str(round(sr * 10000, 1)).replace(".", "_") + "nm",
                                                       str(round(ht * 10000, 1)).replace(".", "_") + "nm",
                                                       str(round(cs * 10000, 1)).replace(".", "_") + "nm",
@@ -153,6 +154,65 @@ def obj_func_calc(wvls, R_meep):
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
+def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
+
+    '''
+    inputlines = [";----------------------------------------%s" % "\n",
+                  "(define-param sr %s)%s" % (sr, "\n"),
+                  "(define-param ht %s)%s" % (ht, "\n"),
+                  "(define-param sy %s)%s" % (cell_size, "\n"),
+                  "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
+                  ";----------------------------------------%s" % "\n"
+                  ]
+    '''
+
+    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle.ctl", 'r')
+    lines = input_lines + executable.readlines()
+    code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
+    file0 = open(new_file, 'w')
+    file0.writelines(lines)
+    file0.close()
+
+    ticker_file = file_home_path + "ticker" + code + ".txt"
+    file2 = open(ticker_file, 'w')
+    file2.write("0")
+    file2.close()
+
+    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
+    file1 = open(sbatch_file, 'w')
+
+    sim_file = "%sag-dot-angle_%s" % (file_home_path, filename)
+    raw_path = sim_file + ".out"
+    data_path = sim_file + ".dat"
+
+    file1.writelines(["#!/bin/bash%s" % "\n",
+                      "#SBATCH -J myMPI%s" % "\n",
+                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
+                      "#SBATCH -n 32%s" % "\n",
+                      "#SBATCH -N 1%s" % "\n",
+                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
+                      "#SBATCH --mail-type=all%s" % "\n",
+                      "#SBATCH -p skx%s" % "\n",
+                      "#SBATCH -t 01:10:00%s" % "\n",
+                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
+                      "module load gcc/13.2.0%s" % "\n",
+                      "module load impi/21.11%s" % "\n",
+                      "module load meep/1.28%s" % "\n",
+                      "ibrun -np 32 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+                      "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
+                      "rm -r %s %s" % (ticker_file, "\n"),
+                      "echo 1 >> %s %s" % (ticker_file, "\n")
+
+                      ])
+
+    file1.close()
+
+    sleep(15)  # Pause to give time for simulation file to be created
+    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+
+    return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code)
+
 
 def obj_func_run(x: [float]):
     """
@@ -169,145 +229,51 @@ def obj_func_run(x: [float]):
     #theta_deg = x[3]
     cs = 250
     theta_deg = x[2]
+    cell_size = 2 * sr + cs
 
-    sleep(10)# Sleep to give code time to process parallelization
+    #sleep(10)# Sleep to give code time to process parallelization
 
     # Parameters to be used in current evaluation
     printing((sr, ht, cs, theta_deg))
+    filename = make_filename("", sr, ht, cs, theta_deg)
 
-    filename = make_filename(sr, ht, cs, theta_deg)
 
-    #Creating Scheme executable for current optimization; ag-dot-angle.ctl cannot be used simultaneously with multiple workers)
-    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle.ctl", 'r')
-    lines = executable.readlines()
-    code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
-    file0 = open(new_file, 'w')
-    file0.writelines(lines)
-    file0.close()
+    filename0 = make_filename("air", sr, ht, cs, theta_deg)
 
-    # Creating ticker file to make sure the data is created and stable for processing
-    
 
-    # Creation of optimization "subjob" file
-    '''
-    air_file = "%sair-angle_%s" % (file_home_path, filename)
-    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
 
-    air_raw_path = air_file + ".out"
-    metal_raw_path = metal_file + ".out"
-    air_data_path = air_file + ".dat"
-    metal_data_path = metal_file + ".dat"
-    #cell_size = 2*(sr + cs)
-    cell_size = 2*sr + cs
+    input_lines0 = [";----------------------------------------%s" % "\n",
+                  "(define-param sr %s)%s" % (sr, "\n"),
+                  "(define-param ht %s)%s" % (ht, "\n"),
+                  "(define-param sy %s)%s" % (cell_size, "\n"),
+                  "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
+                  "(define-param no-metal? false)",
+                  ";----------------------------------------%s" % "\n"
+                  ]
 
-    command_list = ["mpirun -np 64 meep no-metal?=true theta_deg=%s sy=%s %s | tee %s%s" % (
-                      theta_deg, cell_size, new_file, air_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
-                      "mpirun -np 64 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
-                      sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file0, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file0, "\n")]
 
-    for command in command_list:
-        print(command)
 
-    raise Exception
-
-    for command in command_list:
-
-        sleep(1)# Pause to give time for optimization file to be created
-        os.system(command)# Execute the optimization commands
-        print(command)
-
-    success = 0
-    '''
-
-    
-
-    air_file = "%sair-angle_%s" % (file_home_path, filename)
-    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
-    
-    air_raw_path = air_file + ".out"
-    metal_raw_path = metal_file + ".out"
-    air_data_path = air_file + ".dat"
-    metal_data_path = metal_file + ".dat"
-    # cell_size = 2*(sr + cs)
-    cell_size = 2 * sr + cs
-
-    ticker_file0 = file_home_path + "ticker" + code + ".txt"
-    file2 = open(ticker_file0, 'w')
-    file2.write("0")
-    file2.close()
+    ticker_file0, air_raw_path, air_data_path, main_del0, home_del0 = sim(filename=filename0, input_lines=input_lines0)
 
     print("air " + ticker_file0)
 
-    # Creation of simulation "subjob" file
-    sbatch_file0 = file_home_path + "/" + str(filename) + ".txt"
-    file1 = open(sbatch_file0, 'w')
 
-    file1.writelines(["#!/bin/bash%s" % "\n",
-                      "#SBATCH -J myMPI%s" % "\n",
-                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 32%s" % "\n",
-                      "#SBATCH -N 1%s" % "\n",
-                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
-                      "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p skx%s" % "\n",
-                      "#SBATCH -t 01:10:00%s" % "\n",
-                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
-                      "module load gcc/13.2.0%s" % "\n",
-                      "module load impi/21.11%s" % "\n",
-                      "module load meep/1.28%s" % "\n",
-                      "ibrun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file0, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file0, "\n")
+    filename1 = make_filename("metal", sr, ht, cs, theta_deg)
 
-                      ])
 
-    file1.close()
+    input_lines1 = [";----------------------------------------%s" % "\n",
+                    "(define-param sr %s)%s" % (sr, "\n"),
+                    "(define-param ht %s)%s" % (ht, "\n"),
+                    "(define-param sy %s)%s" % (cell_size, "\n"),
+                    "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
+                    "(define-param no-metal? true)",
+                    ";----------------------------------------%s" % "\n"
+                    ]
 
-    sleep(15)  # Pause to give time for simulation file to be created
-    os.system("ssh login1 sbatch " + sbatch_file0)  # Execute the simulation file
-
-    ticker_file1 = file_home_path + "ticker" + code + ".txt"
-    file67 = open(ticker_file1, 'w')
-    file67.write("0")
-    file67.close()
+    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1 = sim(filename=filename1, input_lines=input_lines1)
 
     print("metal " + ticker_file1)
 
-    # Creation of simulation "subjob" file
-    sbatch_file1 = file_home_path + "/" + str(filename) + ".txt"
-    file68 = open(sbatch_file1, 'w')
-
-    file68.writelines(["#!/bin/bash%s" % "\n",
-                      "#SBATCH -J myMPI%s" % "\n",
-                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 32%s" % "\n",
-                      "#SBATCH -N 1%s" % "\n",
-                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
-                      "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p skx%s" % "\n",
-                      "#SBATCH -t 01:10:00%s" % "\n",
-                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
-                      "module load gcc/13.2.0%s" % "\n",
-                      "module load impi/21.11%s" % "\n",
-                      "module load meep/1.28%s" % "\n",
-                      "ibrun -np 32 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
-                      sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file1, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file1, "\n")
-
-                      ])
-
-    file68.close()
-
-    sleep(15)  # Pause to give time for simulation file to be created
-    os.system("ssh login1 sbatch " + sbatch_file1)  # Execute the simulation file
 
     success = 0
 
@@ -318,7 +284,7 @@ def obj_func_run(x: [float]):
     while success == 0:
         try:
             tick1 = open(ticker_file0, "r").read()
-            tick2 = open(ticker_file0, "r").read()
+            tick2 = open(ticker_file1, "r").read()
             if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
                 tick1 = int(tick1)
                 tick2 = int(tick2)
@@ -349,12 +315,15 @@ def obj_func_run(x: [float]):
             os.system("ssh login1 rm -r " +
                       ticker_file0 + " " +
                       air_raw_path + " " +
+                      air_data_path + " " +
+                      main_del0 + "* " +
+                      home_del0 + "* " +
+                      ticker_file1 + " " +
                       metal_raw_path + " " +
                       metal_data_path + " " +
-                      air_data_path + " " +
-                      new_file + " " +
-                      main_home_dir + "ag-dot-angle" + code + "* " +
-                      file_home_path + "ag-dot-angle" + code + "* ")
+                      main_del1 + "* " +
+                      home_del1 + "* "
+                      )
 
             printing(f"finished deleting files; code: {code}")
             sleep(10)
@@ -402,14 +371,17 @@ def obj_func_run(x: [float]):
     os.system("ssh login1 rm -r " +
               ticker_file0 + " " +
               air_raw_path + " " +
+              air_data_path + " " +
+              main_del0 + "* " +
+              home_del0 + "* " +
+              ticker_file1 + " " +
               metal_raw_path + " " +
               metal_data_path + " " +
-              air_data_path + " " +
-              new_file + " " +
-              main_home_dir + "ag-dot-angle" + code + "* " +
-              file_home_path + "ag-dot-angle" + code + "* ")
+              main_del1 + "* " +
+              home_del1 + "* "
+              )
 
-    printing(f"finished deleting files; code: {code}")
+    printing(f"finished deleting files; code: {metal_raw_path}")
 
     # (9) Returning of Result and Continuity of Optimization
     printing(f'Executed: {filename}')
