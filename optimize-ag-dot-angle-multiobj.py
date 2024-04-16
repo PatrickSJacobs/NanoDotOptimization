@@ -397,7 +397,7 @@ def get_values(x: [float], param: str):
     theta_deg = x[2]
 
 
-    filename = make_filename(sr, ht, cs, theta_deg)
+    filename = make_filename("", sr, ht, cs, theta_deg)
 
     log_answer = check_log(filename, param)
     if len(log_answer) > 0:
@@ -504,7 +504,7 @@ if __name__ == "__main__":
     for sol in range(len(front)):
         vars = front[sol].variables
         #print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
-        printing(f'(Solution #{sol + 1}): (Filename - {make_filename(float(vars[0]), float(vars[1]), float(vars[2]), float(vars[3]))})')
+        printing(f'(Solution #{sol + 1}): (Filename - {make_filename("", float(vars[0]), float(vars[1]), float(vars[2]), float(vars[3]))})')
         printing(f'             Variables={vars}')
         printing(f'             Objectives={front[sol].objectives}')
 
