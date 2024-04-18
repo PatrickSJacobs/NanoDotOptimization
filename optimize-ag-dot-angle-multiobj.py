@@ -166,7 +166,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                   ]
     '''
 
-    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle.ctl", 'r')
+    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
     lines = input_lines + executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
