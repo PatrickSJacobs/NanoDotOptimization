@@ -199,7 +199,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
-                      "ibrun -np 32 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+                      "mpirun -np 32 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
@@ -215,6 +215,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
 
 
 def obj_func_run(x: [float]):
+
     """
     (3) Running the Optimization with Test Values
         - Given the test parameters, construct a optimization to get the reflectance from the situation with respect to the parameters
@@ -223,6 +224,7 @@ def obj_func_run(x: [float]):
         - The objective function results are logged and any unnecessary files are deleted.
         - The objective function results are sent back to the optimizer
     """
+
     sr = x[0]
     ht = x[1]
     #cs = x[2]
@@ -237,10 +239,7 @@ def obj_func_run(x: [float]):
     printing((sr, ht, cs, theta_deg))
     filename = make_filename("", sr, ht, cs, theta_deg)
 
-
     filename0 = make_filename("air", sr, ht, cs, theta_deg)
-
-
 
     input_lines0 = [";----------------------------------------%s" % "\n",
                   "(define-param sr %s)%s" % (sr, "\n"),
