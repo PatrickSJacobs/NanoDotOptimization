@@ -194,7 +194,6 @@
  
 (stop-when-fields-decayed 50 Ez
                                (vector3 (- (/ sx 2) (+ dpml 0.1)) 0 0)  1e-3)
-
 )
 
 (if no-metal? (save-flux "refl-flux" refl))

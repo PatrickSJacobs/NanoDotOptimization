@@ -165,6 +165,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                   ";----------------------------------------%s" % "\n"
                   ]
     '''
+
     input_lines = []
     executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle.ctl", 'r')
     lines = input_lines + executable.readlines()
@@ -251,15 +252,11 @@ def obj_func_run(x: [float]):
                   ";----------------------------------------%s" % "\n"
                   ]
 
-
-
     ticker_file0, air_raw_path, air_data_path, main_del0, home_del0 = sim(filename=filename0, input_lines=input_lines0)
 
     print("air " + ticker_file0)
 
-
     filename1 = make_filename("metal", sr, ht, cs, theta_deg)
-
 
     input_lines1 = [";----------------------------------------%s" % "\n",
                     "(define-param sr %s)%s" % (sr, "\n"),
@@ -273,7 +270,6 @@ def obj_func_run(x: [float]):
     ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1 = sim(filename=filename1, input_lines=input_lines1)
 
     print("metal " + ticker_file1)
-
 
     success = 0
 
@@ -395,7 +391,6 @@ def get_values(x: [float], param: str):
     cs = 250
     #theta_deg = x[3]
     theta_deg = x[2]
-
 
     filename = make_filename("", sr, ht, cs, theta_deg)
 
