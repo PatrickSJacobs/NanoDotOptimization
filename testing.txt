@@ -11,4 +11,4 @@ echo "SCRIPT $PE_HOSTFILE"
 module load gcc/13.2.0
 module load impi/21.11
 module load meep/1.28
-meep /home1/08809/tg881088/opt_08_18_2024__14_18_07_processed/ag-dot-angleL7PLLL.ctl | tee /home1/08809/tg881088/opt_08_18_2024__14_18_07_processed/ag-dot-angle_opt_08_18_2024__14_18_07_air_sr_50_0nm_ht_500_0nm_cs_2500000nm_theta_deg_360_0.out
+meep /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleL7PLLL.ctl | tee /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleL7PLLL.out
