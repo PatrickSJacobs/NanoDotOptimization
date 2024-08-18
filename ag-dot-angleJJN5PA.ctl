@@ -19,23 +19,23 @@
 
 (set-param! eps-averaging? false)
 
-(define Si
+(define Si          
 	(make dielectric (epsilon 12)))
 (define a-si
       (make dielectric (epsilon 1.2518)
             (polarizations
              (make polarizability
                (omega -2.1762) (gamma 2.3364) (sigma -10.4548))
-
+	     
 	     (make polarizability
                (omega 3.0452) (gamma 2.0402) (sigma 22.332))
 )))
 
 ;----------------------------------------
 
- (define silver_f
+ (define silver_f 
           (make dielectric (epsilon 1)
-                  (E-susceptibilities
+                  (E-susceptibilities 
                      (make lorentzian-susceptibility
                        (frequency 1.000e-20) (gamma 0.00615) (sigma 4.444e+41  ))
                      (make lorentzian-susceptibility
@@ -200,5 +200,3 @@
 )
 
 (if no-metal? (save-flux "refl-flux" refl))
-
-(display-fluxes trans  refl )
