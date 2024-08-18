@@ -9,4 +9,4 @@
 #SBATCH -t 01:10:00
 echo "SCRIPT $PE_HOSTFILE"
 
-\$TACC_MEEP_BIN/meep /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.ctl | tee /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.out
+$TACC_MEEP_BIN/meep /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.ctl | tee /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.out
