@@ -8,5 +8,11 @@
 #SBATCH -p icx
 #SBATCH -t 01:10:00
 echo "SCRIPT $PE_HOSTFILE"
+module load gcc/13.2.0
+module load impi/21.11
+module load hdf5
+module load fftw
+module load meep/1.28
 
-$TACC_MEEP_BIN/meep /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.ctl | tee /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.out
+
+meep /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.ctl | tee /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.out
