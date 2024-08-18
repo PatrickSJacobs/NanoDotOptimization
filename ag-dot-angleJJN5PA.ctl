@@ -200,3 +200,5 @@
 )
 
 (if no-metal? (save-flux "refl-flux" refl))
+
+(display-fluxes trans  refl )
