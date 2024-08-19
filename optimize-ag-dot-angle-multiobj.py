@@ -307,7 +307,7 @@ def obj_func_run(x: [float]):
         isMemoryError = False
         log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
         step_count = int(len(log_obj_exe))
-        
+
         try:
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
@@ -474,7 +474,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=1,
+        population_size=16,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
