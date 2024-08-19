@@ -305,6 +305,9 @@ def obj_func_run(x: [float]):
         df = None
         df0 = None
         isMemoryError = False
+        log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
+        step_count = int(len(log_obj_exe))
+        
         try:
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
@@ -317,8 +320,7 @@ def obj_func_run(x: [float]):
             wvls = wvls[: len(wvls) - 2]
             R_meep = R_meep[: len(R_meep) - 2]
 
-            log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
-            step_count = int(len(log_obj_exe))
+            
 
             with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
                 writer = csv.writer(file)
