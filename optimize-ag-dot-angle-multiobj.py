@@ -154,17 +154,18 @@ def obj_func_calc(wvls, R_meep):
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
-def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
+def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]
+        ):
 
-    '''
-    inputlines = [";----------------------------------------%s" % "\n",
+    
+    """input_lines = [";----------------------------------------%s" % "\n",
                   "(define-param sr %s)%s" % (sr, "\n"),
                   "(define-param ht %s)%s" % (ht, "\n"),
                   "(define-param sy %s)%s" % (cell_size, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
                   ";----------------------------------------%s" % "\n"
-                  ]
-    '''
+                  ]"""
+    
 
     executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
     lines = input_lines + executable.readlines()
@@ -244,9 +245,9 @@ def obj_func_run(x: [float]):
     filename0 = make_filename("air", sr, ht, cs, theta_deg)
 
     input_lines0 = [";----------------------------------------%s" % "\n",
-                  "(define-param sr %s)%s" % (sr, "\n"),
-                  "(define-param ht %s)%s" % (ht, "\n"),
-                  "(define-param sy %s)%s" % (cell_size, "\n"),
+                  "(define-param sr %s)%s" % (0.019, "\n"),
+                  "(define-param ht %s)%s" % (0.088, "\n"),
+                  "(define-param sy %s)%s" % (250.038, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
                   "(define-param no-metal? false)",
                   ";----------------------------------------%s" % "\n"
@@ -263,9 +264,9 @@ def obj_func_run(x: [float]):
 
 
     input_lines1 = [";----------------------------------------%s" % "\n",
-                    "(define-param sr %s)%s" % (sr, "\n"),
-                    "(define-param ht %s)%s" % (ht, "\n"),
-                    "(define-param sy %s)%s" % (cell_size, "\n"),
+                     "(define-param sr %s)%s" % (0.019, "\n"),
+                  "(define-param ht %s)%s" % (0.088, "\n"),
+                  "(define-param sy %s)%s" % (250.038, "\n"),
                     "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
                     "(define-param no-metal? true)",
                     ";----------------------------------------%s" % "\n"

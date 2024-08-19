@@ -15,17 +15,6 @@
 
 (set-param! eps-averaging? false)
 
-(define Si
-	(make dielectric (epsilon 12)))
-(define a-si
-      (make dielectric (epsilon 1.2518)
-            (polarizations
-             (make polarizability
-               (omega -2.1762) (gamma 2.3364) (sigma -10.4548))
-
-	     (make polarizability
-               (omega 3.0452) (gamma 2.0402) (sigma 22.332))
-)))
 
 ;----------------------------------------
 
