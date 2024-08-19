@@ -252,8 +252,8 @@ def obj_func_run(x: [float]):
                   "(define-param ht %s)%s" % (ht, "\n"),
                   "(define-param sy %s)%s" % (cell_size, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                  #"(define-param no-metal? false)",
-                    "(define-param no-metal false)",
+                  "(define-param no-metal false)",
+                    
 
                   ";----------------------------------------%s" % "\n"
                   ]
@@ -273,7 +273,7 @@ def obj_func_run(x: [float]):
                     "(define-param ht %s)%s" % (ht, "\n"),
                     "(define-param sy %s)%s" % (cell_size, "\n"),
                     "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                    "(define-param no-metal? true)",
+                    "(define-param no-metal true)",
                     ";----------------------------------------%s" % "\n"
                     ]
 
