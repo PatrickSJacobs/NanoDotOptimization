@@ -209,7 +209,8 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file1.close()
 
     sleep(15)  # Pause to give time for simulation file to be created
-    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+    #os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+    os.system("ssh login1 sbatch /home1/08809/tg881088/NanoDotOptimization/testing.txt")  # Execute the simulation file
 
     return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code)
 
@@ -375,16 +376,13 @@ def obj_func_run(x: [float]):
 
 def get_values(x: [float], param: str):
 
-    #sr = x[0]
-    #ht = x[1]
+    sr = x[0]
+    ht = x[1]
     #cs = x[2]
-    sr = 0.04
-    ht = 0.050
-    cs = 0.4 - 2 * sr
-
-    
+    cs = 0.001 * 250
     #theta_deg = x[3]
     theta_deg = x[2]
+
 
     filename = make_filename("", sr, ht, cs, theta_deg)
 
