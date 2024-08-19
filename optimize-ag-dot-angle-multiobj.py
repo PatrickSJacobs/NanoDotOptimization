@@ -252,7 +252,9 @@ def obj_func_run(x: [float]):
                   "(define-param ht %s)%s" % (ht, "\n"),
                   "(define-param sy %s)%s" % (cell_size, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                  "(define-param no-metal? false)",
+                  #"(define-param no-metal? false)",
+                    "(define-param no-metal false)",
+
                   ";----------------------------------------%s" % "\n"
                   ]
 
@@ -480,7 +482,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=16,
+        population_size=2,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),

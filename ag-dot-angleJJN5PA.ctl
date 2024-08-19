@@ -2,6 +2,7 @@
 (define-param sr 0.0400000000000)
 (define-param ht 0.05000000000000)
 (define-param theta_deg 0.00000000000)     ; angle in degrees. 
+(define-param no-metal? false) ; if true, have metal
 (define-param sz sy) ; size of cell in z direction 
 (define-param sx 6) ; size of cell in X direction
 
@@ -107,7 +108,7 @@
 (set! geometry-lattice (make lattice (size sx sy sz)))
 
 
-(define-param no-metal? false) ; if true, have metal
+
 (set! k-point (vector3 0 0 0))
 (set! geometry
       (if no-metal?
