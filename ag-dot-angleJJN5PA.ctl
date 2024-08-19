@@ -1,8 +1,4 @@
-(define-param sy 250.1) ; size of cell in Y direction 
-(define-param sr 0.01)
-(define-param ht 0.08)
-(define-param theta_deg 0.0); angle in degrees.
-
+(define-param sy 0.4) ; size of cell in Y direction 
 (define-param sz sy) ; size of cell in z direction 
 (define-param sx 6) ; size of cell in X direction
 
@@ -15,30 +11,31 @@
 (define-param efield Ez)
 (define-param dpml 0.4) ; Thickness of PML
 
+(define-param sr 0.04)
+(define-param ht 0.050)
 
-
-
+(define-param theta_deg 0)     ; angle in degrees.
 
 
 (set-param! eps-averaging? false)
 
-(define Si          
+(define Si
 	(make dielectric (epsilon 12)))
 (define a-si
       (make dielectric (epsilon 1.2518)
             (polarizations
              (make polarizability
                (omega -2.1762) (gamma 2.3364) (sigma -10.4548))
-	     
+
 	     (make polarizability
                (omega 3.0452) (gamma 2.0402) (sigma 22.332))
 )))
 
 ;----------------------------------------
 
- (define silver_f 
+ (define silver_f
           (make dielectric (epsilon 1)
-                  (E-susceptibilities 
+                  (E-susceptibilities
                      (make lorentzian-susceptibility
                        (frequency 1.000e-20) (gamma 0.00615) (sigma 4.444e+41  ))
                      (make lorentzian-susceptibility
