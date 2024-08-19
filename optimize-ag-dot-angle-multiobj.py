@@ -386,9 +386,7 @@ def get_values(x: [float], param: str):
     sr = x[0]
     ht = x[1]
     #cs = x[2]
-    #cs = 0.001 * 250
     cs = 0.001 * 250
-
     #theta_deg = x[3]
     theta_deg = x[2]
 
