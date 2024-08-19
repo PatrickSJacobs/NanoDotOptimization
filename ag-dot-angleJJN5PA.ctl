@@ -1,4 +1,4 @@
-(define-param sy 0.4000000000000) ; size of cell in Y direction
+(define-param sy 0.5000000000000) ; size of cell in Y direction
 (define-param sr 0.0400000000000)
 (define-param ht 0.05000000000000)
 (define-param theta_deg 0.00000000000)     ; angle in degrees. 
