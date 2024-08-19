@@ -189,7 +189,8 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file1.writelines(["#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
                       "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 32%s" % "\n",
+                      #"#SBATCH -n 32%s" % "\n",
+                    "#SBATCH -n 1%s" % "\n",
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
@@ -199,7 +200,9 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
-                      "mpirun -np 32 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+                     # "mpirun -np 32 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+                      "mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+
                       "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
