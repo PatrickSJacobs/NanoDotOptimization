@@ -195,7 +195,9 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
                       "#SBATCH -p skx%s" % "\n",
-                      "#SBATCH -t 01:10:00%s" % "\n",
+                     # "#SBATCH -t 01:10:00%s" % "\n",
+                        "#SBATCH -t 00:10:00%s" % "\n",
+
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
@@ -233,7 +235,7 @@ def obj_func_run(x: [float]):
     ht = x[1]
     #cs = x[2]
     #theta_deg = x[3]
-    cs = 250
+    cs = 0.001 * 250
     theta_deg = x[2]
     cell_size = 2 * sr + cs
 
