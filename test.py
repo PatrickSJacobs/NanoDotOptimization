@@ -1,6 +1,6 @@
 import subprocess
 
-file = "ag-dot-angle.ctl"
+file = "testing.txt"
 
 # Define your commands
 commands = [
