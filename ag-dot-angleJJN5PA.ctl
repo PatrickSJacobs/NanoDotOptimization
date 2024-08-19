@@ -1,4 +1,8 @@
-(define-param sy 250.03888411958) ; size of cell in Y direction 
+(define-param sy 250.0388841195) ; size of cell in Y direction 
+(define-param sr 0.01944205979001)
+(define-param ht 0.088074242448)
+(define-param theta_deg 0.0); angle in degrees.
+
 (define-param sz sy) ; size of cell in z direction 
 (define-param sx 6) ; size of cell in X direction
 
@@ -11,10 +15,9 @@
 (define-param efield Ez)
 (define-param dpml 0.4) ; Thickness of PML
 
-(define-param sr 0.019442059790017)
-(define-param ht 0.0880742424486)
 
-(define-param theta_deg 0.0)     ; angle in degrees.
+
+
 
 
 (set-param! eps-averaging? false)
