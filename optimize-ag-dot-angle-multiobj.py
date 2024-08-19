@@ -154,18 +154,17 @@ def obj_func_calc(wvls, R_meep):
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
-def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]
-        ):
+def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
 
-    
-    """input_lines = [";----------------------------------------%s" % "\n",
+    '''
+    inputlines = [";----------------------------------------%s" % "\n",
                   "(define-param sr %s)%s" % (sr, "\n"),
                   "(define-param ht %s)%s" % (ht, "\n"),
                   "(define-param sy %s)%s" % (cell_size, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
                   ";----------------------------------------%s" % "\n"
-                  ]"""
-    
+                  ]
+    '''
 
     executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
     lines = input_lines + executable.readlines()
@@ -190,7 +189,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]
     file1.writelines(["#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
                       "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 1%s" % "\n",
+                      "#SBATCH -n 2%s" % "\n",
                       #"#SBATCH -n 32%s" % "\n",
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
@@ -201,7 +200,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
-                      "mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+                      "mpirun -np 2 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
@@ -212,7 +211,6 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]
 
     sleep(15)  # Pause to give time for simulation file to be created
     os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
-    #os.system("sbatch " + sbatch_file)  # Execute the simulation file
 
     return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code)
 
@@ -245,9 +243,9 @@ def obj_func_run(x: [float]):
     filename0 = make_filename("air", sr, ht, cs, theta_deg)
 
     input_lines0 = [";----------------------------------------%s" % "\n",
-                  "(define-param sr %s)%s" % (0.019, "\n"),
-                  "(define-param ht %s)%s" % (0.088, "\n"),
-                  "(define-param sy %s)%s" % (250.038, "\n"),
+                  "(define-param sr %s)%s" % (sr, "\n"),
+                  "(define-param ht %s)%s" % (ht, "\n"),
+                  "(define-param sy %s)%s" % (cell_size, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
                   "(define-param no-metal? false)",
                   ";----------------------------------------%s" % "\n"
@@ -264,9 +262,9 @@ def obj_func_run(x: [float]):
 
 
     input_lines1 = [";----------------------------------------%s" % "\n",
-                     "(define-param sr %s)%s" % (0.019, "\n"),
-                  "(define-param ht %s)%s" % (0.088, "\n"),
-                  "(define-param sy %s)%s" % (250.038, "\n"),
+                    "(define-param sr %s)%s" % (sr, "\n"),
+                    "(define-param ht %s)%s" % (ht, "\n"),
+                    "(define-param sy %s)%s" % (cell_size, "\n"),
                     "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
                     "(define-param no-metal? true)",
                     ";----------------------------------------%s" % "\n"
@@ -304,57 +302,42 @@ def obj_func_run(x: [float]):
 
     # Check if data is good and data file exists, if not error
     if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
+        b = c = b_var = c_var = None
         df = None
         df0 = None
+        isMemoryError = False
         try:
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
-        except:
-            raise Exception((air_data_path, metal_data_path, ticker_file0))
-            sys.exit()
+            printing("success df")
 
-            sleep(10)
-            os.system("ssh login1 rm -r " +
-                      ticker_file0 + " " +
-                      air_raw_path + " " +
-                      air_data_path + " " +
-                      main_del0 + "* " +
-                      home_del0 + "* " +
-                      ticker_file1 + " " +
-                      metal_raw_path + " " +
-                      metal_data_path + " " +
-                      main_del1 + "* " +
-                      home_del1 + "* "
-                      )
+            # Get wavelengths and reflectance data
+            wvls = df[1] * 0.32
+            R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
 
-            printing(f"finished deleting files; code: {code}")
-            sleep(10)
-            printing("recursion")
-            return float(obj_func_run(sr, ht, cs, theta_deg))
+            wvls = wvls[: len(wvls) - 2]
+            R_meep = R_meep[: len(R_meep) - 2]
 
-        printing("success df")
+            log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
+            step_count = int(len(log_obj_exe))
 
-        # Get wavelengths and reflectance data
-        wvls = df[1] * 0.32
-        R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
+            with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(["wvl", "refl"])
+                for (wvl, refl) in zip(wvls, R_meep):
+                    writer.writerow([wvl, refl])
+            printing("passed to obj")
+            # (5) Sending Data Through Objective function
 
-        wvls = wvls[: len(wvls) - 2]
-        R_meep = R_meep[: len(R_meep) - 2]
+            b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
 
-        log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
-        step_count = int(len(log_obj_exe))
+            printing("came out of obj")
+        except Exception as e:
+            printing("failure df")
 
-        with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["wvl", "refl"])
-            for (wvl, refl) in zip(wvls, R_meep):
-                writer.writerow([wvl, refl])
-        printing("passed to obj")
-        # (5) Sending Data Through Objective function
-
-        b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
-
-        printing("came out of obj")
+            print(f"A memory error occurred: {e}")
+            print((air_data_path, metal_data_path, ticker_file0))
+            b, c, b_var, c_var = 125, 15, 100, 100
 
         # (7) Logging of Current Data
         with open(file_home_path + "calc_log_obj.csv", 'a') as file:
