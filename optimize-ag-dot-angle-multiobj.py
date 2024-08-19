@@ -20,6 +20,8 @@ import csv
 import numpy as np
 import pandas as pd
 import os
+import subprocess
+
 from scipy.optimize import curve_fit
 import statistics
 from scipy.signal import find_peaks
@@ -180,13 +182,13 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file2.close()
 
     sbatch_file = file_home_path + "/" + str(filename) + ".txt"
-    file1 = open(sbatch_file, 'w')
+    #file1 = open(sbatch_file, 'w')
 
     sim_file = "%sag-dot-angle_%s" % (file_home_path, filename)
     raw_path = sim_file + ".out"
     data_path = sim_file + ".dat"
 
-    file1.writelines(["#!/bin/bash%s" % "\n",
+    """file1.writelines(["#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
                       "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
                       "#SBATCH -n 1%s" % "\n",
@@ -198,7 +200,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "#SBATCH -t 01:10:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
-                      "module load impi/21.9%s" % "\n",
+                      "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
                       "mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
@@ -206,11 +208,27 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "echo 1 >> %s %s" % (ticker_file, "\n")
 
                       ])
+                      """
 
-    file1.close()
+    #file1.close()
+    
+    # Define your commands
+    commands = [
+            "mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+            "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
+            "rm -r %s %s" % (ticker_file, "\n"),
+            "echo 1 >> %s %s" % (ticker_file, "\n")
+        ]
 
-    sleep(15)  # Pause to give time for simulation file to be created
-    os.system("ssh login2 sbatch " + sbatch_file)  # Execute the simulation file
+        # Execute each command
+    for cmd in commands:
+            result = subprocess.run(cmd, shell=True, check=True)
+            if result.returncode != 0:
+                print(f"Command failed: {cmd}")
+                break
+
+    #sleep(15)  # Pause to give time for simulation file to be created
+    #os.system("ssh login2 sbatch " + sbatch_file)  # Execute the simulation file
     #os.system("sbatch " + sbatch_file)  # Execute the simulation file
 
     return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code)
