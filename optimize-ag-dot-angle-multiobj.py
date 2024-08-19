@@ -375,13 +375,16 @@ def obj_func_run(x: [float]):
 
 def get_values(x: [float], param: str):
 
-    sr = x[0]
-    ht = x[1]
+    #sr = x[0]
+    #ht = x[1]
     #cs = x[2]
-    cs = 0.4
-    #theta_deg = x[3]
-    theta_deg = x[2]
+    sr = 0.04
+    ht = 0.050
+    cs = 0.4 - 2 * sr
 
+    
+    theta_deg = x[3]
+    #theta_deg = x[2]
 
     filename = make_filename("", sr, ht, cs, theta_deg)
 
