@@ -215,9 +215,9 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     # Define your commands
     commands = [
             "mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
-            "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
-            "rm -r %s %s" % (ticker_file, "\n"),
-            "echo 1 >> %s %s" % (ticker_file, "\n")
+            #"grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
+            #"rm -r %s %s" % (ticker_file, "\n"),
+            #"echo 1 >> %s %s" % (ticker_file, "\n")
         ]
 
         # Execute each command
