@@ -210,8 +210,8 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file1.close()
 
     sleep(15)  # Pause to give time for simulation file to be created
-    #os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
-    os.system("sbatch " + sbatch_file)  # Execute the simulation file
+    os.system("ssh login2 sbatch " + sbatch_file)  # Execute the simulation file
+    #os.system("sbatch " + sbatch_file)  # Execute the simulation file
 
     return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code)
 
