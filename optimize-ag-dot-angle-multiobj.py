@@ -198,7 +198,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "#SBATCH -t 01:10:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
-                      "module load impi/21.11%s" % "\n",
+                      "module load impi/21.9%s" % "\n",
                       "module load meep/1.28%s" % "\n",
                       "mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
