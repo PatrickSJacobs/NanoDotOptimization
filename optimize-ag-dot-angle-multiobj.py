@@ -235,7 +235,7 @@ def obj_func_run(x: [float]):
     ht = x[1]
     #cs = x[2]
     #theta_deg = x[3]
-    cs = 0.001 * 250
+    cs = 250
     theta_deg = x[2]
     cell_size = 2 * sr + cs
 
@@ -386,7 +386,9 @@ def get_values(x: [float], param: str):
     sr = x[0]
     ht = x[1]
     #cs = x[2]
-    cs = 0.001 * 250
+    #cs = 0.001 * 250
+    cs = 250
+
     #theta_deg = x[3]
     theta_deg = x[2]
 
