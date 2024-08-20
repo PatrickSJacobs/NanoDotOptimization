@@ -347,7 +347,7 @@ def obj_func_run(x: [float]):
             print((air_data_path, metal_data_path, ticker_file0))
             sleep(1)
             
-            '''
+            
             # Define the path to the file that contains the job ID
             # Open the file and read the content
             with open(jobfile0, "r") as file:
@@ -382,12 +382,6 @@ def obj_func_run(x: [float]):
                             jobfile0 + " " +
                             jobfile1 + " "
                             )
-
-            sleep(1)
-            printing("recursion")
-
-            return float(obj_func_run(sr, ht, cs, theta_deg))
-            '''
 
             b, c, b_var, c_var = 0.001, 15, 10, 10
 
