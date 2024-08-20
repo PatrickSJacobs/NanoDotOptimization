@@ -1,5 +1,10 @@
-(define-param sy 0.4) ; size of cell in Y direction 
-(define-param sz sy) ; size of cell in z direction 
+(define-param sr 0.04)
+(define-param ht 0.050)
+(define-param sy 0.4)
+(define-param theta_deg 0)
+(define-param no-metal true)
+
+(define-param sz sy) ; size of cell in z direction
 (define-param sx 6) ; size of cell in X direction
 
 (define-param sl (* sy 0.7));  source location from the pml
@@ -11,25 +16,11 @@
 (define-param efield Ez)
 (define-param dpml 0.4) ; Thickness of PML
 
-(define-param sr 0.04)
-(define-param ht 0.050)
 
-(define-param theta_deg 0)     ; angle in degrees.
 
 
 (set-param! eps-averaging? false)
 
-(define Si
-	(make dielectric (epsilon 12)))
-(define a-si
-      (make dielectric (epsilon 1.2518)
-            (polarizations
-             (make polarizability
-               (omega -2.1762) (gamma 2.3364) (sigma -10.4548))
-
-	     (make polarizability
-               (omega 3.0452) (gamma 2.0402) (sigma 22.332))
-)))
 
 ;----------------------------------------
 
@@ -107,10 +98,9 @@
 (set! geometry-lattice (make lattice (size sx sy sz)))
 
 
-(define-param no-metal? false) ; if true, have metal
 (set! k-point (vector3 0 0 0))
 (set! geometry
-      (if no-metal?
+      (if no-metal
           (list
            (make block
 		(center 0 0 0)	      
@@ -173,7 +163,7 @@
 (define-param nfreq 400) ; number of frequencies at which to compute flux             
 (define trans ; transmitted flux                                                
       (add-flux fcen df nfreq
-                (if no-metal?
+                (if no-metal
 		  
                     (make flux-region
                      (center (- (/ sx 2) (+ dpml 0.1)) 0 0) (size 0 sy sz) )
@@ -188,17 +178,15 @@
                    (center (+ (/ sx -2) (+ dpml sy)) 0 0) (size 0 sy sz))))
 
 
-(if (not no-metal?) (load-minus-flux "refl-flux" refl))
+(if (not no-metal) (load-minus-flux "refl-flux" refl))
 
 (run-sources+ 500
  
 (stop-when-fields-decayed 50 Ez
                                (vector3 (- (/ sx 2) (+ dpml 0.1)) 0 0)  1e-3)
 
-(at-beginning (in-volume (volume (center 0 0) (size (- sx (* (+ dpml 0.1) 2)) sy sz )) output-epsilon))
-(at-end (in-volume (volume (center 0 0) (size (- sx (* (+ dpml 0.1) 2)) sy sz )) output-efield-z))
 )
 
-(if no-metal? (save-flux "refl-flux" refl))
+(if no-metal (save-flux "refl-flux" refl))
 
-(display-fluxes trans  refl )
+
