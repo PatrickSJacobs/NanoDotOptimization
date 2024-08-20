@@ -275,13 +275,18 @@ def obj_func_run(x: [float]):
         try:
             tick1 = open(ticker_file0, "r").read()
             tick1 = int(tick1)
+            print("ticker: " + str(tick1))
             if os.path.isfile(file_name0 + "-refl-flux.h5") and tick1 == 1:
+                print(f"ticker existing")
                 success1 = 1
         except:
             if time_count == max_time:
                 raise Exception(f"ticker not existing: {ticker_file0}")
             else:
                 pass
+        
+        print(f"ticker not existing")
+        print(file_name0 + "-refl-flux.h5")
 
         time_count = time_count + 1
         time.sleep(1)
@@ -370,28 +375,6 @@ def obj_func_run(x: [float]):
             sleep(1)
             
             
-            # Define the path to the file that contains the job ID
-            # Open the file and read the content
-            with open(jobfile0, "r") as file:
-                # Read the first line
-                line = file.readline().strip()
-
-                # Split the line and extract the job ID
-                # The line format is "Submitted batch job <job_id>"
-                job_id = line.split()[-1]  # Extract the last word, which is the job ID
-                os.system(f"scancel {job_id}")
-                print(f"Successfully cancelled job {job_id}")
-
-
-            with open(jobfile1, "r") as file:
-                # Read the first line
-                line = file.readline().strip()
-
-                # Split the line and extract the job ID
-                # The line format is "Submitted batch job <job_id>"
-                job_id = line.split()[-1]  # Extract the last word, which is the job ID
-                os.system(f"scancel {job_id}")
-
             os.system("ssh login1 rm -r " +
                             ticker_file0 + " " +
                             air_raw_path + " " +
@@ -402,9 +385,7 @@ def obj_func_run(x: [float]):
                             metal_raw_path + " " +
                             metal_data_path + " " +
                             main_del1 + "* " +
-                            home_del1 + "* " +
-                            jobfile0 + " " +
-                            jobfile1 + " "
+                            home_del1 + "* " 
                             )
 
             b, c, b_var, c_var = 0.001, 15, 10, 10
