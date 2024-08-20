@@ -179,7 +179,9 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file2.write("0")
     file2.close()
 
-    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
+    sbatch_name = file_home_path + "/" + str(filename)
+    sbatch_file = sbatch_name + ".txt"
+    
     file1 = open(sbatch_file, 'w')
 
     sim_file = "%sag-dot-angle_%s" % (file_home_path, filename)
@@ -204,7 +206,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "module load meep/1.28%s" % "\n",
                      # "mpirun -np 32 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
                       "mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
-                      #"meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
+                      "meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
                       "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
@@ -213,11 +215,11 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
 
     file1.close()
 
-    sleep(15)  # Pause to give time for simulation file to be created
-    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+    sleep(15)  # Pause to give time for simulation file to be created 
+    os.system("ssh login1 sbatch " + sbatch_file + " > " + sbatch_name + "_job_id.txt")  # Execute the simulation file
     #os.system("ssh login1 sbatch /home1/08809/tg881088/NanoDotOptimization/testing.txt")  # Execute the simulation file
 
-    return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code)
+    return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code, sbatch_name + "_job_id.txt")
 
 
 def obj_func_run(x: [float]):
@@ -253,14 +255,12 @@ def obj_func_run(x: [float]):
                   "(define-param sy %s)%s" % (cell_size, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
                   "(define-param no-metal false)",
-                    
-
                   ";----------------------------------------%s" % "\n"
                   ]
 
 
 
-    ticker_file0, air_raw_path, air_data_path, main_del0, home_del0 = sim(filename=filename0, input_lines=input_lines0)
+    ticker_file0, air_raw_path, air_data_path, main_del0, home_del0, jobfile0 = sim(filename=filename0, input_lines=input_lines0)
 
     print("air " + ticker_file0)
 
@@ -277,7 +277,7 @@ def obj_func_run(x: [float]):
                     ";----------------------------------------%s" % "\n"
                     ]
 
-    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1 = sim(filename=filename1, input_lines=input_lines1)
+    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = sim(filename=filename1, input_lines=input_lines1)
 
     print("metal " + ticker_file1)
 
@@ -309,44 +309,78 @@ def obj_func_run(x: [float]):
 
     # Check if data is good and data file exists, if not error
     if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
-        b = c = b_var = c_var = None
         df = None
         df0 = None
-        isMemoryError = False
+        try:    
+            df = pd.read_csv(metal_data_path, header=None)
+            df0 = pd.read_csv(air_data_path, header=None)
+        except:
+            print((air_data_path, metal_data_path, ticker_file0))
+            sleep(1)
+
+            # Define the path to the file that contains the job ID
+            # Open the file and read the content
+            with open(jobfile0, "r") as file:
+                # Read the first line
+                line = file.readline().strip()
+
+                # Split the line and extract the job ID
+                # The line format is "Submitted batch job <job_id>"
+                job_id = line.split()[-1]  # Extract the last word, which is the job ID
+                os.system(f"scancel {job_id}")
+
+            with open(jobfile1, "r") as file:
+                # Read the first line
+                line = file.readline().strip()
+
+                # Split the line and extract the job ID
+                # The line format is "Submitted batch job <job_id>"
+                job_id = line.split()[-1]  # Extract the last word, which is the job ID
+                os.system(f"scancel {job_id}")
+
+            os.system("ssh login1 rm -r " +
+                            ticker_file0 + " " +
+                            air_raw_path + " " +
+                            air_data_path + " " +
+                            main_del0 + "* " +
+                            home_del0 + "* " +
+                            ticker_file1 + " " +
+                            metal_raw_path + " " +
+                            metal_data_path + " " +
+                            main_del1 + "* " +
+                            home_del1 + "* " +
+                            jobfile0 + " " +
+                            jobfile1 + " "
+                            )
+
+            sleep(1)
+            printing("recursion")
+
+            return float(obj_func_run(sr, ht, cs, theta_deg))
+
+        printing("success df")
+
+        # Get wavelengths and reflectance data
+        wvls = df[1] * 0.32
+        R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
+
+        wvls = wvls[: len(wvls) - 2]
+        R_meep = R_meep[: len(R_meep) - 2]
+
         log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
         step_count = int(len(log_obj_exe))
 
-        try:
-            df = pd.read_csv(metal_data_path, header=None)
-            df0 = pd.read_csv(air_data_path, header=None)
-            printing("success df")
+        with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["wvl", "refl"])
+            for (wvl, refl) in zip(wvls, R_meep):
+                writer.writerow([wvl, refl])
+        printing("passed to obj")
+        # (5) Sending Data Through Objective function
 
-            # Get wavelengths and reflectance data
-            wvls = df[1] * 0.32
-            R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
+        b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
 
-            wvls = wvls[: len(wvls) - 2]
-            R_meep = R_meep[: len(R_meep) - 2]
-
-            
-
-            with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(["wvl", "refl"])
-                for (wvl, refl) in zip(wvls, R_meep):
-                    writer.writerow([wvl, refl])
-            printing("passed to obj")
-            # (5) Sending Data Through Objective function
-
-            b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
-
-            printing("came out of obj")
-        except Exception as e:
-            printing("failure df")
-
-            print(f"A memory error occurred: {e}")
-            print((air_data_path, metal_data_path, ticker_file0))
-            b, c, b_var, c_var = 125, 15, 100, 100
+        printing("came out of obj")
 
         # (7) Logging of Current Data
         with open(file_home_path + "calc_log_obj.csv", 'a') as file:
@@ -380,6 +414,7 @@ def obj_func_run(x: [float]):
     # (9) Returning of Result and Continuity of Optimization
     printing(f'Executed: {filename}')
     return filename
+
 
 def get_values(x: [float], param: str):
 
