@@ -260,9 +260,9 @@ def obj_func_run(x: [float]):
                     ";----------------------------------------%s" % "\n"
                     ]
 
-    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = None, None, None, None, None, None
+    #ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = None, None, None, None, None, None
 
-    #ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = sim(filename=filename1, input_lines=input_lines1)
+    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = sim(filename=filename1, input_lines=input_lines1)
 
     print("metal " + ticker_file1)
 
