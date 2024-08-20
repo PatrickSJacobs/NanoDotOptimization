@@ -263,7 +263,7 @@ def obj_func_run(x: [float]):
     ticker_file0, air_raw_path, air_data_path, main_del0, home_del0, jobfile0 = sim(filename=filename0, input_lines=input_lines0)
 
     print("air " + ticker_file0)
-    sleep(15) 
+    sleep(100) 
 
     filename1 = make_filename("metal", sr, ht, cs, theta_deg)
 
