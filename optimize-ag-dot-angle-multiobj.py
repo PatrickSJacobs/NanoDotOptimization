@@ -272,6 +272,7 @@ def obj_func_run(x: [float]):
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success1 == 0:
+        print(f"ticker not existing")
         try:
             tick1 = open(ticker_file0, "r").read()
             tick1 = int(tick1)

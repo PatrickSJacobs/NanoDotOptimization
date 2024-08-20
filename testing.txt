@@ -13,3 +13,4 @@ module load impi/21.11
 module load meep/1.28
 
 meep no-metal?=true /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.ctl | tee /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.out
+grep flux1: /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.out > /home1/08809/tg881088/NanoDotOptimization/ag-dot-angleJJN5PA.dat
