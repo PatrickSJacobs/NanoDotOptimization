@@ -358,6 +358,8 @@ def obj_func_run(x: [float]):
                 # The line format is "Submitted batch job <job_id>"
                 job_id = line.split()[-1]  # Extract the last word, which is the job ID
                 os.system(f"scancel {job_id}")
+                print(f"Successfully cancelled job {job_id}")
+
 
             with open(jobfile1, "r") as file:
                 # Read the first line
