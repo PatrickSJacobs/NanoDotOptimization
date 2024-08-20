@@ -197,7 +197,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "#SBATCH --mail-type=all%s" % "\n",
                       "#SBATCH -p skx%s" % "\n",
                      # "#SBATCH -t 01:10:00%s" % "\n",
-                        "#SBATCH -t 00:10:00%s" % "\n",
+                        "#SBATCH -t 00:20:00%s" % "\n",
 
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
