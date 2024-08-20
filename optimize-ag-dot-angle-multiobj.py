@@ -311,13 +311,43 @@ def obj_func_run(x: [float]):
     if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
         df = None
         df0 = None
+        b, c, b_var, c_var = None, None, None, None
+        log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
+        step_count = int(len(log_obj_exe))
+        
         try:    
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
-        except:
+
+            printing("success df")
+
+            # Get wavelengths and reflectance data
+            wvls = df[1] * 0.32
+            R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
+
+            wvls = wvls[: len(wvls) - 2]
+            R_meep = R_meep[: len(R_meep) - 2]
+
+          
+
+            with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(["wvl", "refl"])
+                for (wvl, refl) in zip(wvls, R_meep):
+                    writer.writerow([wvl, refl])
+            printing("passed to obj")
+            # (5) Sending Data Through Objective function
+
+            b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
+
+            printing("came out of obj")
+
+        except Exception as e:
+            print(f"Error : {e}")
             print((air_data_path, metal_data_path, ticker_file0))
             sleep(1)
-
+            
+            '''
             # Define the path to the file that contains the job ID
             # Open the file and read the content
             with open(jobfile0, "r") as file:
@@ -357,30 +387,12 @@ def obj_func_run(x: [float]):
             printing("recursion")
 
             return float(obj_func_run(sr, ht, cs, theta_deg))
+            '''
 
-        printing("success df")
+            b, c, b_var, c_var = 0.001, 15, 10, 10
 
-        # Get wavelengths and reflectance data
-        wvls = df[1] * 0.32
-        R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
+            
 
-        wvls = wvls[: len(wvls) - 2]
-        R_meep = R_meep[: len(R_meep) - 2]
-
-        log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
-        step_count = int(len(log_obj_exe))
-
-        with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["wvl", "refl"])
-            for (wvl, refl) in zip(wvls, R_meep):
-                writer.writerow([wvl, refl])
-        printing("passed to obj")
-        # (5) Sending Data Through Objective function
-
-        b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
-
-        printing("came out of obj")
 
         # (7) Logging of Current Data
         with open(file_home_path + "calc_log_obj.csv", 'a') as file:
