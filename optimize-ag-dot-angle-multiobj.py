@@ -169,7 +169,8 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
     lines = input_lines + executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
+    new_name = file_home_path + "ag-dot-angle" + code
+    new_file = new_name + ".ctl"
     file0 = open(new_file, 'w')
     file0.writelines(lines)
     file0.close()
@@ -179,8 +180,7 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file2.write("0")
     file2.close()
 
-    sbatch_name = file_home_path + "/" + str(filename)
-    sbatch_file = sbatch_name + ".txt"
+    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
     
     file1 = open(sbatch_file, 'w')
 
@@ -216,10 +216,10 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file1.close()
 
     sleep(15)  # Pause to give time for simulation file to be created 
-    os.system("ssh login1 sbatch " + sbatch_file + " > " + sbatch_name + "_job_id.txt")  # Execute the simulation file
+    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
     #os.system("ssh login1 sbatch /home1/08809/tg881088/NanoDotOptimization/testing.txt")  # Execute the simulation file
 
-    return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code, sbatch_name + "_job_id.txt")
+    return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code, new_name)
 
 
 def obj_func_run(x: [float]):
@@ -260,14 +260,34 @@ def obj_func_run(x: [float]):
 
 
 
-    ticker_file0, air_raw_path, air_data_path, main_del0, home_del0, jobfile0 = sim(filename=filename0, input_lines=input_lines0)
+    ticker_file0, air_raw_path, air_data_path, main_del0, home_del0, file_name0 = sim(filename=filename0, input_lines=input_lines0)
     #= None, None, None, None, None, None
 
     print("air " + ticker_file0)
-    sleep(100) 
+    #sleep(100) 
+
+    success1 = 0
+
+    #(4) Extracting Data From optimization
+    max_time = (70000*60)
+    time_count = 0
+    # Wait for data to be stable and ready for processing
+    while success1 == 0:
+        try:
+            tick1 = open(ticker_file0, "r").read()
+            tick1 = int(tick1)
+            if os.path.isfile(file_name0 + "-refl-flux.h5") and tick1 == 1:
+                success1 = 1
+        except:
+            if time_count == max_time:
+                raise Exception(f"ticker not existing: {ticker_file0}")
+            else:
+                pass
+
+        time_count = time_count + 1
+        time.sleep(1)
 
     filename1 = make_filename("metal", sr, ht, cs, theta_deg)
-
 
     input_lines1 = [";----------------------------------------%s" % "\n",
                     "(define-param sr %s)%s" % (sr, "\n"),
@@ -280,18 +300,18 @@ def obj_func_run(x: [float]):
 
     #ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = None, None, None, None, None, None
 
-    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = sim(filename=filename1, input_lines=input_lines1)
+    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, file_name1 = sim(filename=filename1, input_lines=input_lines1)
 
     print("metal " + ticker_file1)
 
 
-    success = 0
+    success2 = 0
 
     #(4) Extracting Data From optimization
     max_time = (70*60)
     time_count = 0
     # Wait for data to be stable and ready for processing
-    while success == 0:
+    while success2 == 0:
         try:
             tick1 = open(ticker_file0, "r").read()
             tick2 = open(ticker_file1, "r").read()
@@ -300,7 +320,7 @@ def obj_func_run(x: [float]):
                 tick2 = int(tick2)
                 if tick1 == 1 & tick2 == 1:
                     printing(f"files pass:{(air_data_path, metal_data_path)}")
-                    success = 1
+                    success2 = 1
         except:
             if time_count == max_time:
                 raise Exception(f"ticker not existing: {ticker_file0}")
@@ -322,7 +342,7 @@ def obj_func_run(x: [float]):
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
 
-            printing("success df")
+            printing("success2 df")
 
             # Get wavelengths and reflectance data
             wvls = df[1] * 0.32
