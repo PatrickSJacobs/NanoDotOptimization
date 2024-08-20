@@ -247,27 +247,6 @@ def obj_func_run(x: [float]):
     printing((sr, ht, cs, theta_deg))
     filename = make_filename("", sr, ht, cs, theta_deg)
 
-    
-    filename1 = make_filename("metal", sr, ht, cs, theta_deg)
-
-
-    input_lines1 = [";----------------------------------------%s" % "\n",
-                    "(define-param sr %s)%s" % (sr, "\n"),
-                    "(define-param ht %s)%s" % (ht, "\n"),
-                    "(define-param sy %s)%s" % (cell_size, "\n"),
-                    "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                    "(define-param no-metal true)",
-                    ";----------------------------------------%s" % "\n"
-                    ]
-
-    #ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = None, None, None, None, None, None
-
-    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = sim(filename=filename1, input_lines=input_lines1)
-
-    print("metal " + ticker_file1)
-
-    sleep(100) 
-
     filename0 = make_filename("air", sr, ht, cs, theta_deg)
 
     input_lines0 = [";----------------------------------------%s" % "\n",
@@ -275,7 +254,7 @@ def obj_func_run(x: [float]):
                   "(define-param ht %s)%s" % (ht, "\n"),
                   "(define-param sy %s)%s" % (cell_size, "\n"),
                   "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                  "(define-param no-metal false)",
+                  "(define-param no-metal true)",
                   ";----------------------------------------%s" % "\n"
                   ]
 
@@ -285,6 +264,26 @@ def obj_func_run(x: [float]):
     #= None, None, None, None, None, None
 
     print("air " + ticker_file0)
+    sleep(100) 
+
+    filename1 = make_filename("metal", sr, ht, cs, theta_deg)
+
+
+    input_lines1 = [";----------------------------------------%s" % "\n",
+                    "(define-param sr %s)%s" % (sr, "\n"),
+                    "(define-param ht %s)%s" % (ht, "\n"),
+                    "(define-param sy %s)%s" % (cell_size, "\n"),
+                    "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
+                    "(define-param no-metal false)",
+                    ";----------------------------------------%s" % "\n"
+                    ]
+
+    #ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = None, None, None, None, None, None
+
+    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = sim(filename=filename1, input_lines=input_lines1)
+
+    print("metal " + ticker_file1)
+
 
     success = 0
 
