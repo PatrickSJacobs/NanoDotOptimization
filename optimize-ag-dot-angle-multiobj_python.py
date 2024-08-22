@@ -186,12 +186,12 @@ def sim(run_file, filenames=[], input_lines=[]):
                       "#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
                       "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 1%s" % "\n",
+                      "#SBATCH -n 32%s" % "\n",
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
                       "#SBATCH -p skx%s" % "\n",
-                     "#SBATCH -t 00:45:00%s" % "\n",
+                     "#SBATCH -t 00:30:00%s" % "\n",
                       #"#SBATCH -t 02:20:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       #"module load gcc/13.2.0%s" % "\n",
@@ -200,7 +200,7 @@ def sim(run_file, filenames=[], input_lines=[]):
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
                     ]
                     +
-                    ["mpirun -np 1 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
+                    ["mpirun -np 32 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
                         [
                             [
                                 True, 

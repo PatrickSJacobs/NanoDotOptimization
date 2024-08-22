@@ -1,7 +1,7 @@
 import meep as mp
 import numpy as np
 
-no_metal = True
+no_metal = False
 # Parameters
 sy = 0.4
 sz = sy
