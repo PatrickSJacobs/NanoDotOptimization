@@ -191,7 +191,7 @@ def sim(run_file, filenames=[], input_lines=[]):
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
                       "#SBATCH -p skx%s" % "\n",
-                     "#SBATCH -t 00:30:00%s" % "\n",
+                     "#SBATCH -t 00:45:00%s" % "\n",
                       #"#SBATCH -t 02:20:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       #"module load gcc/13.2.0%s" % "\n",
@@ -266,7 +266,7 @@ def obj_func_run(x: [float]):
     ticker_file, air_raw_path, air_data_path, metal_raw_path, metal_data_path, main_del, home_del, file_name0 = sim(run_file = filename, filenames=[make_filename(name, sr, ht, cs, theta_deg) for name in ["air", 
                                                                                                                                                                                                               "metal"]],
                                                                                                                                                         input_lines=input_lines)
-   
+    success2 =0
    #(4) Extracting Data From optimization
     max_time = (70*60)
     time_count = 0
