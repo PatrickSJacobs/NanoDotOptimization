@@ -5,7 +5,7 @@
 #SBATCH -N 1
 #SBATCH --mail-user=pjacobs7@eagles.nccu.edu
 #SBATCH --mail-type=all
-#SBATCH -p icx
+#SBATCH -p skx
 #SBATCH -t 00:30:00
 echo "SCRIPT $PE_HOSTFILE"
 module load gcc/13.2.0

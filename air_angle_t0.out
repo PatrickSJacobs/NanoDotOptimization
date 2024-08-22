@@ -1,0 +1,16 @@
+Using MPI version 3.1, 32 processes
+command-line param: no-metal?=true
+command-line param: theta_deg=0
+-----------
+Initializing structure...
+Working in 3D dimensions.
+Computational cell is 6 x 0.4 x 0.4 with resolution 100
+     block, center = (0,0,0)
+          size (6,0.4,0.4)
+          axes (1,0,0), (0,1,0), (0,0,1)
+          dielectric constant epsilon diagonal = (1,1,1)
+Splitting into 32 chunks by voxels
+time for choose_chunkdivision = 0.000583277 s
+time for set_epsilon = 0.0231761 s
+-----------
+creating output file "./ag-dot-angle-eps-000000000.h5"...
