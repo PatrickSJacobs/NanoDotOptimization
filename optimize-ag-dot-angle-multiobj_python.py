@@ -154,23 +154,13 @@ def obj_func_calc(wvls, R_meep):
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
-def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
+def sim(run_file, filenames=[], input_lines=[]):
 
-    '''
-    inputlines = [";----------------------------------------%s" % "\n",
-                  "(define-param sr %s)%s" % (sr, "\n"),
-                  "(define-param ht %s)%s" % (ht, "\n"),
-                  "(define-param sy %s)%s" % (cell_size, "\n"),
-                  "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                  ";----------------------------------------%s" % "\n"
-                  ]
-    '''
-
-    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
+    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.txt", 'r')
     lines = input_lines + executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_name = file_home_path + "ag-dot-angle" + code
-    new_file = new_name + ".ctl"
+    new_file = new_name + ".py"
     file0 = open(new_file, 'w')
     file0.writelines(lines)
     file0.close()
@@ -180,45 +170,63 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
     file2.write("0")
     file2.close()
 
-    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
+    sbatch_file = file_home_path + "/" + str(run_file) + ".txt"
     
     file1 = open(sbatch_file, 'w')
 
-    sim_file = "%sag-dot-angle_%s" % (file_home_path, filename)
-    raw_path = sim_file + ".out"
-    data_path = sim_file + ".dat"
+    air_sim_file = "%sag-dot-angle_%s" % (file_home_path, filenames[0])
+    air_raw_path = air_sim_file + ".out"
+    air_data_path = air_sim_file + ".dat"
 
-    file1.writelines(["#!/bin/bash%s" % "\n",
+    metal_sim_file = "%sag-dot-angle_%s" % (file_home_path, filenames[1])
+    metal_raw_path = metal_sim_file + ".out"
+    metal_data_path = metal_sim_file + ".dat"
+
+    file1.writelines([
+                      "#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
                       "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 32%s" % "\n",
+                      "#SBATCH -n 1%s" % "\n",
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
                       "#SBATCH -p skx%s" % "\n",
-                     # "#SBATCH -t 01:10:00%s" % "\n",
-                    "#SBATCH -t 02:20:00%s" % "\n",
-
+                     "#SBATCH -t 00:45:00%s" % "\n",
+                      #"#SBATCH -t 02:20:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
-                      "module load gcc/13.2.0%s" % "\n",
+                      #"module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.9%s" % "\n",
-                      "module load meep/1.28%s" % "\n",
-                     "mpirun -np 32 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
-                      #"mpirun -np 1 meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
-                      #"meep %s |tee %s;%s" % (new_file, raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (raw_path, data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")
-
-                      ])
+                      #"module load meep/1.28%s" % "\n",
+                      #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
+                    ]
+                    +
+                    ["mpirun -np 1 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
+                        [
+                            [
+                                True, 
+                                air_raw_path, 
+                                air_data_path
+                            ], 
+                            [
+                                False,
+                                metal_raw_path, 
+                                metal_data_path
+                            ]
+                        ]
+                    ]
+                    + 
+                    [
+                    "rm -r %s %s" % (ticker_file, "\n"),
+                    "echo 1 >> %s %s" % (ticker_file, "\n")
+                    ])
 
     file1.close()
 
     sleep(15)  # Pause to give time for simulation file to be created 
-    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+    os.system("conda activate ndo && ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
     #os.system("ssh login1 sbatch /home1/08809/tg881088/NanoDotOptimization/testing.txt")  # Execute the simulation file
 
-    return (ticker_file, raw_path, data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code, new_name)
+    return (ticker_file, air_raw_path, air_data_path, metal_raw_path, metal_data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code, new_name)
 
 
 def obj_func_run(x: [float]):
@@ -244,91 +252,36 @@ def obj_func_run(x: [float]):
 
     # Parameters to be used in current evaluation
     printing((sr, ht, cs, theta_deg))
+
+    input_lines = ["#----------------------------------------%s" % "\n",
+                "sr = %s%s" % (sr, "\n"),
+                "ht = %s%s" % (ht, "\n"),
+                "sy = %s%s" % (cell_size, "\n"),
+                "theta_deg = %s%s" % (theta_deg, "\n"),
+                "#----------------------------------------%s" % "\n"
+                ]
+
     filename = make_filename("", sr, ht, cs, theta_deg)
 
-    filename0 = make_filename("air", sr, ht, cs, theta_deg)
-
-    input_lines0 = [";----------------------------------------%s" % "\n",
-                  "(define-param sr %s)%s" % (sr, "\n"),
-                  "(define-param ht %s)%s" % (ht, "\n"),
-                  "(define-param sy %s)%s" % (cell_size, "\n"),
-                  "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                  "(define-param no-metal true)",
-                  ";----------------------------------------%s" % "\n"
-                  ]
-
-
-
-    ticker_file0, air_raw_path, air_data_path, main_del0, home_del0, file_name0 = sim(filename=filename0, input_lines=input_lines0)
-    #= None, None, None, None, None, None
-
-    print("air " + ticker_file0)
-    #sleep(100) 
-
-    success1 = 0
-
-    #(4) Extracting Data From optimization
-    max_time = (70000*60)
-    time_count = 0
-    # Wait for data to be stable and ready for processing
-    while success1 == 0:
-        print(f"ticker not existing")
-        try:
-            tick1 = open(ticker_file0, "r").read()
-            tick1 = int(tick1)
-            print("ticker: " + str(tick1))
-            if os.path.isfile(file_name0 + "-refl-flux.h5") and tick1 == 1:
-                print(f"ticker existing")
-                success1 = 1
-        except:
-            if time_count == max_time:
-                raise Exception(f"ticker not existing: {ticker_file0}")
-            else:
-                pass
-        
-        print(f"ticker not existing")
-        print(file_name0 + "-refl-flux.h5")
-
-        time_count = time_count + 1
-        time.sleep(1)
-
-    filename1 = make_filename("metal", sr, ht, cs, theta_deg)
-
-    input_lines1 = [";----------------------------------------%s" % "\n",
-                    "(define-param sr %s)%s" % (sr, "\n"),
-                    "(define-param ht %s)%s" % (ht, "\n"),
-                    "(define-param sy %s)%s" % (cell_size, "\n"),
-                    "(define-param theta_deg %s)%s" % (theta_deg, "\n"),
-                    "(define-param no-metal false)",
-                    ";----------------------------------------%s" % "\n"
-                    ]
-
-    #ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, jobfile1 = None, None, None, None, None, None
-
-    ticker_file1, metal_raw_path, metal_data_path, main_del1, home_del1, file_name1 = sim(filename=filename1, input_lines=input_lines1)
-
-    print("metal " + ticker_file1)
-
-
-    success2 = 0
-
-    #(4) Extracting Data From optimization
+    ticker_file, air_raw_path, air_data_path, metal_raw_path, metal_data_path, main_del, home_del, file_name0 = sim(run_file = filename, filenames=[make_filename(name, sr, ht, cs, theta_deg) for name in ["air", 
+                                                                                                                                                                                                              "metal"]],
+                                                                                                                                                        input_lines=input_lines)
+   
+   #(4) Extracting Data From optimization
     max_time = (70*60)
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success2 == 0:
         try:
-            tick1 = open(ticker_file0, "r").read()
-            tick2 = open(ticker_file1, "r").read()
+            tick = open(ticker_file, "r").read()
             if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
-                tick1 = int(tick1)
-                tick2 = int(tick2)
-                if tick1 == 1 & tick2 == 1:
+                tick = int(tick)
+                if tick == 1:
                     printing(f"files pass:{(air_data_path, metal_data_path)}")
                     success2 = 1
         except:
             if time_count == max_time:
-                raise Exception(f"ticker not existing: {ticker_file0}")
+                raise Exception(f"ticker not existing: {ticker_file}")
             else:
                 pass
 
@@ -372,27 +325,21 @@ def obj_func_run(x: [float]):
 
         except Exception as e:
             print(f"Error : {e}")
-            print((air_data_path, metal_data_path, ticker_file0))
+            print((air_data_path, metal_data_path, ticker_file))
             sleep(1)
             
             
             os.system("ssh login1 rm -r " +
-                            ticker_file0 + " " +
+                            ticker_file + " " +
                             air_raw_path + " " +
                             air_data_path + " " +
-                            main_del0 + "* " +
-                            home_del0 + "* " +
-                            ticker_file1 + " " +
+                            main_del + "* " +
+                            home_del + "* " +
                             metal_raw_path + " " +
-                            metal_data_path + " " +
-                            main_del1 + "* " +
-                            home_del1 + "* " 
+                            metal_data_path + " " 
                             )
 
             b, c, b_var, c_var = 0.001, 15, 10, 10
-
-            
-
 
         # (7) Logging of Current Data
         with open(file_home_path + "calc_log_obj.csv", 'a') as file:
@@ -409,16 +356,16 @@ def obj_func_run(x: [float]):
     # (8) Deleting Excess Files
     sleep(10)
     os.system("ssh login1 rm -r " +
-              ticker_file0 + " " +
+              ticker_file + " " +
               air_raw_path + " " +
               air_data_path + " " +
-              main_del0 + "* " +
-              home_del0 + "* " +
-              ticker_file1 + " " +
+              main_del + "* " +
+              home_del + "* " +
+              ticker_file + " " +
               metal_raw_path + " " +
               metal_data_path + " " +
-              main_del1 + "* " +
-              home_del1 + "* "
+              main_del + "* " +
+              home_del + "* "
               )
 
     printing(f"finished deleting files; code: {metal_raw_path}")
@@ -445,9 +392,9 @@ def get_values(x: [float], param: str):
         printing(f'Referenced: {filename}')
         return log_answer[0]
     else:
-        obj_func_run(x)
+        #obj_func_run(x)
         sleep(5)
-        return check_log(filename, param)[0]
+        return check_log(obj_func_run(x), param)[0]
 
 def b(x: [float]):
 
