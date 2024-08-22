@@ -195,8 +195,9 @@ def sim(run_file, filenames=[], input_lines=[]):
                       #"#SBATCH -t 02:20:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
-                      "module load impi/21.9%s" % "\n",
+                      "module load impi/21.11%s" % "\n",
                      #"module load miniconda/<version>%s" % "\n",
+                     "conda init bash%s" % "\n",
                      "conda activate ndo%s" % "\n",
                       #"module load meep/1.28%s" % "\n",
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
@@ -218,8 +219,10 @@ def sim(run_file, filenames=[], input_lines=[]):
                     ]
                     + 
                     [
+                    "conda deactivate%s" % "\n",
                     "rm -r %s %s" % (ticker_file, "\n"),
-                    "echo 1 >> %s %s" % (ticker_file, "\n")
+                    "echo 1 >> %s %s" % (ticker_file, "\n"),
+                    
                     ])
 
     file1.close()
