@@ -236,7 +236,8 @@ def sim(run_file, filenames=[], input_lines=[]):
     sleep(15)  # Pause to give time for simulation file to be created 
     #os.system("conda init bash && conda activate ndo && ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
     #os.system("ssh login1 )  # Execute the simulation file
-    os.system("ssh login1 conda activate ndo && sbatch " + sbatch_file)  # Execute the simulation file
+    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+    #conda activate ndo && 
     #os.system("")
     #os.system("sbatch " + sbatch_file)  # Execute the simulation file
 
