@@ -209,20 +209,9 @@ def sim(run_file, filenames=[], input_lines=[]):
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
                     ]
                     +
-                    ["mpirun -np 32 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
-                        [
-                            [
-                                True, 
-                                air_raw_path, 
-                                air_data_path
-                            ], 
-                            [
-                                False,
-                                metal_raw_path, 
-                                metal_data_path
-                            ]
-                        ]
-                    ]
+                    [f"mpirun -np 32 python -m mpi4py {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path};\n",
+                     f"mpirun -np 32 python -m mpi4py {new_file} False | tee -a {metal_raw_path} ; grep flux1: {metal_raw_path} > {metal_data_path};\n"
+                     ]
                     + 
                     [
                     "conda deactivate%s" % "\n",
@@ -232,6 +221,23 @@ def sim(run_file, filenames=[], input_lines=[]):
                     ])
 
     file1.close()
+
+    '''
+    ["mpirun -np 32 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
+        [
+            [
+                True, 
+                air_raw_path, 
+                air_data_path
+            ], 
+            [
+                False,
+                metal_raw_path, 
+                metal_data_path
+            ]
+        ]
+    ]
+    '''
 
     sleep(15)  # Pause to give time for simulation file to be created 
     #os.system("conda init bash && conda activate ndo && ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
