@@ -237,7 +237,7 @@ def sim(run_file, filenames=[], input_lines=[]):
     #os.system("conda init bash && conda activate ndo && ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
     #os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
     os.system("ssh login1")  # Execute the simulation file
-    os.system("conda activate ndo")
+    #os.system("conda activate ndo")
     os.system("sbatch " + sbatch_file)  # Execute the simulation file
 
     #os.system("ssh login1 sbatch /home1/08809/tg881088/NanoDotOptimization/testing.txt")  # Execute the simulation file
