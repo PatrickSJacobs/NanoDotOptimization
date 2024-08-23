@@ -8,6 +8,7 @@
 #SBATCH -p skx-dev              # Queue name
 #SBATCH -t 00:10:00           # Run time (hh:mm:ss) - 20 hours
 echo "SCRIPT $PE_HOSTFILE"
+conda init
 conda activate ndo
 python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj_python.py
 
