@@ -188,8 +188,8 @@ def sim(run_file, filenames=[], input_lines=[]):
 
     # Define the commands as a list of tuples (description, command)
     commands = [
-        ("Run simulation for air", f"mpirun -np 48 python -u {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path}"),
-        ("Run simulation for metal", f"mpirun -np 48 python -u {new_file} False | tee -a {metal_raw_path} ; grep flux1: {metal_raw_path} > {metal_data_path}"),
+        ("Run simulation for air", f"mpirun -np 5 python -u {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path}"),
+        ("Run simulation for metal", f"mpirun -np 5 python -u {new_file} False | tee -a {metal_raw_path} ; grep flux1: {metal_raw_path} > {metal_data_path}"),
         ("Remove ticker file", f"rm -r {ticker_file}"),
         ("Create new ticker file", f"echo 1 >> {ticker_file}")
     ]
