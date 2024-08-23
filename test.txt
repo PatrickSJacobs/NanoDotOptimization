@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J myMPI               # Job Name
 #SBATCH -o myMPI.o%j	       # Name of the output file (eg. myMPI.oJobID)
-#SBATCH -n 512                  # Requests total number of MPI tasks 96
-#SBATCH -N 11
+#SBATCH -n 32                  # Requests total number of MPI tasks 96
+#SBATCH -N 1
 #SBATCH --mail-user=pjacobs7@eagles.nccu.edu
 #SBATCH --mail-type=all
 #SBATCH -p skx              # Queue name
