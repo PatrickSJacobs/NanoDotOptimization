@@ -200,7 +200,7 @@ def sim(run_file, filenames=[], input_lines=[]):
                      #"conda init bash%s" % "\n",
                      "pwd%s" % "\n",
                         "ls%s" % "\n",
-                     "source /home1/08809/tg881088/miniconda/etc/profile.d/conda.sh%s" % "\n",
+                     #"source /home1/08809/tg881088/miniconda/etc/profile.d/conda.sh%s" % "\n",
                      "conda activate ndo%s" % "\n",
                       #"module load meep/1.28%s" % "\n",
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
