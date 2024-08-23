@@ -201,8 +201,8 @@ def sim(run_file, filenames=[], input_lines=[]):
                      #"source ~/.bashrc%s" % "\n",
                         
                      #"source /home1/08809/tg881088/miniconda/etc/profile.d/conda.sh%s" % "\n",
-                     #"source ~/.bashrc%s" % "\n",
-                     #"conda activate ndo%s" % "\n",
+                     "source ~/.bashrc%s" % "\n",
+                     "conda activate ndo%s" % "\n",
                       #"module load meep/1.28%s" % "\n",
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
                     ]
@@ -233,8 +233,9 @@ def sim(run_file, filenames=[], input_lines=[]):
 
     sleep(15)  # Pause to give time for simulation file to be created 
     #os.system("conda init bash && conda activate ndo && ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
-    os.system("ssh login2 sbatch " + sbatch_file)  # Execute the simulation file
+    #os.system("ssh login2 sbatch " + sbatch_file)  # Execute the simulation file
     #os.system("ssh login1 sbatch /home1/08809/tg881088/NanoDotOptimization/testing.txt")  # Execute the simulation file
+    os.system("sbatch " + sbatch_file)  # Execute the simulation file
 
     return (ticker_file, air_raw_path, air_data_path, metal_raw_path, metal_data_path, main_home_dir + "ag-dot-angle" + code, file_home_path + "ag-dot-angle" + code, new_name)
 

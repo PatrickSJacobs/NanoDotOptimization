@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J myMPI               # Job Name
 #SBATCH -o myMPI.o%j	       # Name of the output file (eg. myMPI.oJobID)
-#SBATCH -n 96                  # Requests total number of MPI tasks 96
-#SBATCH -N 2
+#SBATCH -n 1                  # Requests total number of MPI tasks 96
+#SBATCH -N 1
 #SBATCH --mail-user=pjacobs7@eagles.nccu.edu
 #SBATCH --mail-type=all
 #SBATCH -p skx-dev              # Queue name
@@ -13,5 +13,5 @@ module load impi/21.11
 source ~/.bashrc
 conda activate ndo
 
-python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj.py
+python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj_python.py
 
