@@ -190,24 +190,26 @@ def sim(run_file, filenames=[], input_lines=[]):
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p skx-dev %s" % "\n",
+                      "#SBATCH -p skx %s" % "\n",
                      "#SBATCH -t 00:45:00%s" % "\n",
                       #"#SBATCH -t 02:20:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
+                      "module load python/3.9.18%s" % "\n",
+                      
                      #"module load miniconda/<version>%s" % "\n",
                      #"conda init bash%s" % "\n",
                      #"source ~/.bashrc%s" % "\n",
                         
                      #"source /home1/08809/tg881088/miniconda/etc/profile.d/conda.sh%s" % "\n",
-                     "source ~/.bashrc%s" % "\n",
-                     "conda activate ndo%s" % "\n",
+                     #"source ~/.bashrc%s" % "\n",
+                     #"conda activate ndo%s" % "\n",
                       #"module load meep/1.28%s" % "\n",
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
                     ]
                     +
-                    ["mpirun -np 1 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
+                    ["mpirun -np 32 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
                         [
                             [
                                 True, 
@@ -490,7 +492,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=1,
+        population_size=16,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
