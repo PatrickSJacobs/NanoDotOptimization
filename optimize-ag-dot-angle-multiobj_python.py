@@ -206,7 +206,7 @@ def sim(run_file, filenames=[], input_lines=[]):
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
                     ]
                     +
-                    ["mpirun -np 32 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
+                    ["mpirun -np 1 python -u %s %s | tee -a %s ; grep flux1: %s > %s;%s" % (new_file, set[0], set[1],  set[1], set[2], "\n") for set in 
                         [
                             [
                                 True, 
