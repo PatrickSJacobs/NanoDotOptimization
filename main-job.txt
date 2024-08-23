@@ -14,4 +14,3 @@ source ~/.bashrc
 conda activate ndo
 
 python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj.py
-
