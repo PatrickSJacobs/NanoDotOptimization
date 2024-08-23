@@ -235,9 +235,11 @@ def sim(run_file, filenames=[], input_lines=[]):
 
     sleep(15)  # Pause to give time for simulation file to be created 
     #os.system("conda init bash && conda activate ndo && ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
-    #os.system("ssh login2 sbatch " + sbatch_file)  # Execute the simulation file
-    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
-    #os.system("conda activate ndo")
+    #os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+    os.system("ssh login1")  # Execute the simulation file
+    os.system("conda activate ndo")
+    os.system("sbatch " + sbatch_file)  # Execute the simulation file
+
     #os.system("ssh login1 sbatch /home1/08809/tg881088/NanoDotOptimization/testing.txt")  # Execute the simulation file
     #os.system("sbatch " + sbatch_file)  # Execute the simulation file
 
@@ -491,7 +493,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=16,
+        population_size=1,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
