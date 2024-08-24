@@ -350,6 +350,7 @@ def obj_func_run(x: [float]):
             printing("came out of obj")
 
         except Exception as e:
+            sys.exit(f"Error : {e}")
             print(f"Error : {e}")
             print((air_data_path, metal_data_path, ticker_file))
             sleep(1)
