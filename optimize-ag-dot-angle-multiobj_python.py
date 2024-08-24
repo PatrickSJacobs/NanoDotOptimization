@@ -209,7 +209,9 @@ def sim(run_file, filenames=[], input_lines=[]):
                       #mpirun -np 32 python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
                     ]
                     +
-                    [f"mpirun -np 32 python -m mpi4py {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path};\n",
+                    #[f"mpirun -np 32 python -m mpi4py {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path};\n",
+                    [f"python -m mpi4py {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path};\n",
+
                      f"mpirun -np 32 python -m mpi4py {new_file} False | tee -a {metal_raw_path} ; grep flux1: {metal_raw_path} > {metal_data_path};\n"
                      ]
                     + 
