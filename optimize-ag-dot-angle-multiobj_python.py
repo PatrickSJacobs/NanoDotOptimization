@@ -382,6 +382,7 @@ def obj_func_run(x: [float]):
 
     # (8) Deleting Excess Files
     sleep(10)
+    sys.exit(f"Error : {e}")
     os.system("ssh login1 rm -r " +
               ticker_file + " " +
               air_raw_path + " " +
