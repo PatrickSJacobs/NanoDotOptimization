@@ -186,7 +186,7 @@ def sim(run_file, filenames=[], input_lines=[]):
                       "#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
                       "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 1%s" % "\n",
+                      "#SBATCH -n 32%s" % "\n",
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
@@ -210,7 +210,7 @@ def sim(run_file, filenames=[], input_lines=[]):
                     ]
                     +
                     #[f"mpirun -np 32 python -m mpi4py {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path};\n",
-                    [f"python -m mpi4py {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path};\n",
+                    [f"mpirun -np 32 python -m mpi4py {new_file} True | tee -a {air_raw_path} ; grep flux1: {air_raw_path} > {air_data_path};\n",
 
                      f"mpirun -np 32 python -m mpi4py {new_file} False | tee -a {metal_raw_path} ; grep flux1: {metal_raw_path} > {metal_data_path};\n"
                      ]
