@@ -11,8 +11,13 @@ hx = 0.1
 hy = sy
 hz = sz
 
+from mpi4py import MPI
 import meep as mp
 import numpy as np
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
 
 efield = mp.Ez
 dpml = 0.4
@@ -128,9 +133,25 @@ sim = mp.Simulation(
 trans_flux = sim.add_flux(fcen, df, nfreq, mp.FluxRegion(center=mp.Vector3(0.5 * sx - dpml - 0.1, 0, 0), size=mp.Vector3(0, sy, sz)))
 refl_flux = sim.add_flux(fcen, df, nfreq, mp.FluxRegion(center=mp.Vector3(-0.5 * sx + dpml + sy, 0, 0), size=mp.Vector3(0, sy, sz)))
 
+comm.Barrier()
+
 # Load minus flux if metal is present
 if not no_metal:
-    sim.load_minus_flux("refl-flux", refl_flux)
+    if rank == 0:
+        # Rank 0 loads the minus flux data from the file
+        minus_flux_data = sim.load_minus_flux("refl-flux", refl_flux)
+    else:
+        # Other ranks initialize minus_flux_data as None
+        minus_flux_data = None
+
+    # Broadcast the loaded minus flux data to all processes
+    minus_flux_data = comm.bcast(minus_flux_data, root=0)
+
+    # Apply the minus flux data to all ranks
+    sim.load_minus_flux("refl-flux", refl_flux, flux_data=minus_flux_data)
+
+
+comm.Barrier()
 
 # Run simulation
 
@@ -165,14 +186,34 @@ mp.at_beginning(
     until=500
 )
 
+# Ensure all processes have completed their tasks
+comm.Barrier()
 
-# Save flux if no metal
-if no_metal:
-    sim.save_flux("refl-flux", refl_flux)
+all_done = np.array(1, dtype='i')
+all_done = comm.allreduce(all_done, op=MPI.MIN)
+
 
 # Display fluxes
-sim.display_fluxes(trans_flux, refl_flux)
+#sim.display_fluxes(trans_flux, refl_flux)
 
-'''
-python -u test.py | tee -a flux_t.out ; grep flux1: flux_t.out > flux_t.dat
-'''
+
+if all_done == 1:
+    # Gather flux data on rank 0
+    flux_data = comm.gather(sim.get_flux_data(refl_flux), root=0)
+
+    # Only rank 0 writes the flux data
+    if rank == 0:
+        
+        # Save flux if no metal
+        if no_metal:
+            # Combine data from all ranks into one coherent dataset
+            combined_flux_data = sum(flux_data)  # Adjust this operation as needed for your data
+        
+            sim.save_flux("refl-flux", refl_flux, combined_flux_data)
+        
+        # Alternatively, you may directly save the combined flux data without summing:
+        #sim.save_flux("refl-flux", refl_flux)
+
+        
+# Final Barrier to ensure all processes are synchronized before exiting
+comm.Barrier()
