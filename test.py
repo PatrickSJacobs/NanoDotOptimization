@@ -6,4 +6,4 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-print(meep.with_mpi())
+print(mp.with_mpi())
