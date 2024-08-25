@@ -1,19 +1,12 @@
-from mpi4py import MPI
-import meep as mp
-print(mp.with_mpi())
-import numpy as np
-
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-
 #----------------------------------------
-sr = 0.1244229976060725
-ht = 0.08467103656737388
-sy = 0.498845995212145
+sr = 0.06748289135799125
+ht = 0.09591995969084945
+sy = 0.3849657827159825
 theta_deg = 0.0
 #----------------------------------------
 
+#import sys
+#no_metal = sys.argv[0]
 no_metal = True
 
 # Parameters
@@ -25,6 +18,9 @@ sl = sy * 0.7
 hx = 0.1
 hy = sy
 hz = sz
+
+import meep as mp
+import numpy as np
 
 efield = mp.Ez
 dpml = 0.4
@@ -42,6 +38,7 @@ df = fmax - fmin
 theta_rad = theta_deg * mp.pi / 180
 kdir = mp.Vector3(np.cos(theta_rad), np.sin(theta_rad), 0)
 k = kdir.scale(2 * mp.pi * fcen)
+
 
 silver_f = mp.Medium(
     epsilon=1,
@@ -101,6 +98,8 @@ Ag = mp.Medium(epsilon=1.0,
 # Geometry
 geometry_lattice = mp.Lattice(size=mp.Vector3(sx, sy, sz))
 
+
+
 geometry = []
 if no_metal:
     geometry.append(mp.Block(center=mp.Vector3(0, 0, 0), size=mp.Vector3(sx, sy, sz), material=mp.air))
@@ -137,31 +136,26 @@ sim = mp.Simulation(
 trans_flux = sim.add_flux(fcen, df, nfreq, mp.FluxRegion(center=mp.Vector3(0.5 * sx - dpml - 0.1, 0, 0), size=mp.Vector3(0, sy, sz)))
 refl_flux = sim.add_flux(fcen, df, nfreq, mp.FluxRegion(center=mp.Vector3(-0.5 * sx + dpml + sy, 0, 0), size=mp.Vector3(0, sy, sz)))
 
-comm.Barrier()
-
 # Load minus flux if metal is present
 if not no_metal:
-    if rank == 0:
-        # Rank 0 loads the minus flux data from the file
-        minus_flux_data = sim.load_minus_flux("refl-flux", refl_flux)
-    else:
-        # Other ranks initialize minus_flux_data as None
-        minus_flux_data = None
-
-    # Broadcast the loaded minus flux data to all processes
-    minus_flux_data = comm.bcast(minus_flux_data, root=0)
-
-    # Apply the minus flux data to all ranks
-    sim.load_minus_flux("refl-flux", refl_flux, flux_data=minus_flux_data)
-
-comm.Barrier()
+    sim.load_minus_flux("refl-flux", refl_flux)
 
 # Run simulation
+
+'''
+sim.run(
+    mp.at_beginning(mp.output_epsilon),
+    mp.to_appended("flux", mp.in_volume(mp.Volume(center=mp.Vector3(0, 0, 0), size=mp.Vector3(sx - 2 * (dpml + 0.1), sy, sz)), mp.output_efield_z)),
+    until_after_sources=500,
+    until=sim.stop_when_fields_decayed(50, efield, mp.Vector3(0.5 * sx - dpml - 0.1, 0, 0), 1e-3)
+)
+'''
+
 center_point = mp.Vector3(-0.5 * sx + dpml + 0.1, 0, 0)
 size_vec = mp.Vector3(sx - 2 * (dpml + 0.1), sy, sz)
 
 sim.run(
-    mp.at_beginning(
+mp.at_beginning(
         mp.in_volume(
             mp.Volume(center=mp.Vector3(0, 0, 0), size=size_vec),
             mp.output_epsilon
@@ -179,24 +173,10 @@ sim.run(
     until=500
 )
 
-# Ensure all processes have completed their tasks
-comm.Barrier()
 
-all_done = np.array(1, dtype='i')
-all_done = comm.allreduce(all_done, op=MPI.MIN)
+# Save flux if no metal
+if no_metal:
+    sim.save_flux("refl-flux", refl_flux)
 
-if all_done == 1:
-    # Gather flux data on rank 0
-    flux_data = comm.gather(sim.get_flux_data(refl_flux), root=0)
-
-    # Only rank 0 writes the flux data
-    if rank == 0:
-        # Save flux if no metal
-        if no_metal:
-            # Save the flux data on rank 0
-            sim.save_flux("refl-flux", refl_flux)
-        # Display fluxes
-        sim.display_fluxes(trans_flux, refl_flux)
-
-# Final Barrier to ensure all processes are synchronized before exiting
-comm.Barrier()
+# Display fluxes
+#sim.display_fluxes(trans_flux, refl_flux)
