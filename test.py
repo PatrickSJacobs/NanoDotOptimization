@@ -179,4 +179,4 @@ if no_metal == True:
     sim.save_flux("refl-flux", refl_flux)
 
 # Display fluxes
-#sim.display_fluxes(trans_flux, refl_flux)
+sim.display_fluxes(trans_flux, refl_flux)
