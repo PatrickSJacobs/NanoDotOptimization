@@ -8,8 +8,7 @@
 #SBATCH -p skx              # Queue name
 #SBATCH -t 05:00:00           # Run time (hh:mm:ss) - 20 hours
 echo "SCRIPT $PE_HOSTFILE"
-module load gcc/13.2.0
-module load impi/21.11
+
 source ~/.bashrc
 conda activate ndo
 
