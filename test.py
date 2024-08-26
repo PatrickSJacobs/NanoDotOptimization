@@ -5,9 +5,9 @@ sy = 0.3849657827159825
 theta_deg = 0.0
 #----------------------------------------
 
-#import sys
-#no_metal = sys.argv[0]
-no_metal = True
+import sys
+no_metal = sys.argv[0]
+#no_metal = True
 
 # Parameters
 
