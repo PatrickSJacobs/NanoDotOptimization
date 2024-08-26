@@ -12,7 +12,5 @@ echo "SCRIPT $PE_HOSTFILE"
 source ~/.bashrc
 conda activate ndo
 
-mpirun -np 1 python -m mpi4py /home1/08809/tg881088/NanoDotOptimization/test.py True
-mpirun -np 1 python -m mpi4py /home1/08809/tg881088/NanoDotOptimization/test.py False
-
-
+mpirun -np 1 python -m mpi4py /home1/08809/tg881088/NanoDotOptimization/test.py True | tee -a air.out ; grep flux1: air.out > air.dat;
+mpirun -np 1 python -m mpi4py /home1/08809/tg881088/NanoDotOptimization/test.py False | tee -a metal.out ; grep flux1: metal.out > metal.dat;
