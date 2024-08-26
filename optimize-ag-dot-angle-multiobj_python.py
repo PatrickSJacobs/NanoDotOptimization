@@ -191,7 +191,7 @@ def sim(run_file, filenames=[], input_lines=[]):
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
                       "#SBATCH -p skx %s" % "\n",
-                     "#SBATCH -t 00:45:00%s" % "\n",
+                     "#SBATCH -t 00:30:00%s" % "\n",
                       #"#SBATCH -t 02:20:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
