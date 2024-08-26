@@ -137,7 +137,7 @@ trans_flux = sim.add_flux(fcen, df, nfreq, mp.FluxRegion(center=mp.Vector3(0.5 *
 refl_flux = sim.add_flux(fcen, df, nfreq, mp.FluxRegion(center=mp.Vector3(-0.5 * sx + dpml + sy, 0, 0), size=mp.Vector3(0, sy, sz)))
 
 # Load minus flux if metal is present
-if not no_metal:
+if no_metal == False:
     sim.load_minus_flux("refl-flux", refl_flux)
 
 # Run simulation
@@ -175,7 +175,7 @@ mp.at_beginning(
 
 
 # Save flux if no metal
-if no_metal:
+if no_metal == True:
     sim.save_flux("refl-flux", refl_flux)
 
 # Display fluxes
