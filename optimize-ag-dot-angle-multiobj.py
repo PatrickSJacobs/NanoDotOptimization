@@ -256,7 +256,7 @@ def obj_func_run(x: [float]):
                       "module load mvapich/3.0%s" % "\n", 
                       "module load meep/1.28%s" % "\n",
                       #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "mpirun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s%;s" % (theta_deg, new_file, air_raw_path, "\n"),
+                      "mpirun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
                       #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
 
                       "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
