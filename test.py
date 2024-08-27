@@ -6,7 +6,7 @@ theta_deg = 0.0
 #----------------------------------------
 
 import sys
-no_metal = sys.argv[0]
+no_metal = sys.argv[1]
 #no_metal = True
 
 # Parameters
