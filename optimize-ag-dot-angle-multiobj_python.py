@@ -15,14 +15,13 @@ import os
 from scipy.optimize import curve_fit
 import statistics
 from scipy.signal import find_peaks
-import subprocess
 
 # File and directory paths
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")
-main_home_dir = "/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/tg881088_home1/"
+main_home_dir = "/home1/08809/tg881088/"
 folder_name = f"opt_{str(current_time)}"
 file_home_path = os.path.join(main_home_dir, f"{folder_name}_processed/")
-main_work_dir = "/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/tg881088_work2/"
+main_work_dir = "/work2/08809/tg881088/"
 file_work_path = os.path.join(main_work_dir, f"{folder_name}_raw/")
 progress_file = os.path.join(file_home_path, "progress.txt")
 
@@ -40,18 +39,8 @@ def printing(msg: str):
     print(msg)
 
 def check_log(filename: str, param: str):
-    log_file_path = os.path.join(file_home_path, "calc_log_obj.csv")
-
-    # Check if the log file exists, and if not, create it with headers
-    if not os.path.exists(log_file_path):
-        with open(log_file_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time", "step_count"])
-
-    # Now read the file and check for the parameter
-    df = pd.read_csv(log_file_path)
+    df = pd.read_csv(os.path.join(file_home_path, "calc_log_obj.csv"))
     return df.loc[df['filename'] == filename, param].tolist()
-
 
 def make_filename(type: str, sr: float, ht: float, cs: float, theta_deg: float) -> str:
     display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0, 1)).replace(".", "_")
@@ -81,7 +70,7 @@ def obj_func_calc(wvls, R_meep):
 
     def objective(x, b, c):
         maximum = np.array([maxi] * len(x))
-        return 1 / (c ** 2 * (1 + (1000 / b * (x - maximum)) ** 2))
+        return 1 / (c ** 2 * (1 + (10000 / b * (x - maximum)) ** 2))
 
     popt, popv = curve_fit(objective, xs, ys)
     b, c = popt
@@ -91,7 +80,7 @@ def obj_func_calc(wvls, R_meep):
     return b, c ** 2 * 10 - 10, b_var * 100, c_var * 100
 
 def sim(run_file, filenames=[], input_lines=[]):
-    executable = open("/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/ag-dot-angle0.txt", 'r')
+    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.txt", 'r')
     lines = input_lines + executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_name = os.path.join(file_home_path, f"ag-dot-angle{code}.py")
@@ -107,30 +96,38 @@ def sim(run_file, filenames=[], input_lines=[]):
     air_sim_file = os.path.join(file_home_path, f"ag-dot-angle_{filenames[0]}")
     metal_sim_file = os.path.join(file_home_path, f"ag-dot-angle_{filenames[1]}")
 
-    # Assuming the variables new_name, air_sim_file, metal_sim_file, and ticker_file are already defined
-    commands = [
-        f"mpirun -np 4 python -m mpi4py {new_name} True | tee -a {air_sim_file}.out ; grep flux1: {air_sim_file}.out > {air_sim_file}.dat;",
-        f"mpirun -np 4 python -m mpi4py {new_name} False | tee -a {metal_sim_file}.out ; grep flux1: {metal_sim_file}.out > {metal_sim_file}.dat;",
-        f"rm -r {ticker_file}",
-        f"echo 1 >> {ticker_file}",
+    sbatch_content = [
+        "#!/bin/bash\n",
+        "#SBATCH -J myMPI\n",
+        "#SBATCH -o myMPI.%j.o\n",
+        "#SBATCH -n 32\n",
+        "#SBATCH -N 1\n",
+        "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu\n",
+        "#SBATCH --mail-type=all\n",
+        "#SBATCH -p skx\n",
+        "#SBATCH -t 00:30:00\n",
+        'echo "SCRIPT $PE_HOSTFILE"\n',
+        "source ~/.bashrc\n",
+        "conda activate ndo\n",
+        f"mpirun -np 32 python -m mpi4py {new_name} True | tee -a {air_sim_file}.out ; grep flux1: {air_sim_file}.out > {air_sim_file}.dat;\n",
+        f"mpirun -np 32 python -m mpi4py {new_name} False | tee -a {metal_sim_file}.out ; grep flux1: {metal_sim_file}.out > {metal_sim_file}.dat;\n",
+        "conda deactivate\n",
+        f"rm -r {ticker_file}\n",
+        f"echo 1 >> {ticker_file}\n",
     ]
 
-    # Execute each command
-    for command in commands:
-        try:
-            result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
-            print("Output:", result.stdout)
-        except subprocess.CalledProcessError as e:
-            print("An error occurred:", e.stderr)
-
+    with open(sbatch_file, 'w') as file1:
+        file1.writelines(sbatch_content)
 
     time.sleep(15)
-   
+    os.system(f"ssh login1 sbatch {sbatch_file}")
+
     return ticker_file, f"{air_sim_file}.out", f"{air_sim_file}.dat", f"{metal_sim_file}.out", f"{metal_sim_file}.dat", new_name
 
 def obj_func_run(x: [float]):
     sr, ht, theta_deg = x[0], x[1], x[2]
-    cs = 0.001 * 250
+    #cs = 0.001 * 250
+    cs = 0.001 * 125
     cell_size = 2 * sr + cs
     printing((sr, ht, cs, theta_deg))
 
@@ -187,14 +184,14 @@ def obj_func_run(x: [float]):
 
         except Exception as e:
             printing(f"Error: {e}")
-            os.system(f"rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
+            os.system(f"ssh login1 rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
         finally:
             with open(os.path.join(file_home_path, "calc_log_obj.csv"), 'a') as file:
                 writer = csv.writer(file)
                 writer.writerow([filename, sr, ht, cs, theta_deg, b, c, b_var, c_var, datetime.now().strftime("%m_%d_%Y__%H_%M_%S"), len(open(os.path.join(file_home_path, "calc_log_obj.csv"), 'r').readlines())])
 
         time.sleep(10)
-        os.system(f"rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
+        os.system(f"ssh login1 rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
 
         printing(f"finished deleting files; code: {metal_raw_path}")
         printing(f'Executed: {filename}')
@@ -214,11 +211,25 @@ def b(x: [float]): return get_values(x, "b-param")
 def c(x: [float]): return get_values(x, "c-param")
 def b_var(x: [float]): return get_values(x, "b_var")
 def c_var(x: [float]): return get_values(x, "c_var")
-def b_constraint(x: [float]): return 1 - get_values(x, "b-param")
-def c_constraint(x: [float]): return 15 - get_values(x, "c-param")
-def b_var_constraint(x: [float]): return 10 - get_values(x, "b_var")
 
-# Define the optimization problem
+# Double-sided constraints for b, c, b_var, and c_var parameters
+def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
+def b_upper_constraint(x: [float]): return 150 - get_values(x, "b-param")  # b-param should be <= 15
+
+def c_lower_constraint(x: [float]): return get_values(x, "c-param") - 1  # c-param should be >= 1
+def c_upper_constraint(x: [float]): return 1.5 - get_values(x, "c-param")  # c-param should be <= 1.5
+
+def b_var_lower_constraint(x: [float]): return get_values(x, "b_var") - 0  # b_var should be >= 0
+def b_var_upper_constraint(x: [float]): return 10 - get_values(x, "b_var")  # b_var should be <= 10
+
+# Double-sided constraints for the decision variables
+#def sr_lower_constraint(x: [float]): return x[0] - 0.001 * 5  # sr should be >= 0.001 * 5
+#def sr_upper_constraint(x: [float]): return 0.001 * 125 - x[0]  # sr should be <= 0.001 * 125
+
+#def ht_lower_constraint(x: [float]): return x[1] - 0.001 * 50  # ht should be >= 0.001 * 50
+#def ht_upper_constraint(x: [float]): return 0.001 * 100 - x[1]  # ht should be <= 0.001 * 100
+
+# Define the optimization problem with double-sided constraints
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
@@ -229,9 +240,16 @@ problem = (
     .add_function(b)
     .add_function(b_var)
     .add_function(c_var)
-    .add_constraint(b_constraint)
-    .add_constraint(c_constraint)
-    .add_constraint(b_var_constraint)
+    .add_constraint(b_lower_constraint)
+    .add_constraint(b_upper_constraint)
+    .add_constraint(c_lower_constraint)
+    .add_constraint(c_upper_constraint)
+    .add_constraint(b_var_lower_constraint)
+    .add_constraint(b_var_upper_constraint)
+    #.add_constraint(sr_lower_constraint)
+    #.add_constraint(sr_upper_constraint)
+    #.add_constraint(ht_lower_constraint)
+    #.add_constraint(ht_upper_constraint)
 )
 
 # Main execution
@@ -240,11 +258,13 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time", "step_count"])
 
-    max_evaluations = 640
+    #max_evaluations = 640
+    max_evaluations = 32
+
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=1,
+        population_size=16,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
@@ -263,5 +283,3 @@ if __name__ == "__main__":
         printing(f'             Objectives={front[sol].objectives}')
 
     printing(f"Computing time: {algorithm.total_computing_time}")
-
-
