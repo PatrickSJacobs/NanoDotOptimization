@@ -277,7 +277,9 @@ def obj_func_run(x: [float]):
             tick1 = open(ticker_file0, "r").read()
             tick1 = int(tick1)
             print("ticker: " + str(tick1))
-            if os.path.isfile(file_name0 + "-refl-flux.h5") and tick1 == 1:
+            #if os.path.isfile(file_name0 + "-refl-flux.h5") and tick1 == 1:
+            if tick1 == 1:
+
                 print(f"ticker existing")
                 success1 = 1
         except:
@@ -337,89 +339,70 @@ def obj_func_run(x: [float]):
 
     # Check if data is good and data file exists, if not error
     if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
-        df = None
-        df0 = None
         b, c, b_var, c_var = None, None, None, None
-        log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
-        step_count = int(len(log_obj_exe))
+        step_count = len(open(os.path.join(file_home_path, "calc_log_obj.csv"), 'r').readlines())
         
-        try:    
+        try:
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
-
             printing("success2 df")
 
             # Get wavelengths and reflectance data
             wvls = df[1] * 0.32
-            R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
+            R_meep = [np.abs(-r / r0) for r, r0 in zip(df[3], df0[3])]
+            wvls, R_meep = wvls[:-2], R_meep[:-2]
 
-            wvls = wvls[: len(wvls) - 2]
-            R_meep = R_meep[: len(R_meep) - 2]
-
-          
-
-            with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
+            # Write calculation log data step
+            calc_log_csv_path = os.path.join(file_work_path, f"calc_log_data_step_{step_count}_{filename}.csv")
+            with open(calc_log_csv_path, 'w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(["wvl", "refl"])
-                for (wvl, refl) in zip(wvls, R_meep):
-                    writer.writerow([wvl, refl])
-            printing("passed to obj")
-            # (5) Sending Data Through Objective function
+                writer.writerows(zip(wvls, R_meep))
 
+            printing("passed to obj")
+
+            # Sending data through the objective function
             b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
 
             printing("came out of obj")
-
+        
         except Exception as e:
-            print(f"Error : {e}")
+            print(f"Error: {e}")
             print((air_data_path, metal_data_path, ticker_file0))
-            sleep(1)
-            
-            
-            os.system("ssh login1 rm -r " +
-                            ticker_file0 + " " +
-                            air_raw_path + " " +
-                            air_data_path + " " +
-                            main_del0 + "* " +
-                            home_del0 + "* " +
-                            ticker_file1 + " " +
-                            metal_raw_path + " " +
-                            metal_data_path + " " +
-                            main_del1 + "* " +
-                            home_del1 + "* " 
-                            )
-
+            time.sleep(1)
+            os.system(f"ssh login1 rm -r {ticker_file0} {air_raw_path} {air_data_path} {main_del0}* {home_del0}* {ticker_file1} {metal_raw_path} {metal_data_path} {main_del1}* {home_del1}*")
             b, c, b_var, c_var = 0.001, 15, 10, 10
 
-            
-
-
-        # (7) Logging of Current Data
-        with open(file_home_path + "calc_log_obj.csv", 'a') as file:
+        # Logging of current data
+        log_obj_csv_path = os.path.join(file_home_path, "calc_log_obj.csv")
+        with open(log_obj_csv_path, 'a') as file:
             writer = csv.writer(file)
             writer.writerow([filename, sr, ht, cs, theta_deg, b, c, b_var, c_var, datetime.now().strftime("%m_%d_%Y__%H_%M_%S"), step_count])
-            file.close()
-
-        #execution_dictionary[filename] = {"b": b, "c": c, "b_var": b_var, "c_var": c_var}
-
     else:
         printing(f"({metal_data_path}): It isn't a file!")
         raise ValueError(f"({metal_data_path}): It isn't a file!")
 
-    # (8) Deleting Excess Files
+    # Deleting excess files
+    time.sleep(10)
+    os.system(f"ssh login1 rm -r {ticker_file0} {air_raw_path} {air_data_path} {main_del0}* {home_del0}* {ticker_file1} {metal_raw_path} {metal_data_path} {main_del1}* {home_del1}*")
+
+    printing(f"finished deleting files; code: {metal_raw_path}")
+
+    # Returning result and continuity of optimization
+    
     sleep(10)
     os.system("ssh login1 rm -r " +
-              ticker_file0 + " " +
-              air_raw_path + " " +
-              air_data_path + " " +
-              main_del0 + "* " +
-              home_del0 + "* " +
-              ticker_file1 + " " +
-              metal_raw_path + " " +
-              metal_data_path + " " +
-              main_del1 + "* " +
-              home_del1 + "* "
-              )
+            ticker_file0 + " " +
+            air_raw_path + " " +
+            air_data_path + " " +
+            main_del0 + "* " +
+            home_del0 + "* " +
+            ticker_file1 + " " +
+            metal_raw_path + " " +
+            metal_data_path + " " +
+            main_del1 + "* " +
+            home_del1 + "* "
+            )
 
     printing(f"finished deleting files; code: {metal_raw_path}")
 
