@@ -40,8 +40,18 @@ def printing(msg: str):
     print(msg)
 
 def check_log(filename: str, param: str):
-    df = pd.read_csv(os.path.join(file_home_path, "calc_log_obj.csv"))
+    log_file_path = os.path.join(file_home_path, "calc_log_obj.csv")
+
+    # Check if the log file exists, and if not, create it with headers
+    if not os.path.exists(log_file_path):
+        with open(log_file_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time", "step_count"])
+
+    # Now read the file and check for the parameter
+    df = pd.read_csv(log_file_path)
     return df.loc[df['filename'] == filename, param].tolist()
+
 
 def make_filename(type: str, sr: float, ht: float, cs: float, theta_deg: float) -> str:
     display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0, 1)).replace(".", "_")
@@ -81,7 +91,7 @@ def obj_func_calc(wvls, R_meep):
     return b, c ** 2 * 10 - 10, b_var * 100, c_var * 100
 
 def sim(run_file, filenames=[], input_lines=[]):
-    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.txt", 'r')
+    executable = open("/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/ag-dot-angle0.txt", 'r')
     lines = input_lines + executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_name = os.path.join(file_home_path, f"ag-dot-angle{code}.py")
@@ -115,8 +125,7 @@ def sim(run_file, filenames=[], input_lines=[]):
 
 
     time.sleep(15)
-    os.system(f"ssh login1 sbatch {sbatch_file}")
-
+   
     return ticker_file, f"{air_sim_file}.out", f"{air_sim_file}.dat", f"{metal_sim_file}.out", f"{metal_sim_file}.dat", new_name
 
 def obj_func_run(x: [float]):
@@ -178,14 +187,14 @@ def obj_func_run(x: [float]):
 
         except Exception as e:
             printing(f"Error: {e}")
-            os.system(f"ssh login1 rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
+            os.system(f"rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
         finally:
             with open(os.path.join(file_home_path, "calc_log_obj.csv"), 'a') as file:
                 writer = csv.writer(file)
                 writer.writerow([filename, sr, ht, cs, theta_deg, b, c, b_var, c_var, datetime.now().strftime("%m_%d_%Y__%H_%M_%S"), len(open(os.path.join(file_home_path, "calc_log_obj.csv"), 'r').readlines())])
 
         time.sleep(10)
-        os.system(f"ssh login1 rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
+        os.system(f"rm -r {ticker_file} {air_raw_path} {air_data_path} {new_name}* {metal_raw_path} {metal_data_path}")
 
         printing(f"finished deleting files; code: {metal_raw_path}")
         printing(f'Executed: {filename}')

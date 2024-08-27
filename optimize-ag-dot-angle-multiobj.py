@@ -70,7 +70,7 @@ def obj_func_calc(wvls, R_meep):
 
     def objective(x, b, c):
         maximum = np.array([maxi] * len(x))
-        return 1 / (c ** 2 * (1 + (1000 / b * (x - maximum)) ** 2))
+        return 1 / (c ** 2 * (1 + (10000 / b * (x - maximum)) ** 2))
 
     popt, popv = curve_fit(objective, xs, ys)
     b, c = popt
@@ -126,7 +126,8 @@ def sim(run_file, filenames=[], input_lines=[]):
 
 def obj_func_run(x: [float]):
     sr, ht, theta_deg = x[0], x[1], x[2]
-    cs = 0.001 * 250
+    #cs = 0.001 * 250
+    cs = 0.001 * 125
     cell_size = 2 * sr + cs
     printing((sr, ht, cs, theta_deg))
 
@@ -210,11 +211,25 @@ def b(x: [float]): return get_values(x, "b-param")
 def c(x: [float]): return get_values(x, "c-param")
 def b_var(x: [float]): return get_values(x, "b_var")
 def c_var(x: [float]): return get_values(x, "c_var")
-def b_constraint(x: [float]): return 1 - get_values(x, "b-param")
-def c_constraint(x: [float]): return 15 - get_values(x, "c-param")
-def b_var_constraint(x: [float]): return 10 - get_values(x, "b_var")
 
-# Define the optimization problem
+# Double-sided constraints for b, c, b_var, and c_var parameters
+def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
+def b_upper_constraint(x: [float]): return 150 - get_values(x, "b-param")  # b-param should be <= 15
+
+def c_lower_constraint(x: [float]): return get_values(x, "c-param") - 1  # c-param should be >= 1
+def c_upper_constraint(x: [float]): return 1.5 - get_values(x, "c-param")  # c-param should be <= 1.5
+
+def b_var_lower_constraint(x: [float]): return get_values(x, "b_var") - 0  # b_var should be >= 0
+def b_var_upper_constraint(x: [float]): return 10 - get_values(x, "b_var")  # b_var should be <= 10
+
+# Double-sided constraints for the decision variables
+#def sr_lower_constraint(x: [float]): return x[0] - 0.001 * 5  # sr should be >= 0.001 * 5
+#def sr_upper_constraint(x: [float]): return 0.001 * 125 - x[0]  # sr should be <= 0.001 * 125
+
+#def ht_lower_constraint(x: [float]): return x[1] - 0.001 * 50  # ht should be >= 0.001 * 50
+#def ht_upper_constraint(x: [float]): return 0.001 * 100 - x[1]  # ht should be <= 0.001 * 100
+
+# Define the optimization problem with double-sided constraints
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
@@ -225,9 +240,16 @@ problem = (
     .add_function(b)
     .add_function(b_var)
     .add_function(c_var)
-    .add_constraint(b_constraint)
-    .add_constraint(c_constraint)
-    .add_constraint(b_var_constraint)
+    .add_constraint(b_lower_constraint)
+    .add_constraint(b_upper_constraint)
+    .add_constraint(c_lower_constraint)
+    .add_constraint(c_upper_constraint)
+    .add_constraint(b_var_lower_constraint)
+    .add_constraint(b_var_upper_constraint)
+    #.add_constraint(sr_lower_constraint)
+    #.add_constraint(sr_upper_constraint)
+    #.add_constraint(ht_lower_constraint)
+    #.add_constraint(ht_upper_constraint)
 )
 
 # Main execution
@@ -236,7 +258,9 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time", "step_count"])
 
-    max_evaluations = 640
+    #max_evaluations = 640
+    max_evaluations = 50
+
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
@@ -259,5 +283,3 @@ if __name__ == "__main__":
         printing(f'             Objectives={front[sol].objectives}')
 
     printing(f"Computing time: {algorithm.total_computing_time}")
-
-
