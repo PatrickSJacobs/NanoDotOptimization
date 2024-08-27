@@ -15,19 +15,20 @@ import os
 from scipy.optimize import curve_fit
 import statistics
 from scipy.signal import find_peaks
+import subprocess
 
 # File and directory paths
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")
-main_home_dir = "/home1/08809/tg881088/"
+main_home_dir = "/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/tg881088_home1/"
 folder_name = f"opt_{str(current_time)}"
 file_home_path = os.path.join(main_home_dir, f"{folder_name}_processed/")
-main_work_dir = "/work2/08809/tg881088/"
+main_work_dir = "/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/tg881088_work2/"
 file_work_path = os.path.join(main_work_dir, f"{folder_name}_raw/")
 progress_file = os.path.join(file_home_path, "progress.txt")
 
 # Make directories for the optimization files
-os.mkdir(file_home_path)
-os.mkdir(file_work_path)
+os.makedirs(file_home_path, exist_ok=True)
+os.makedirs(file_work_path, exist_ok=True)
 
 # Initialize progress file
 with open(progress_file, 'w') as file_naught:
@@ -96,31 +97,22 @@ def sim(run_file, filenames=[], input_lines=[]):
     air_sim_file = os.path.join(file_home_path, f"ag-dot-angle_{filenames[0]}")
     metal_sim_file = os.path.join(file_home_path, f"ag-dot-angle_{filenames[1]}")
 
-    sbatch_content = [
-        "#!/bin/bash\n",
-        "#SBATCH -J myMPI\n",
-        "#SBATCH -o myMPI.%j.o\n",
-        "#SBATCH -n 32\n",
-        "#SBATCH -N 1\n",
-        "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu\n",
-        "#SBATCH --mail-type=all\n",
-        "#SBATCH -p skx\n",
-        "#SBATCH -t 00:30:00\n",
-        'echo "SCRIPT $PE_HOSTFILE"\n',
-        "module load gcc/13.2.0\n",
-        "module load impi/21.11\n",
-        "module load python/3.9.18\n",
-        "source ~/.bashrc\n",
-        "conda activate ndo\n",
-        f"mpirun -np 32 python -m mpi4py {new_name} True | tee -a {air_sim_file}.out ; grep flux1: {air_sim_file}.out > {air_sim_file}.dat;\n",
-        f"mpirun -np 32 python -m mpi4py {new_name} False | tee -a {metal_sim_file}.out ; grep flux1: {metal_sim_file}.out > {metal_sim_file}.dat;\n",
-        "conda deactivate\n",
-        f"rm -r {ticker_file}\n",
-        f"echo 1 >> {ticker_file}\n",
+    # Assuming the variables new_name, air_sim_file, metal_sim_file, and ticker_file are already defined
+    commands = [
+        f"mpirun -np 4 python -m mpi4py {new_name} True | tee -a {air_sim_file}.out ; grep flux1: {air_sim_file}.out > {air_sim_file}.dat;",
+        f"mpirun -np 4 python -m mpi4py {new_name} False | tee -a {metal_sim_file}.out ; grep flux1: {metal_sim_file}.out > {metal_sim_file}.dat;",
+        f"rm -r {ticker_file}",
+        f"echo 1 >> {ticker_file}",
     ]
 
-    with open(sbatch_file, 'w') as file1:
-        file1.writelines(sbatch_content)
+    # Execute each command
+    for command in commands:
+        try:
+            result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
+            print("Output:", result.stdout)
+        except subprocess.CalledProcessError as e:
+            print("An error occurred:", e.stderr)
+
 
     time.sleep(15)
     os.system(f"ssh login1 sbatch {sbatch_file}")
@@ -243,7 +235,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=16,
+        population_size=1,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
