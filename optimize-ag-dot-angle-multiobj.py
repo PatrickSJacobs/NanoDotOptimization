@@ -248,7 +248,7 @@ def obj_func_run(x: [float]):
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p skx%s" % "\n",
+                      "#SBATCH -p icx%s" % "\n",
                       "#SBATCH -t 01:10:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
@@ -455,7 +455,7 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 4
+    max_evaluations = 2
 
     '''
 
@@ -475,7 +475,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=2,
+        population_size=1,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
