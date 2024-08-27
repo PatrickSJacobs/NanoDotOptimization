@@ -370,7 +370,7 @@ def obj_func_run(x: [float]):
             print(f"Error: {e}")
             print((air_data_path, metal_data_path, ticker_file0))
             time.sleep(1)
-            os.system(f"ssh login1 rm -r {ticker_file0} {air_raw_path} {air_data_path} {main_del0}* {home_del0}* {ticker_file1} {metal_raw_path} {metal_data_path} {main_del1}* {home_del1}*")
+            #os.system(f"ssh login1 rm -r {ticker_file0} {air_raw_path} {air_data_path} {main_del0}* {home_del0}* {ticker_file1} {metal_raw_path} {metal_data_path} {main_del1}* {home_del1}*")
             b, c, b_var, c_var = 0.001, 15, 10, 10
 
         # Logging of current data
@@ -384,14 +384,14 @@ def obj_func_run(x: [float]):
 
     # Deleting excess files
     time.sleep(10)
-    os.system(f"ssh login1 rm -r {ticker_file0} {air_raw_path} {air_data_path} {main_del0}* {home_del0}* {ticker_file1} {metal_raw_path} {metal_data_path} {main_del1}* {home_del1}*")
+    #os.system(f"ssh login1 rm -r {ticker_file0} {air_raw_path} {air_data_path} {main_del0}* {home_del0}* {ticker_file1} {metal_raw_path} {metal_data_path} {main_del1}* {home_del1}*")
 
     printing(f"finished deleting files; code: {metal_raw_path}")
 
     # Returning result and continuity of optimization
     
     sleep(10)
-    os.system("ssh login1 rm -r " +
+    '''os.system("ssh login1 rm -r " +
             ticker_file0 + " " +
             air_raw_path + " " +
             air_data_path + " " +
@@ -402,7 +402,7 @@ def obj_func_run(x: [float]):
             metal_data_path + " " +
             main_del1 + "* " +
             home_del1 + "* "
-            )
+            )'''
 
     printing(f"finished deleting files; code: {metal_raw_path}")
 
