@@ -198,7 +198,6 @@ def sim(filename="make_filename(sr, ht, cs, theta_deg)", input_lines=[]):
                       "#SBATCH -p skx%s" % "\n",
                      # "#SBATCH -t 01:10:00%s" % "\n",
                       "#SBATCH -t 02:20:00%s" % "\n",
-
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.9%s" % "\n",

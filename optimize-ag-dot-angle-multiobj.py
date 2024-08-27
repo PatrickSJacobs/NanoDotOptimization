@@ -255,11 +255,15 @@ def obj_func_run(x: [float]):
                       "module load impi/21.9%s" % "\n",
                       "module load meep/1.28%s" % "\n",
                       #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "mpirun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
+                      #"mpirun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s%;s" % (theta_deg, new_file, air_raw_path, "\n"),
+                      "meep no-metal?=true theta_deg=%s %s | tee %s%;s" % (theta_deg, new_file, air_raw_path, "\n"),
+
+                      "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
                       #"ibrun -np 4 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "mpirun -np 32 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
+                      #"mpirun -np 32 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      "meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+
+                      "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
 
