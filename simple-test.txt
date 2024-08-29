@@ -16,5 +16,5 @@ echo "PATH: $PATH"
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
 
-mpiexec -np 32 meep no-metal?=true theta_deg=0 ag-dot-angle.ctl | tee air-angle_t0.out
+mpiexec -np 1 meep no-metal?=true theta_deg=0 ag-dot-angle.ctl | tee air-angle_t0.out
 grep flux1: air-angle_t0.out > air-angle_t0.dat
