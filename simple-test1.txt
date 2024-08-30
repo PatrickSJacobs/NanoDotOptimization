@@ -12,5 +12,7 @@ module load gcc/13.2.0
 module load impi/21.11
 module load meep/1.28
 
-ibrun -np 32 meep no-metal=true theta_deg=0 sy=.5 ag-dot-angle0.ctl | tee air-angle_t0.out
-grep flux1: air-angle_t0.out > air-angle_t0.dat
+ibrun -np 32 meep no-metal=true theta_deg=0.0 sy=0.4 ag-dot-angle0.ctl | tee air.out;
+grep flux1: air.out > air.dat;
+ibrun -np 32 meep no-metal=false sr=0.04 ht=0.050 sy=0.4 theta_deg=0.0 ag-dot-angle0.ctl | tee metal.out;
+grep flux1: metal.out > metal.dat;
