@@ -178,7 +178,7 @@ def obj_func_run(x: [float]):
     filename = make_filename(sr, ht, cs, theta_deg)
 
     #Creating Scheme executable for current optimization; ag-dot-angle0.ctl cannot be used simultaneously with multiple workers)
-    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle.ctl", 'r')
+    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
     lines = executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
@@ -191,41 +191,6 @@ def obj_func_run(x: [float]):
     file2 = open(ticker_file, 'w')
     file2.write("0")
     file2.close()
-
-    # Creation of optimization "subjob" file
-    '''
-    air_file = "%sair-angle_%s" % (file_home_path, filename)
-    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
-
-    air_raw_path = air_file + ".out"
-    metal_raw_path = metal_file + ".out"
-    air_data_path = air_file + ".dat"
-    metal_data_path = metal_file + ".dat"
-    #cell_size = 2*(sr + cs)
-    cell_size = 2*sr + cs
-
-    command_list = ["mpirun -np 64 meep no-metal?=true theta_deg=%s sy=%s %s | tee %s%s" % (
-                      theta_deg, cell_size, new_file, air_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (air_raw_path, air_data_path, "\n"),
-                      "mpirun -np 64 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (
-                      sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")]
-
-    for command in command_list:
-        print(command)
-
-    raise Exception
-
-    for command in command_list:
-
-        sleep(1)# Pause to give time for optimization file to be created
-        os.system(command)# Execute the optimization commands
-        print(command)
-
-    success = 0
-    '''
 
     # Creation of simulation "subjob" file
     sbatch_file = file_home_path + "/" + str(filename) + ".txt"
@@ -248,28 +213,32 @@ def obj_func_run(x: [float]):
                       "#SBATCH -N 1%s" % "\n",
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p icx%s" % "\n",
-                      "#SBATCH -t 00:20:00%s" % "\n",
+                      "#SBATCH -p skx%s" % "\n",
+                      "#SBATCH -t 01:00:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
-                      #"module load mvapich/3.0%s" % "\n", 
                       "module load meep/1.28%s" % "\n",
+                      #"echo new_file: %s %s" % (new_file, "\n"),
+                      #"echo air_raw_path: %s %s" % (air_raw_path, "\n"),
+                      #"echo air_data_path: %s %s" % (air_data_path, "\n"),
+                      #"echo metal_raw_path: %s %s" % (metal_raw_path, "\n"),
+                      #"echo metal_data_path: %s %s" % (metal_data_path, "\n"),
+                      #"echo ticker_file: %s %s" % (ticker_file, "\n"),
                       #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "mpirun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
+                      "ibrun -np 32 meep no-metal?=true sy=%s theta_deg=%s %s | tee %s;%s" % (cell_size, theta_deg, new_file, air_raw_path, "\n"),
                       #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
-
                       "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
                       #"ibrun -np 4 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "mpirun -np 32 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      "mpirun -np 32 meep no-metal?=false sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-
                       "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
 
                       ])
     
+
     file1.close()
 
     sleep(15)  # Pause to give time for simulation file to be created
@@ -460,7 +429,7 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 2
+    max_evaluations = 640
 
     '''
 
@@ -480,7 +449,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=1,
+        population_size=16,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
