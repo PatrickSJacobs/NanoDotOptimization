@@ -298,7 +298,10 @@ def obj_func_run(x: [float]):
 
         # Get wavelengths and reflectance data
         wvls = df[1] * 0.32
-        R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
+        print(df[3])
+        print(df0[3])
+
+        R_meep = [np.abs(- float(r) / float(r0)) for r, r0 in zip(df[3], df0[3])]
 
         wvls = wvls[: len(wvls) - 2]
         R_meep = R_meep[: len(R_meep) - 2]
