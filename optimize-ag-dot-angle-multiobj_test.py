@@ -219,6 +219,13 @@ def obj_func_run(x: [float]):
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
+                      "echo new_file: %s %s" % (new_file, "\n"),
+                      "echo air_raw_path: %s %s" % (air_raw_path, "\n"),
+                      "echo air_data_path: %s %s" % (air_data_path, "\n"),
+                      "echo metal_raw_path: %s %s" % (metal_raw_path, "\n"),
+                      "echo metal_data_path: %s %s" % (metal_data_path, "\n"),
+                      "echo ticker_file: %s %s" % (ticker_file, "\n"),
+
                       #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
                       "ibrun -np 32 meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
                       #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
