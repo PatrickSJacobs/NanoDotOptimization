@@ -227,7 +227,7 @@ def obj_func_run(x: [float]):
                       "echo ticker_file: %s %s" % (ticker_file, "\n"),
 
                       #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "ibrun -np 32 meep no-metal?=true sr=%s theta_deg=%s %s | tee %s;%s" % (sr, theta_deg, new_file, air_raw_path, "\n"),
+                      "ibrun -np 32 meep no-metal?=true sy=%s theta_deg=%s %s | tee %s;%s" % (cell_size, theta_deg, new_file, air_raw_path, "\n"),
                       #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
 
                       "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
