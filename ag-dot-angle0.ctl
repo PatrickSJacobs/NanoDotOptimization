@@ -94,7 +94,7 @@
 
 (set! k-point (vector3 0 0 0))
 (set! geometry
-      (if no-metal
+      (if no-metal?
           (list
            (make block
 		(center 0 0 0)	      
@@ -157,7 +157,7 @@
 (define-param nfreq 400) ; number of frequencies at which to compute flux             
 (define trans ; transmitted flux                                                
       (add-flux fcen df nfreq
-                (if no-metal
+                (if no-metal?
 		  
                     (make flux-region
                      (center (- (/ sx 2) (+ dpml 0.1)) 0 0) (size 0 sy sz) )
@@ -172,7 +172,7 @@
                    (center (+ (/ sx -2) (+ dpml sy)) 0 0) (size 0 sy sz))))
 
 
-(if (not no-metal) (load-minus-flux "refl-flux" refl))
+(if (not no-metal?) (load-minus-flux "refl-flux" refl))
 
 (run-sources+ 500
  
@@ -181,6 +181,6 @@
 
 )
 
-(if no-metal (save-flux "refl-flux" refl))
+(if no-metal? (save-flux "refl-flux" refl))
 
 (display-fluxes trans  refl )
