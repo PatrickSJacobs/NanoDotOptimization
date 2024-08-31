@@ -390,10 +390,8 @@ def c_var(x: [float]):
 
     return get_values(x, "c_var")
 
-
-def b_constraint(x: [float]):
-
-    return 1 - get_values(x, "b-param")
+def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
+def b_upper_constraint(x: [float]): return 60 - get_values(x, "b-param")  # b-param should be <= 15
 
 '''
 def c_constraint(x: [float]):
@@ -420,7 +418,8 @@ problem = (
     .add_function(b)
     .add_function(b_var)
     .add_function(c_var)
-    .add_constraint(b_constraint)
+    .add_constraint(b_lower_constraint)
+    .add_constraint(b_upper_constraint)
     #.add_constraint(c_constraint)
     .add_constraint(b_var_constraint)
 )
@@ -432,7 +431,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 640
+    #max_evaluations = 640
+    max_evaluations = 32
 
     '''
 
