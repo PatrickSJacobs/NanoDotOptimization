@@ -395,11 +395,11 @@ def b_constraint(x: [float]):
 
     return 1 - get_values(x, "b-param")
 
-
+'''
 def c_constraint(x: [float]):
 
     return 15 - get_values(x, "c-param")
-
+'''
 
 def b_var_constraint(x: [float]):
 
