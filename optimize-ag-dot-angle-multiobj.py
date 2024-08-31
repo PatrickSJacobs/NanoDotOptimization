@@ -421,7 +421,7 @@ problem = (
     .add_function(b_var)
     .add_function(c_var)
     .add_constraint(b_constraint)
-    .add_constraint(c_constraint)
+    #.add_constraint(c_constraint)
     .add_constraint(b_var_constraint)
 )
 
