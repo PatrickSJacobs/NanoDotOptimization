@@ -129,7 +129,7 @@ def obj_func_calc(wvls, R_meep):
 
     # print(tsr)
 
-    q = 10000
+    q = 1000
 
     # 1/(1 + (q/b*(x - a))^2)/c == 1/(pc)
 
@@ -151,7 +151,7 @@ def obj_func_calc(wvls, R_meep):
 
     printing("finished obj_eval")
 
-    return b, c**2 * 100 - 100, b_var * 100, c_var * 100
+    return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
 
 def obj_func_run(x: [float]):
