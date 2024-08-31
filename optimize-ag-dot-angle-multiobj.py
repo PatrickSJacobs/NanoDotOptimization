@@ -431,8 +431,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    #max_evaluations = 640
-    max_evaluations = 32
+    max_evaluations = 640
+    #max_evaluations = 32
 
     '''
 
