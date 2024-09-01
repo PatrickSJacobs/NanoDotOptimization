@@ -304,12 +304,11 @@ def obj_func_run(x: [float]):
             try:
                 wvls += [float(wvl) * 0.32]
                 R_meep += [np.abs(- float(r) / float(r0))]
-                print("data works!")
-           
+                
             except:
                 pass
             
-        
+        print("data works!")
         sys.exit("data works!")
            
 
