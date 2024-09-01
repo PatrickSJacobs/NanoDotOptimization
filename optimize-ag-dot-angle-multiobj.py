@@ -297,11 +297,22 @@ def obj_func_run(x: [float]):
         printing("success df")
 
         # Get wavelengths and reflectance data
-        wvls = df[1] * 0.32
-        print(df[3])
-        print(df0[3])
+        wvls = []
+        R_meep = []
+        
+        for r, r0, wvl in zip(df[3], df0[3], df[1]):
+            try:
+                wvls += [float(wvl) * 0.32]
+                R_meep += [np.abs(- float(r) / float(r0))]
+            except:
+                pass
+            
+        
+        sys.exit("data works!")
+           
 
-        R_meep = [np.abs(- float(r) / float(r0)) for r, r0 in zip(df[3], df0[3])]
+        #print(df[3])
+        #print(df0[3])
 
         wvls = wvls[: len(wvls) - 2]
         R_meep = R_meep[: len(R_meep) - 2]
@@ -431,8 +442,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 640
-    #max_evaluations = 32
+    #max_evaluations = 640
+    max_evaluations = 1
 
     '''
 
@@ -452,7 +463,8 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=16,
+        #population_size=16,
+        population_size=1,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
