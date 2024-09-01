@@ -311,10 +311,7 @@ def obj_func_run(x: [float]):
         wvls = wvls[: len(wvls) - 2]
         R_meep = R_meep[: len(R_meep) - 2]
 
-        print(wvls)
-        print(R_meep)
-        print("data works!")
-        sys.exit("data works!")
+        
         log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
         step_count = int(len(log_obj_exe))
 
@@ -440,8 +437,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    #max_evaluations = 640
-    max_evaluations = 1
+    max_evaluations = 640
+    #max_evaluations = 1
 
     '''
 
@@ -461,8 +458,8 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        #population_size=16,
-        population_size=1,
+        population_size=16,
+        #population_size=1,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
