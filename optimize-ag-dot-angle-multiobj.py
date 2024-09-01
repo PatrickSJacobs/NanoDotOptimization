@@ -302,8 +302,9 @@ def obj_func_run(x: [float]):
         
         for r, r0, wvl in zip(df[3], df0[3], df[1]):
             try:
+                ration = np.abs(- float(r) / float(r0))
+                R_meep += [ration]
                 wvls += [float(wvl) * 0.32]
-                R_meep += [np.abs(- float(r) / float(r0))]
                 
             except:
                 pass
@@ -440,7 +441,7 @@ if __name__ == "__main__":
         file.close()
 
     #max_evaluations = 640
-    max_evaluations = 16
+    max_evaluations = 5
 
     '''
 
