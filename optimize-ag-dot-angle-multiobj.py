@@ -307,17 +307,14 @@ def obj_func_run(x: [float]):
                 
             except:
                 pass
-            
-        #print("data works!")
-        #sys.exit("data works!")
-           
-
-        #print(df[3])
-        #print(df0[3])
 
         wvls = wvls[: len(wvls) - 2]
         R_meep = R_meep[: len(R_meep) - 2]
 
+        print(wvls)
+        print(R_meep)
+        print("data works!")
+        sys.exit("data works!")
         log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
         step_count = int(len(log_obj_exe))
 
