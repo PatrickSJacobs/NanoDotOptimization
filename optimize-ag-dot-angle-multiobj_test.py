@@ -24,6 +24,8 @@ from scipy.optimize import curve_fit
 import statistics
 from scipy.signal import find_peaks
 import sys
+import traceback
+
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
@@ -219,29 +221,25 @@ def obj_func_run(x: [float]):
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
-                      "echo new_file: %s %s" % (new_file, "\n"),
-                      "echo air_raw_path: %s %s" % (air_raw_path, "\n"),
-                      "echo air_data_path: %s %s" % (air_data_path, "\n"),
-                      "echo metal_raw_path: %s %s" % (metal_raw_path, "\n"),
-                      "echo metal_data_path: %s %s" % (metal_data_path, "\n"),
-                      "echo ticker_file: %s %s" % (ticker_file, "\n"),
-
+                      #"echo new_file: %s %s" % (new_file, "\n"),
+                      #"echo air_raw_path: %s %s" % (air_raw_path, "\n"),
+                      #"echo air_data_path: %s %s" % (air_data_path, "\n"),
+                      #"echo metal_raw_path: %s %s" % (metal_raw_path, "\n"),
+                      #"echo metal_data_path: %s %s" % (metal_data_path, "\n"),
+                      #"echo ticker_file: %s %s" % (ticker_file, "\n"),
                       #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
                       "ibrun -np 32 meep no-metal?=true sy=%s theta_deg=%s %s | tee %s;%s" % (cell_size, theta_deg, new_file, air_raw_path, "\n"),
                       #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
-
                       "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
                       #"ibrun -np 4 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       "mpirun -np 32 meep no-metal?=false sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-
                       "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
 
                       ])
     
-
     file1.close()
 
     sleep(15)  # Pause to give time for simulation file to be created
@@ -256,20 +254,20 @@ def obj_func_run(x: [float]):
     while success == 0:
         try:
             a = open(ticker_file, "r").read()
-            if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
-                a = int(a)
-                if a == 1:
-                    printing(f"files pass:{(air_data_path, metal_data_path)}")
-                    success = 1
+            a = int(a)
+            if a == 1:
+                printing(f"files pass:{(air_data_path, metal_data_path)}")
+                success = 1   
         except:
-            if time_count == max_time:
+            pass
+        
+        if time_count == max_time:
                 raise Exception(f"ticker not existing: {ticker_file}")
-            else:
-                pass
 
         time_count = time_count + 1
         time.sleep(1)
 
+    b, c, b_var, c_var = 1E6, 1E6, 1E6, 1E6
     # Check if data is good and data file exists, if not error
     if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
         df = None
@@ -277,62 +275,66 @@ def obj_func_run(x: [float]):
         try:
             df = pd.read_csv(metal_data_path, header=None)
             df0 = pd.read_csv(air_data_path, header=None)
-        except:
-            raise Exception((air_data_path, metal_data_path, ticker_file))
+        
+            printing("success df")
+
+            # Get wavelengths and reflectance data
+            wvls = []
+            R_meep = []
+            
+            for r, r0, wvl in zip(df[3], df0[3], df[1]):
+                try:
+                    ration = np.abs(- float(r) / float(r0))
+                    R_meep += [ration]
+                    wvls += [float(wvl) * 0.32]
+                    
+                except:
+                    pass
+
+            wvls = wvls[: len(wvls) - 2]
+            R_meep = R_meep[: len(R_meep) - 2]
+
+            print(wvls)
+            print(R_meep)
+            
+            log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
+            step_count = int(len(log_obj_exe))
+
+            with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(["wvl", "refl"])
+                for (wvl, refl) in zip(wvls, R_meep):
+                    writer.writerow([wvl, refl])
+            printing("passed to obj")
+            # (5) Sending Data Through Objective function
+
+            b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
+
+            printing("came out of obj")
+
+            #execution_dictionary[filename] = {"b": b, "c": c, "b_var": b_var, "c_var": c_var}
+            
+        except Exception as e:
+            print("An error occurred:")
+            print(f"air_data_path: {air_data_path}")
+            print(f"metal_data_path: {metal_data_path}")
+            print(f"ticker_file: {ticker_file}")
+            print(f"air_raw_path: {air_raw_path}")
+            print(f"metal_raw_path: {metal_raw_path}")
+            print(f"new_file: {new_file}")
+            traceback.print_exc()
             sys.exit()
 
-            sleep(10)
-            os.system("ssh login1 rm -r " +
-                      ticker_file + " " +
-                      air_raw_path + " " +
-                      metal_raw_path + " " +
-                      metal_data_path + " " +
-                      air_data_path + " " +
-                      new_file + " " +
-                      main_home_dir + "ag-dot-angle" + code + "* " +
-                      file_home_path + "ag-dot-angle" + code + "* ")
-
-            printing(f"finished deleting files; code: {code}")
-            sleep(10)
-            printing("recursion")
-            return float(obj_func_run(sr, ht, cs, theta_deg))
-
-        printing("success df")
-
-        # Get wavelengths and reflectance data
-        wvls = df[1] * 0.32
-        R_meep = [np.abs(- r / r0) for r, r0 in zip(df[3], df0[3])]
-
-        wvls = wvls[: len(wvls) - 2]
-        R_meep = R_meep[: len(R_meep) - 2]
-
-        log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
-        step_count = int(len(log_obj_exe))
-
-        with open(file_work_path + "calc_log_data_step_%s_%s.csv" % (step_count, filename), 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["wvl", "refl"])
-            for (wvl, refl) in zip(wvls, R_meep):
-                writer.writerow([wvl, refl])
-        printing("passed to obj")
-        # (5) Sending Data Through Objective function
-
-        b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
-
-        printing("came out of obj")
-
-        # (7) Logging of Current Data
-        with open(file_home_path + "calc_log_obj.csv", 'a') as file:
-            writer = csv.writer(file)
-            writer.writerow([filename, sr, ht, cs, theta_deg, b, c, b_var, c_var, datetime.now().strftime("%m_%d_%Y__%H_%M_%S"), step_count])
-            file.close()
-
-        #execution_dictionary[filename] = {"b": b, "c": c, "b_var": b_var, "c_var": c_var}
-
     else:
-        printing(f"({metal_data_path}): It isn't a file!")
-        raise ValueError(f"({metal_data_path}): It isn't a file!")
-
+        printing(f"({metal_data_path}): It isn't a file! Error in variables {x} ")
+        #raise ValueError(f"({metal_data_path}): It isn't a file!")
+   
+    # (7) Logging of Current Data
+    with open(file_home_path + "calc_log_obj.csv", 'a') as file:
+        writer = csv.writer(file)
+        writer.writerow([filename, sr, ht, cs, theta_deg, b, c, b_var, c_var, datetime.now().strftime("%m_%d_%Y__%H_%M_%S"), step_count])
+        file.close()
+        
     # (8) Deleting Excess Files
     sleep(10)
     os.system("ssh login1 rm -r " +
@@ -369,7 +371,6 @@ def get_values(x: [float], param: str):
         return log_answer[0]
     else:
         obj_func_run(x)
-        sleep(5)
         return check_log(filename, param)[0]
 
 def b(x: [float]):
@@ -390,16 +391,14 @@ def c_var(x: [float]):
 
     return get_values(x, "c_var")
 
+def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
+def b_upper_constraint(x: [float]): return 60 - get_values(x, "b-param")  # b-param should be <= 15
 
-def b_constraint(x: [float]):
-
-    return 1 - get_values(x, "b-param")
-
-
+'''
 def c_constraint(x: [float]):
 
     return 15 - get_values(x, "c-param")
-
+'''
 
 def b_var_constraint(x: [float]):
 
@@ -420,8 +419,9 @@ problem = (
     .add_function(b)
     .add_function(b_var)
     .add_function(c_var)
-    .add_constraint(b_constraint)
-    .add_constraint(c_constraint)
+    .add_constraint(b_lower_constraint)
+    .add_constraint(b_upper_constraint)
+    #.add_constraint(c_constraint)
     .add_constraint(b_var_constraint)
 )
 
@@ -432,7 +432,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 20
+    #max_evaluations = 640
+    max_evaluations = 1
 
     '''
 
@@ -452,7 +453,8 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        population_size=16,
+        #population_size=16,
+        population_size=1,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
@@ -461,9 +463,7 @@ if __name__ == "__main__":
 
 
     algorithm.run()
-    solutions = algorithm.get_result()
     front = algorithm.get_result()
-    #front = get_non_dominated_solutions(solutions)
 
     for sol in range(len(front)):
         vars = front[sol].variables

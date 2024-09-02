@@ -1,16 +1,16 @@
 #!/bin/bash
 #SBATCH -J myMPI               # Job Name
 #SBATCH -o myMPI.o%j	       # Name of the output file (eg. myMPI.oJobID)
-#SBATCH -n 32                 # Requests total number of MPI tasks 96
+#SBATCH -n 32                # Requests total number of MPI tasks 96
 #SBATCH -N 1
 #SBATCH --mail-user=pjacobs7@eagles.nccu.edu
 #SBATCH --mail-type=all
 #SBATCH -p skx              # Queue name
-#SBATCH -t 00:30:00           # Run time (hh:mm:ss) - 20 hours
+#SBATCH -t 01:00:00           # Run time (hh:mm:ss) - 20 hours
 echo "SCRIPT $PE_HOSTFILE"
 
 source ~/.bashrc
 conda activate ndo
 
-mpirun -np 32 python -m mpi4py /home1/08809/tg881088/NanoDotOptimization/test.py True | tee -a air.out ; grep flux1: air.out > air.dat;
-mpirun -np 32 python -m mpi4py /home1/08809/tg881088/NanoDotOptimization/test.py False | tee -a metal.out ; grep flux1: metal.out > metal.dat;
+python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj.py
+
