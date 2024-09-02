@@ -167,10 +167,10 @@ def obj_func_run(x: [float]):
     """
     sr = x[0]
     ht = x[1]
-    #cs = x[2]
-    #theta_deg = x[3]
-    cs = 0.001 * 250
-    theta_deg = x[2]
+    cs = x[2]
+    theta_deg = x[3]
+    #cs = 0.001 * 250
+    #theta_deg = x[2]
 
     sleep(10)# Sleep to give code time to process parallelization
 
@@ -357,10 +357,10 @@ def get_values(x: [float], param: str):
 
     sr = x[0]
     ht = x[1]
-    #cs = x[2]
-    cs = 0.001 * 250
-    #theta_deg = x[3]
-    theta_deg = x[2]
+    cs = x[2]
+    #cs = 0.001 * 250
+    theta_deg = x[3]
+    #theta_deg = x[2]
 
 
     filename = make_filename(sr, ht, cs, theta_deg)
@@ -412,7 +412,7 @@ problem = (
     .set_name("Testing")
     .add_variable(0.001 * 5, 0.001 * 125)
     .add_variable(0.001 * 50, 0.001 * 100)
-    #.add_variable(0.001 * 25, 0.001 * 250)
+    .add_variable(0.001 * 25, 0.001 * 250)
     #.add_variable(0.001 * 25, 1.0)
     .add_variable(0.0, 0.0)
     .add_function(c)
@@ -433,7 +433,7 @@ if __name__ == "__main__":
         file.close()
 
     #max_evaluations = 640
-    max_evaluations = 1
+    max_evaluations = 5
 
     '''
 
@@ -454,7 +454,7 @@ if __name__ == "__main__":
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
         #population_size=16,
-        population_size=1,
+        population_size=5,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
