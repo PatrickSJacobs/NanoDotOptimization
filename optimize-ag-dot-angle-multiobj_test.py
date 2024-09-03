@@ -413,8 +413,8 @@ problem = (
     .add_variable(0.001 * 5, 0.001 * 125)
     .add_variable(0.001 * 50, 0.001 * 100)
     .add_variable(0.001 * 25, 0.001 * 250)
-    #.add_variable(0.001 * 25, 1.0)
     .add_variable(0.0, 0.0)
+    #.add_variable(0.0, 90.0)
     .add_function(c)
     .add_function(b)
     .add_function(b_var)
@@ -432,8 +432,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    #max_evaluations = 640
-    max_evaluations = 5
+    max_evaluations = 640
+    #max_evaluations = 5
 
     '''
 
@@ -453,8 +453,8 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        #population_size=16,
-        population_size=5,
+        population_size=16,
+        #population_size=5,
         cr=0.9,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
