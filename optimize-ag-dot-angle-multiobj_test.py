@@ -118,11 +118,14 @@ def obj_func_calc(wvls, R_meep):
 
         ys_fixed = [ys[i] for i in index_list]
 
-        L = []
-        for (wvl, freq) in zip([xs[i] for i in index_list], np.ceil(np.array(ys_fixed) / np.min(ys_fixed))):
-            L += [wvl for i in range(int(freq))]
-
-        maxi = statistics.mean(L)
+        # Use a cumulative sum instead of creating a large list
+        weighted_sum = sum(wvl * freq for wvl, freq in zip([xs[i] for i in index_list], np.ceil(np.array(ys_fixed) / np.min(ys_fixed))))
+        total_freq = sum(np.ceil(np.array(ys_fixed) / np.min(ys_fixed)))
+        
+        if total_freq > 0:
+            maxi = weighted_sum / total_freq
+        else:
+            maxi = xs[ys.index(mam)]
 
     else:
         maxi = xs[ys.index(mam)]
@@ -294,8 +297,8 @@ def obj_func_run(x: [float]):
             wvls = wvls[: len(wvls) - 2]
             R_meep = R_meep[: len(R_meep) - 2]
 
-            print(wvls)
-            print(R_meep)
+            #print(wvls)
+            #print(R_meep)
             
             log_obj_exe = open(file_home_path + "calc_log_obj.csv", 'r').readlines()
             step_count = int(len(log_obj_exe))
@@ -391,8 +394,12 @@ def c_var(x: [float]):
 
     return get_values(x, "c_var")
 
+def c_constraint(x: [float]):
+
+    return 5 - get_values(x, "c_var")
+
 def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
-def b_upper_constraint(x: [float]): return 60 - get_values(x, "b-param")  # b-param should be <= 15
+def b_upper_constraint(x: [float]): return 50 - get_values(x, "b-param")  # b-param should be <= 60
 
 '''
 def c_constraint(x: [float]):
