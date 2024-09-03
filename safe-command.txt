@@ -1,0 +1,1 @@
+scancel -u tg881088 && rm -r -f myMPI.* NanoDotOptimization/ ag-dot* && git clone https://github.com/PatrickSJacobs/NanoDotOptimization.git && cd NanoDotOptimization/ && sbatch test.txt && cd ..
