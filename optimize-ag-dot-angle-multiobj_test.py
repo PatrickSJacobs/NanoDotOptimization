@@ -251,7 +251,7 @@ def obj_func_run(x: [float]):
     success = 0
 
     #(4) Extracting Data From optimization
-    max_time = (70*60)
+    max_time = (100*60)
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success == 0:
@@ -428,7 +428,7 @@ problem = (
     .add_function(c_var)
     .add_constraint(b_lower_constraint)
     .add_constraint(b_upper_constraint)
-    #.add_constraint(c_constraint)
+    .add_constraint(c_constraint)
     .add_constraint(b_var_constraint)
 )
 
