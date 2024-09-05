@@ -251,7 +251,7 @@ def obj_func_run(x: [float]):
     success = 0
 
     #(4) Extracting Data From optimization
-    max_time = (100*60)
+    max_time = (100*100)
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success == 0:
@@ -394,9 +394,10 @@ def c_var(x: [float]):
 
     return get_values(x, "c_var")
 
+
 def c_constraint(x: [float]):
 
-    return 5 - get_values(x, "c_var")
+    return 5 - get_values(x, "c-param")
 
 def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
 def b_upper_constraint(x: [float]): return 50 - get_values(x, "b-param")  # b-param should be <= 60
@@ -439,7 +440,7 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 640
+    max_evaluations = 64
     #max_evaluations = 5
 
     '''
@@ -462,7 +463,7 @@ if __name__ == "__main__":
         problem=problem,
         population_size=16,
         #population_size=5,
-        cr=0.9,
+        cr=0.5,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
         dominance_comparator=DominanceComparator(),
