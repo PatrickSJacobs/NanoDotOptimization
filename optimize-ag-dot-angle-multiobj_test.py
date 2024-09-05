@@ -147,6 +147,8 @@ def obj_func_run(x: [float]):
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
                       "module load meep/1.28%s" % "\n",
+                      "source ~/.bashrc%s" % "\n",
+                      "conda activate ndo%s" % "\n",
                       #"echo new_file: %s %s" % (new_file, "\n"),
                       #"echo air_raw_path: %s %s" % (air_raw_path, "\n"),
                       #"echo air_data_path: %s %s" % (air_data_path, "\n"),
