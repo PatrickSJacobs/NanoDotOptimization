@@ -164,9 +164,10 @@ def obj_func_run(x: [float]):
                       #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
                       "echo %s;%s" % (info, "\n"),
-                      #"python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info, "\n"),
-                      #"rm -r %s %s" % (ticker_file, "\n"),
-                      #"echo 1 >> %s %s" % (ticker_file, "\n")
+                      "wait;%s" % ("\n"),
+                      "python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info, "\n"),
+                      "rm -r %s %s" % (ticker_file, "\n"),
+                      "echo 1 >> %s %s" % (ticker_file, "\n")
 
                       ])
     
