@@ -142,7 +142,8 @@ while success == 0:
             printing(f"files pass:{(air_data_path, metal_data_path)}")
             success = 1   
     except:
-        pass
+        print(metal_data_path)
+        print(air_data_path)
     
     if time_count == max_time:
             raise Exception(f"files not existing: {(air_data_path, metal_data_path)}")
