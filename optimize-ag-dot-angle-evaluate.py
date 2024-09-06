@@ -128,6 +128,7 @@ def obj_func_calc(wvls, R_meep):
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
+sleep(30)
 b, c, b_var, c_var = 1E6, 1E6, 1E6, 1E6
 # Check if data is good and data file exists, if not error
 if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
