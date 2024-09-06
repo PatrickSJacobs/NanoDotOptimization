@@ -304,7 +304,7 @@ if __name__ == "__main__":
         file.close()
 
     #max_evaluations = 64
-    max_evaluations = 5
+    max_evaluations = 1
 
     '''
 
@@ -325,7 +325,7 @@ if __name__ == "__main__":
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
         #population_size=16,
-        population_size=5,
+        population_size=1,
         cr=0.5,
         f=0.8,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
