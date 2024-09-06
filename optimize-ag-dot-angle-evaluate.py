@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 import sys
 import traceback
+import time
 info = sys.argv[1]
 #no_metal = True
 
@@ -128,7 +129,27 @@ def obj_func_calc(wvls, R_meep):
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
-sleep(30)
+success = 0
+
+#(4) Extracting Data From optimization
+max_time = (60*60)
+
+time_count = 0
+# Wait for data to be stable and ready for processing
+while success == 0:
+    try:
+        if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
+            printing(f"files pass:{(air_data_path, metal_data_path)}")
+            success = 1   
+    except:
+        pass
+    
+    if time_count == max_time:
+            raise Exception(f"files not existing: {(air_data_path, metal_data_path)}")
+
+    time_count = time_count + 1
+    time.sleep(1)
+        
 b, c, b_var, c_var = 1E6, 1E6, 1E6, 1E6
 # Check if data is good and data file exists, if not error
 if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
