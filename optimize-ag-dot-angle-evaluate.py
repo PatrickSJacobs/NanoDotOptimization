@@ -29,6 +29,12 @@ ht = info[10]
 cs = info[11]
 theta_deg = info[12] 
 
+os.system("echo 'now for file input';%s" % ("\n"),)  # Execute the simulation file
+
+os.system("echo %s;%s" % (info, "\n"),)  # Execute the simulation file
+
+
+
 def printing(string):
     file_printout = open(progress_file, 'r').readlines()
     lines = file_printout + [f"{str(string)}\n"]
