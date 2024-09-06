@@ -142,7 +142,7 @@ def obj_func_run(x: [float]):
                       "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
                       "#SBATCH --mail-type=all%s" % "\n",
                       "#SBATCH -p skx%s" % "\n",
-                      "#SBATCH -t 01:00:00%s" % "\n",
+                      "#SBATCH -t 01:20:00%s" % "\n",
                       'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
                       "module load gcc/13.2.0%s" % "\n",
                       "module load impi/21.11%s" % "\n",
@@ -163,9 +163,10 @@ def obj_func_run(x: [float]):
                       "mpirun -np 32 meep no-metal?=false sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")
+                      "echo %s;%s" % (info, "\n"),
+                      #"python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info, "\n"),
+                      #"rm -r %s %s" % (ticker_file, "\n"),
+                      #"echo 1 >> %s %s" % (ticker_file, "\n")
 
                       ])
     
@@ -177,7 +178,10 @@ def obj_func_run(x: [float]):
     success = 0
 
     #(4) Extracting Data From optimization
-    max_time = (100*100)
+    #max_time = (100*100)
+    max_time = (50)
+    sys.exit("stopped!!!")
+
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success == 0:
