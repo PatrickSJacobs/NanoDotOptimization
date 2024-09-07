@@ -10,10 +10,12 @@ from scipy.signal import find_peaks
 import sys
 import traceback
 import time
-info = sys.argv[1]
-#no_metal = True
 
+info_file = sys.argv[1]
+#no_metal = True
 #execution_dictionary = {}
+
+info = [line.strip() for line in open(info_file, "r")]
 
 progress_file = info[0]
 air_data_path = info[1]
@@ -30,6 +32,7 @@ cs = info[11]
 theta_deg = info[12] 
 
 os.system("echo 'now for file input';%s" % ("\n"))  # Execute the simulation file
+os.system("echo %s" % (sys.argv))  # Execute the simulation file
 
 os.system("echo %s" % (air_data_path))  # Execute the simulation file
 os.system("echo %s" % (metal_data_path))  # Execute the simulation file
@@ -136,6 +139,7 @@ def obj_func_calc(wvls, R_meep):
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
+'''
 success = 0
 
 #(4) Extracting Data From optimization
@@ -157,7 +161,8 @@ while success == 0:
 
     time_count = time_count + 1
     time.sleep(1)
-        
+'''     
+
 b, c, b_var, c_var = 1E6, 1E6, 1E6, 1E6
 # Check if data is good and data file exists, if not error
 if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):

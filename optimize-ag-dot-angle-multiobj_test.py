@@ -94,7 +94,8 @@ def obj_func_run(x: [float]):
     executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
     lines = executable.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    new_file = file_home_path + "ag-dot-angle" + code + ".ctl"
+    new_name = file_home_path + "ag-dot-angle" + code
+    new_file = new_name + ".ctl"
     file0 = open(new_file, 'w')
     file0.writelines(lines)
     file0.close()
@@ -118,8 +119,12 @@ def obj_func_run(x: [float]):
     metal_data_path = metal_file + ".dat"
     # cell_size = 2*(sr + cs)
     cell_size = 2 * sr + cs
+    
+    info_file = new_name + ".txt"
 
-    info = [progress_file, 
+    with open(info_file, "w") as f:
+        for item in [
+            progress_file, 
             air_data_path, 
             metal_data_path, 
             file_home_path, 
@@ -131,8 +136,9 @@ def obj_func_run(x: [float]):
             sr, 
             ht, 
             cs, 
-            theta_deg]
-    
+            theta_deg
+                    ]:
+            f.write(f"{item}\n")
 
     file1.writelines(["#!/bin/bash%s" % "\n",
                       "#SBATCH -J myMPI%s" % "\n",
@@ -163,9 +169,9 @@ def obj_func_run(x: [float]):
                       "mpirun -np 32 meep no-metal?=false sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
                       "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "echo %s;%s" % (info, "\n"),
-                      "wait;%s" % ("\n"),
-                      "python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info, "\n"),
+                      "echo %s;%s" % (info_file, "\n"),
+                      #"wait;%s" % ("\n"),
+                      "python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info_file, "\n"),
                       "rm -r %s %s" % (ticker_file, "\n"),
                       "echo 1 >> %s %s" % (ticker_file, "\n")
 
