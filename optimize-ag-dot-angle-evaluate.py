@@ -32,7 +32,7 @@ cs = info[11]
 theta_deg = info[12] 
 
 os.system("echo 'now for file input';%s" % ("\n"))  # Execute the simulation file
-os.system("echo %s" % (sys.argv))  # Execute the simulation file
+os.system("echo %s" % (info))  # Execute the simulation file
 
 os.system("echo %s" % (air_data_path))  # Execute the simulation file
 os.system("echo %s" % (metal_data_path))  # Execute the simulation file
@@ -227,7 +227,6 @@ else:
 # (7) Logging of Current Data
 with open(file_home_path + "calc_log_obj.csv", 'a') as file:
    
-    step_count = int(len(file.readlines()))
     writer = csv.writer(file)
     writer.writerow([filename, sr, ht, cs, theta_deg, b, c, b_var, c_var, datetime.now().strftime("%m_%d_%Y__%H_%M_%S"), step_count])
     file.close()
