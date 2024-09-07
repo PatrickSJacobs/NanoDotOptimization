@@ -187,7 +187,6 @@ def obj_func_run(x: [float]):
     #(4) Extracting Data From optimization
     #max_time = (100*100)
     max_time = (50)
-    sys.exit("stopped!!!")
 
     time_count = 0
     # Wait for data to be stable and ready for processing
