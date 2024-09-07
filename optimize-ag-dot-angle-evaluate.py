@@ -31,7 +31,8 @@ theta_deg = info[12]
 
 os.system("echo 'now for file input';%s" % ("\n"))  # Execute the simulation file
 
-os.system("echo %s" % (info))  # Execute the simulation file
+os.system("echo %s" % (air_data_path))  # Execute the simulation file
+os.system("echo %s" % (metal_data_path))  # Execute the simulation file
 
 
 
