@@ -201,6 +201,7 @@ if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
             writer.writerow(["wvl", "refl"])
             for (wvl, refl) in zip(wvls, R_meep):
                 writer.writerow([wvl, refl])
+            file.close()  
         printing("passed to obj")
         # (5) Sending Data Through Objective function
 
