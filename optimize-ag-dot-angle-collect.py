@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
+import re
 
 def obj_func_calc(wvls, R_meep):
     '''
