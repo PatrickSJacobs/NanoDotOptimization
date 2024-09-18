@@ -90,9 +90,7 @@ def obj_func_calc(wvls, R_meep):
     b, c = popt
     b_var = popv[0][0]
     c_var = popv[1][1]
-
-    printing("finished obj_eval")
-
+    
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
 def date_to_scalar(year, month, day):
