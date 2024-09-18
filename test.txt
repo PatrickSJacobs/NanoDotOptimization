@@ -12,5 +12,7 @@ echo "SCRIPT $PE_HOSTFILE"
 source ~/.bashrc
 conda activate ndo
 
+python -c "import botorch; print(botorch.__version__)"
+
 python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj_test.py
 
