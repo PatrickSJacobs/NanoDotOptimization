@@ -155,7 +155,13 @@ for file_set in collect_calc_log_files(main_work_dir):
     
     sr = float(path.split('_sr_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
     ht =  float(path.split('_ht_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
-    cs = float(path.split('_cs_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
+    
+    cs = 0
+    try:
+        cs = float(path.split('_cs_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
+    except:
+        cs = 0.4 - 2 * sr
+
     theta_deg = float(path.split('_deg_')[1].split('.csv')[0].replace("_", ".")) % 360
         
     data = pd.read_csv(path)
