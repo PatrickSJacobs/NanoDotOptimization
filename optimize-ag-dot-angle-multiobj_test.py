@@ -16,6 +16,7 @@ import string
 import time
 import csv
 import numpy as np
+import botorch
 
 # Import BoTorch and GPyTorch modules
 from botorch.models import SingleTaskMultiOutputGP
