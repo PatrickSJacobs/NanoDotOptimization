@@ -156,11 +156,16 @@ for file_set in collect_calc_log_files(main_work_dir):
     sr = float(path.split('_sr_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
     ht =  float(path.split('_ht_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
     
-    cs = 0
+    cs = 0.4 - 2 * sr
+    cs_accessible = True
+    cs_split = None
     try:
-        cs = float(path.split('_cs_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
+        cs_split = path.split('_cs_')[1]
     except:
-        cs = 0.4 - 2 * sr
+        cs_accessible = False
+        
+    if cs_accessible:   
+        cs = float(cs_split.split('nm_')[0].replace("_", ".")) / scaling_factor
 
     theta_deg = float(path.split('_deg_')[1].split('.csv')[0].replace("_", ".")) % 360
         
