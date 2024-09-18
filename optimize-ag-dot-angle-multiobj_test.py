@@ -1,16 +1,3 @@
-
-from jmetal.core.problem import OnTheFlyFloatProblem
-from jmetal.algorithm.multiobjective.gde3 import GDE3
-#from jmetal.util.evaluator import MultiprocessEvaluator
-#from jmetal.util.termination_criterion import StoppingByEvaluations
-from jmetal.util.comparator import DominanceComparator
-#from jmetal.util.solution import get_non_dominated_solutions
-#from jmetal.algorithm.multiobjective.nsgaii import NSGAII
-#from jmetal.operator import PolynomialMutation, SBXCrossover
-#from jmetal.problem.multiobjective.zdt import ZDT1Modified
-from jmetal.util.evaluator import MultiprocessEvaluator
-#from jmetal.util.solution import print_function_values_to_file, print_variables_to_file
-from jmetal.util.termination_criterion import StoppingByEvaluations
 from datetime import datetime
 import time
 import string
@@ -20,11 +7,26 @@ import csv
 import numpy as np
 import pandas as pd
 import os
-from scipy.optimize import curve_fit
-import statistics
-from scipy.signal import find_peaks
-import sys
-import traceback
+import pandas as pd
+import torch
+import os
+from datetime import datetime
+import random
+import string
+import time
+import csv
+import numpy as np
+
+# Import BoTorch and GPyTorch modules
+from botorch.models import SingleTaskMultiOutputGP
+from botorch.models.transforms import Standardize
+from botorch.fit import fit_gpytorch_model
+from botorch.acquisition.multi_objective import qExpectedHypervolumeImprovement
+from botorch.sampling.samplers import SobolQMCNormalSampler
+from botorch.optim import optimize_acqf
+from botorch.utils.multi_objective.box_decompositions import NondominatedPartitioning
+from botorch.utils.multi_objective.pareto import is_non_dominated
+from gpytorch.mlls import ExactMarginalLogLikelihood
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
@@ -223,14 +225,10 @@ def obj_func_run(x: [float]):
     return filename
 
 def get_values(x: [float], param: str):
-
     sr = x[0]
     ht = x[1]
     cs = x[2]
-    #cs = 0.001 * 250
     theta_deg = x[3]
-    #theta_deg = x[2]
-
 
     filename = make_filename(sr, ht, cs, theta_deg)
 
@@ -242,111 +240,118 @@ def get_values(x: [float], param: str):
         obj_func_run(x)
         return check_log(filename, param)[0]
 
-def b(x: [float]):
+# Define constraints as functions
+def constraint1(Y):
+    return 5 - Y[..., 0]  # c-param <= 5
 
-    return get_values(x, "b-param")
+def constraint2(Y):
+    return Y[..., 1] - 1  # b-param >= 1
 
-def c(x: [float]):
+def constraint3(Y):
+    return 50 - Y[..., 1]  # b-param <= 50
 
-    return get_values(x, "c-param")
+def constraint4(Y):
+    return 10 - Y[..., 2]  # b_var <= 10
 
-def b_var(x: [float]):
+constraints = [constraint1, constraint2, constraint3, constraint4]
 
-    #return get_values(x, "b_var")
-    return get_values(x, "b_var")
-
-
-def c_var(x: [float]):
-
-    return get_values(x, "c_var")
-
-
-def c_constraint(x: [float]):
-
-    return 5 - get_values(x, "c-param")
-
-def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
-def b_upper_constraint(x: [float]): return 50 - get_values(x, "b-param")  # b-param should be <= 60
-
-'''
-def c_constraint(x: [float]):
-
-    return 15 - get_values(x, "c-param")
-'''
-
-def b_var_constraint(x: [float]):
-
-    return 10 - get_values(x, "b_var")
-
-
-#bounds = {'sr': (0.001 * 5, 0.001 * 125), 'ht': (0.001 * 50, 0.001 * 100), 'cs': (0.001 * 25, 0.001 * 250), 'theta_deg': (0.0, 0.0)}# Bounds for optimization
-
-problem = (
-    OnTheFlyFloatProblem()
-    .set_name("Testing")
-    .add_variable(0.001 * 5, 0.001 * 125)
-    .add_variable(0.001 * 50, 0.001 * 100)
-    #.add_variable(0.001 * 25, 0.001 * 250)
-    .add_variable(0.001 * 250, 0.001 * 250)
-    #.add_variable(0.0, 0.0)
-    .add_variable(0.0, 90.0)
-    .add_function(c)
-    .add_function(b)
-    .add_function(b_var)
-    .add_function(c_var)
-    .add_constraint(b_lower_constraint)
-    .add_constraint(b_upper_constraint)
-    .add_constraint(c_constraint)
-    .add_constraint(b_var_constraint)
-)
+# Define the function to evaluate the candidate
+def evaluate_candidate(candidate):
+    x = candidate.squeeze(0).tolist()
+    x_input = [x[0], x[1], x[2], x[3]]
+    y0 = get_values(x_input, 'c-param')
+    y1 = get_values(x_input, 'b-param')
+    y2 = get_values(x_input, 'b_var')
+    y3 = get_values(x_input, 'c_var')
+    y = torch.tensor([[y0, y1, y2, y3]], dtype=torch.double)
+    return y
 
 if __name__ == "__main__":
+    # Load pretraining data from CSV file
+    pretraining_data_path = main_home_dir + 'ag-dot-angle-pretraining.csv'  # Replace with your CSV file path
+    df = pd.read_csv(pretraining_data_path)
 
-    with open(file_home_path + "calc_log_obj.csv", 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
-        file.close()
+    # Inputs (include 'cs' since it's now a variable)
+    train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
+    # Outputs
+    train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
 
-    #max_evaluations = 64
-    max_evaluations = 5
+    # Bounds (include 'cs' bounds)
+    bounds = torch.tensor([
+        [0.005, 0.05, 0.025, 0.0],   # Lower bounds for sr, ht, cs, theta_deg
+        [0.125, 0.1, 0.25, 90.0]     # Upper bounds for sr, ht, cs, theta_deg
+    ], dtype=torch.double).T
 
-    '''
+    num_iterations = 10  # Number of optimization iterations
 
-    algorithm = NSGAII(
-        population_evaluator=MultiprocessEvaluator(processes=16),
-        problem=problem,
-        population_size=16,
-        offspring_population_size=16,
-        mutation=PolynomialMutation(probability=1.0 / problem.number_of_variables(), distribution_index=20),
-        crossover=SBXCrossover(probability=1.0, distribution_index=20),
-        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
-        #dominance_comparator=DominanceComparator(),
+    # Initialize CSV log file if it doesn't exist
+    calc_log_obj_path = os.path.join(file_home_path, "calc_log_obj.csv")
+    if not os.path.exists(calc_log_obj_path):
+        with open(calc_log_obj_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time", "step count"])
+
+    for iteration in range(num_iterations):
+        # Fit the GP model
+        model = SingleTaskMultiOutputGP(train_X, train_Y, outcome_transform=Standardize(m=4))
+        mll = ExactMarginalLogLikelihood(model.likelihood, model)
+        fit_gpytorch_model(mll)
+
+        # Get standardized training outputs
+        train_Y_std = model.outcome_transform(train_Y)[0]
+
+        # Define reference point for hypervolume calculation
+        # Assuming minimization of all objectives
+        ref_point = train_Y_std.min(dim=0).values - 0.1 * (train_Y_std.max(dim=0).values - train_Y_std.min(dim=0).values)
+        ref_point = ref_point.tolist()
+
+        # Define the partitioning
+        partitioning = NondominatedPartitioning(ref_point=torch.tensor(ref_point), Y=train_Y_std)
+
+        # Define the acquisition function
+        sampler = SobolQMCNormalSampler(num_samples=128)
+        acq_func = qExpectedHypervolumeImprovement(
+            model=model,
+            ref_point=ref_point,
+            partitioning=partitioning,
+            sampler=sampler,
+            constraints=constraints,
+        )
+
+        # Optimize the acquisition function to get the next candidate
+        candidate, acq_value = optimize_acqf(
+            acq_function=acq_func,
+            bounds=bounds,
+            q=1,
+            num_restarts=5,
+            raw_samples=20,  # For initialization
+        )
+
+        # Evaluate the candidate
+        y_new = evaluate_candidate(candidate)
+
+        # Update training data
+        train_X = torch.cat([train_X, candidate], dim=0)
+        train_Y = torch.cat([train_Y, y_new], dim=0)
+
+        # Optionally, save the updated training data to CSV
+        # Append new data to pretraining data CSV if needed
+        # ...
+
+        # Print progress
+        printing(f"Iteration {iteration+1}/{num_iterations}")
+        printing(f"Candidate: {candidate}")
+        printing(f"Objective values: {y_new}")
+
+    # After optimization, you can process the results
+    # For example, extract the Pareto front
+    pareto_mask = is_non_dominated(train_Y)
+    pareto_front = train_Y[pareto_mask]
+    pareto_points = train_X[pareto_mask]
+
+    # Save Pareto front to CSV
+    pareto_df = pd.DataFrame(
+        torch.cat([pareto_points, pareto_front], dim=1).numpy(),
+        columns=['sr', 'ht', 'cs', 'theta_deg', 'c-param', 'b-param', 'b_var', 'c_var']
     )
-
-    '''
-
-    algorithm = GDE3(
-        population_evaluator=MultiprocessEvaluator(processes=16),
-        problem=problem,
-        #population_size=16,
-        population_size=5,
-        cr=0.5,
-        f=0.8,
-        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
-        dominance_comparator=DominanceComparator(),
-    )
-
-
-    algorithm.run()
-    front = algorithm.get_result()
-
-    for sol in range(len(front)):
-        vars = front[sol].variables
-        #print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
-        printing(f'(Solution #{sol + 1}): (Filename - {make_filename(float(vars[0]), float(vars[1]), float(vars[2]), float(vars[3]))})')
-        printing(f'             Variables={vars}')
-        printing(f'             Objectives={front[sol].objectives}')
-
-    printing(f"Computing time: {algorithm.total_computing_time}")
-
-
+    pareto_df.to_csv(os.path.join(file_home_path, 'pareto_front.csv'), index=False)
