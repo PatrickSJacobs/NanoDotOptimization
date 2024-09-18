@@ -158,7 +158,7 @@ for file_set in collect_calc_log_files(main_work_dir):
     sr = float(path.split('_sr_')[1].split('nm_ht_')[0].replace("_", ".")) / scaling_factor
     ht =  float(path.split('_ht_')[1].split('nm_cs_')[0].replace("_", ".")) / scaling_factor
     cs = float(path.split('_cs_')[1].split('nm_theta_deg_')[0].replace("_", ".")) / scaling_factor
-    theta_deg = float(path.split('_deg_')[1].split('csv')[0].replace(".", " degrees").replace("_", ".")) % 360
+    theta_deg = float(path.split('_deg_')[1].split('.csv')[0].replace("_", ".")) % 360
         
     data = pd.read_csv(path)
     wvls = data["wvl"].tolist()
