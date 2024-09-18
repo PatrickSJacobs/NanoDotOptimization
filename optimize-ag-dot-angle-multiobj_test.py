@@ -281,8 +281,6 @@ def b_var_constraint(x: [float]):
 
 #bounds = {'sr': (0.001 * 5, 0.001 * 125), 'ht': (0.001 * 50, 0.001 * 100), 'cs': (0.001 * 25, 0.001 * 250), 'theta_deg': (0.0, 0.0)}# Bounds for optimization
 
-
-
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
