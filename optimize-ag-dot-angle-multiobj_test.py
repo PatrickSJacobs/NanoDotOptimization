@@ -10,7 +10,6 @@ import pandas as pd
 import torch
 
 # Import necessary modules from BoTorch and GPyTorch
-from botorch.models import MultiTaskGP
 from botorch.models.transforms import Standardize
 from botorch import fit_gpytorch_mll
 from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
@@ -18,6 +17,7 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
+from botorch.models import SingleTaskGP
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
 main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
@@ -296,8 +296,7 @@ if __name__ == "__main__":
     for iteration in range(num_iterations):
         # Fit the GP model
         
-        model = model = MultiTaskGP(train_X, train_Y, task_feature=-1, outcome_transform=Standardize(m=num_tasks))
-
+        model = SingleTaskGP(train_X, train_Y, outcome_transform=Standardize(m=num_tasks))
 
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
