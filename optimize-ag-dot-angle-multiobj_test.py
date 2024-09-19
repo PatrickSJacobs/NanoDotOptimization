@@ -271,7 +271,7 @@ if __name__ == "__main__":
         [0.125, 0.1, 0.25, 90.0]     # Upper bounds for sr, ht, cs, theta_deg
     ], dtype=torch.double).T
 
-    num_iterations = 10  # Number of optimization iterations
+    num_iterations = 4  # Number of optimization iterations
 
     # Initialize CSV log file if it doesn't exist
     calc_log_obj_path = os.path.join(file_home_path, "calc_log_obj.csv")
@@ -284,7 +284,7 @@ if __name__ == "__main__":
 
     for iteration in range(num_iterations):
         # Fit the GP model
-        model = MultiTaskGP(train_X, train_Y, outcome_transform=Standardize(m=4))
+        model = MultiTaskGP(train_X, train_Y, task_feature=4, outcome_transform=Standardize(m=1))
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
 
