@@ -12,8 +12,6 @@ echo "SCRIPT $PE_HOSTFILE"
 source ~/.bashrc
 conda activate ndo
 
-python -c "import torch; print(torch.__version__)"
-
 python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-collect.py
 
 python -c "import torch; print(torch.__version__)"
