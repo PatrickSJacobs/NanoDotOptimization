@@ -8,27 +8,26 @@ from time import sleep
 import numpy as np
 import pandas as pd
 import torch
-import botorch.models
-print(dir(botorch.models))
 from botorch.models import MultiTaskGP
 from botorch.models.transforms import Standardize
 from botorch.fit import fit_gpytorch_model
 from botorch.acquisition.multi_objective import qExpectedHypervolumeImprovement
+from botorch.acquisition.multi_objective.objective import FeasibilityWeightedMCMultiOutputObjective
 from botorch.sampling.samplers import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
 from botorch.utils.multi_objective.box_decompositions import NondominatedPartitioning
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
-main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
-folder_name = "opt_%s" % str(current_time)# Folder name for optimization files
-file_home_path = main_home_dir + folder_name + "_processed/" # Folder name for optimization files
-main_work_dir = "/work2/08809/tg881088/" # Home directory for optimization
-file_work_path = main_work_dir + folder_name + "_raw/" # Folder name for optimization files
+current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
+main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
+folder_name = "opt_%s" % str(current_time)  # Folder name for optimization files
+file_home_path = main_home_dir + folder_name + "_processed/"  # Folder name for optimization files
+main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
+file_work_path = main_work_dir + folder_name + "_raw/"  # Folder name for optimization files
 progress_file = file_home_path + "progress.txt"
-os.mkdir(file_home_path)# Making folder name for optimization files
-os.mkdir(file_work_path)# Making folder name for data log
+os.mkdir(file_home_path)  # Making folder name for optimization files
+os.mkdir(file_work_path)  # Making folder name for data log
 file_naught = open(progress_file, 'w')
 file_naught.writelines(["Beginning optimization %s" % "\n"])
 file_naught.close()
@@ -232,20 +231,26 @@ def get_values(x: [float], param: str):
         obj_func_run(x)
         return check_log(filename, param)[0]
 
+
 # Define constraints as functions
-def constraint1(Y):
-    return 5 - Y[..., 0]  # c-param <= 5
+def c1(samples):
+    return 5 - samples[..., 0]  # c-param <= 5
 
-def constraint2(Y):
-    return Y[..., 1] - 1  # b-param >= 1
 
-def constraint3(Y):
-    return 50 - Y[..., 1]  # b-param <= 50
+def c2(samples):
+    return samples[..., 1] - 1  # b-param >= 1
 
-def constraint4(Y):
-    return 10 - Y[..., 2]  # b_var <= 10
 
-constraints = [constraint1, constraint2, constraint3, constraint4]
+def c3(samples):
+    return 50 - samples[..., 1]  # b-param <= 50
+
+
+def c4(samples):
+    return 10 - samples[..., 2]  # b_var <= 10
+
+
+constraints = [c1, c2, c3, c4]
+
 
 # Define the function to evaluate the candidate
 def evaluate_candidate(candidate):
@@ -257,6 +262,7 @@ def evaluate_candidate(candidate):
     y3 = get_values(x_input, 'c_var')
     y = torch.tensor([[y0, y1, y2, y3]], dtype=torch.double)
     return y
+
 
 if __name__ == "__main__":
     # Load pretraining data from CSV file
@@ -281,7 +287,9 @@ if __name__ == "__main__":
     if not os.path.exists(calc_log_obj_path):
         with open(calc_log_obj_path, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time", "step count"])
+            writer.writerow(
+                ["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time",
+                 "step count"])
 
     for iteration in range(num_iterations):
         # Fit the GP model
@@ -292,13 +300,28 @@ if __name__ == "__main__":
         # Get standardized training outputs
         train_Y_std = model.outcome_transform(train_Y)[0]
 
+        # Compute feasibility mask
+        is_feasible = (c1(train_Y_std) >= 0) & (c2(train_Y_std) >= 0) & (c3(train_Y_std) >= 0) & (c4(train_Y_std) >= 0)
+        is_feasible = is_feasible.all(dim=-1)
+
+        if is_feasible.sum() == 0:
+            printing("No feasible observations found.")
+            break
+
+        feasible_Y = train_Y_std[is_feasible]
+
         # Define reference point for hypervolume calculation
-        # Assuming minimization of all objectives
-        ref_point = train_Y_std.min(dim=0).values - 0.1 * (train_Y_std.max(dim=0).values - train_Y_std.min(dim=0).values)
+        ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
         ref_point = ref_point.tolist()
 
         # Define the partitioning
-        partitioning = NondominatedPartitioning(ref_point=torch.tensor(ref_point), Y=train_Y_std)
+        partitioning = NondominatedPartitioning(ref_point=torch.tensor(ref_point), Y=feasible_Y)
+
+        # Define the objective function
+        objective = FeasibilityWeightedMCMultiOutputObjective(
+            objective=lambda Y, X: Y,
+            constraints=constraints,
+        )
 
         # Define the acquisition function
         sampler = SobolQMCNormalSampler(num_samples=128)
@@ -307,7 +330,7 @@ if __name__ == "__main__":
             ref_point=ref_point,
             partitioning=partitioning,
             sampler=sampler,
-            constraints=constraints,
+            objective=objective,
         )
 
         # Optimize the acquisition function to get the next candidate
@@ -326,20 +349,24 @@ if __name__ == "__main__":
         train_X = torch.cat([train_X, candidate], dim=0)
         train_Y = torch.cat([train_Y, y_new], dim=0)
 
-        # Optionally, save the updated training data to CSV
-        # Append new data to pretraining data CSV if needed
-        # ...
-
         # Print progress
-        printing(f"Iteration {iteration+1}/{num_iterations}")
+        printing(f"Iteration {iteration + 1}/{num_iterations}")
         printing(f"Candidate: {candidate}")
         printing(f"Objective values: {y_new}")
 
-    # After optimization, you can process the results
-    # For example, extract the Pareto front
-    pareto_mask = is_non_dominated(train_Y)
-    pareto_front = train_Y[pareto_mask]
-    pareto_points = train_X[pareto_mask]
+    # After optimization, process the results
+    # Compute feasibility mask for final train_Y
+    is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
+    is_feasible = is_feasible.all(dim=-1)
+
+    # Get feasible train_Y and train_X
+    feasible_Y = train_Y[is_feasible]
+    feasible_X = train_X[is_feasible]
+
+    # Extract the Pareto front
+    pareto_mask = is_non_dominated(feasible_Y)
+    pareto_front = feasible_Y[pareto_mask]
+    pareto_points = feasible_X[pareto_mask]
 
     # Save Pareto front to CSV
     pareto_df = pd.DataFrame(
