@@ -258,7 +258,7 @@ def evaluate_candidate(candidate):
 if __name__ == "__main__":
     # Load pretraining data from CSV file
     # Path to your pretraining data CSV file
-    pretraining_data_path = "/path/to/your/pretraining_data.csv"  # Replace with your actual path
+    pretraining_data_path = main_work_dir + "ag-dot-angle-pretraining.csv" # Replace with your actual path
 
     # --- 1. Load the DataFrame ---
     df = pd.read_csv(pretraining_data_path)
