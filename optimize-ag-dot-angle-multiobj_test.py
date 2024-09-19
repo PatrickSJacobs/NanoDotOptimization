@@ -317,9 +317,10 @@ if __name__ == "__main__":
         feasible_Y = train_Y_std[is_feasible]
 
         # Define reference point for hypervolume calculation
+        printing("No reference point")
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
         ref_point = ref_point.tolist()
-
+        printing(f"ref_point: {ref_point}")
         # Remove partitioning (not needed for qNEHVI)
         # partitioning = NondominatedPartitioning(ref_point=torch.tensor(ref_point), Y=feasible_Y)
 
