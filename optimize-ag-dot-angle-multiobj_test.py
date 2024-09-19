@@ -8,14 +8,14 @@ from time import sleep
 import numpy as np
 import pandas as pd
 import torch
+
+# Import necessary modules from BoTorch and GPyTorch
 from botorch.models import MultiTaskGP
 from botorch.models.transforms import Standardize
 from botorch.fit import fit_gpytorch_model
-from botorch.acquisition.multi_objective import qExpectedHypervolumeImprovement
-from botorch.acquisition.multi_objective.objective import FeasibilityWeightedMCMultiOutputObjective
+from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
 from botorch.sampling.samplers import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
-from botorch.utils.multi_objective.box_decompositions import NondominatedPartitioning
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
@@ -220,9 +220,7 @@ def get_values(x: [float], param: str):
     ht = x[1]
     cs = x[2]
     theta_deg = x[3]
-
     filename = make_filename(sr, ht, cs, theta_deg)
-
     log_answer = check_log(filename, param)
     if len(log_answer) > 0:
         printing(f'Referenced: {filename}')
@@ -231,26 +229,20 @@ def get_values(x: [float], param: str):
         obj_func_run(x)
         return check_log(filename, param)[0]
 
-
-# Define constraints as functions
+# Define constraints as functions (accepting posterior samples Y)
 def c1(samples):
     return 5 - samples[..., 0]  # c-param <= 5
-
 
 def c2(samples):
     return samples[..., 1] - 1  # b-param >= 1
 
-
 def c3(samples):
     return 50 - samples[..., 1]  # b-param <= 50
-
 
 def c4(samples):
     return 10 - samples[..., 2]  # b_var <= 10
 
-
 constraints = [c1, c2, c3, c4]
-
 
 # Define the function to evaluate the candidate
 def evaluate_candidate(candidate):
@@ -262,7 +254,6 @@ def evaluate_candidate(candidate):
     y3 = get_values(x_input, 'c_var')
     y = torch.tensor([[y0, y1, y2, y3]], dtype=torch.double)
     return y
-
 
 if __name__ == "__main__":
     # Load pretraining data from CSV file
@@ -314,23 +305,18 @@ if __name__ == "__main__":
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
         ref_point = ref_point.tolist()
 
-        # Define the partitioning
-        partitioning = NondominatedPartitioning(ref_point=torch.tensor(ref_point), Y=feasible_Y)
+        # Remove partitioning (not needed for qNEHVI)
+        # partitioning = NondominatedPartitioning(ref_point=torch.tensor(ref_point), Y=feasible_Y)
 
-        # Define the objective function
-        objective = FeasibilityWeightedMCMultiOutputObjective(
-            objective=lambda Y, X: Y,
-            constraints=constraints,
-        )
-
-        # Define the acquisition function
+        # Define the acquisition function using qNEHVI
         sampler = SobolQMCNormalSampler(num_samples=128)
-        acq_func = qExpectedHypervolumeImprovement(
+        acq_func = qNoisyExpectedHypervolumeImprovement(
             model=model,
             ref_point=ref_point,
-            partitioning=partitioning,
+            X_baseline=train_X,
+            constraints=constraints,
             sampler=sampler,
-            objective=objective,
+            prune_baseline=True,
         )
 
         # Optimize the acquisition function to get the next candidate
