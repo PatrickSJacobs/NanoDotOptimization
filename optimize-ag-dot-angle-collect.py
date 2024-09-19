@@ -176,11 +176,18 @@ for file_set in collect_calc_log_files(main_work_dir):
     data = pd.read_csv(path)
     wvls = data["wvl"].tolist()
     R_meep = data["refl"].tolist()
-
-    b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
     
-    if any(math.isnan(x) for x in [sr, ht, cs, theta_deg, b, c, b_var, c_var, count]):
+    try:
+        # Call the objective function and unpack its return values
+        b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
+        
+        # Write the results to a CSV file
         writer.writerow([path, sr, ht, cs, theta_deg, b, c, b_var, c_var, count])
+        
+    except UserWarning as e:
+        # Handle the UserWarning as an exception
+        print(f"Caught a warning as an exception: {e}")
 
+   
     
 collection_file.close()  
