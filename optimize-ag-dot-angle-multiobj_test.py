@@ -284,7 +284,7 @@ if __name__ == "__main__":
 
     for iteration in range(num_iterations):
         # Fit the GP model
-        model = MultiTaskGP(train_X, train_Y, task_feature=3, outcome_transform=Standardize(m=1))
+        model = MultiTaskGP(train_X, train_Y, task_feature=4, outcome_transform=Standardize(m=4))
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
 
