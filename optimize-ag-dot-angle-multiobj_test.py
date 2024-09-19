@@ -12,7 +12,7 @@ import torch
 # Import necessary modules from BoTorch and GPyTorch
 from botorch.models import MultiTaskGP
 from botorch.models.transforms import Standardize
-from botorch.optim.fit import fit_gpytorch_model
+from botorch import fit_gpytorch_mll
 from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
 from botorch.sampling.samplers import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
@@ -286,7 +286,7 @@ if __name__ == "__main__":
         # Fit the GP model
         model = MultiTaskGP(train_X, train_Y, outcome_transform=Standardize(m=4))
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
-        fit_gpytorch_model(mll)
+        fit_gpytorch_mll(mll)
 
         # Get standardized training outputs
         train_Y_std = model.outcome_transform(train_Y)[0]
