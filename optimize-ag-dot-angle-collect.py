@@ -133,7 +133,7 @@ def collect_calc_log_files(base_directory):
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
 main_work_dir = "/work2/08809/tg881088/" # Home directory for optimization
 
-collection_file = open(main_home_dir + "ag-dot-angle-pretraining.csv", 'w', newline='')
+collection_file = open(main_work_dir + "ag-dot-angle-pretraining.csv", 'w', newline='')
 writer = csv.writer(collection_file)
 writer.writerow(["path", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "count"])
 

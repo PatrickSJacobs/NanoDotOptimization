@@ -1,22 +1,13 @@
-from datetime import datetime
-import time
-import string
-import random
-from time import sleep
+import os
 import csv
+import random
+import string
+import time
+from datetime import datetime
+from time import sleep
 import numpy as np
 import pandas as pd
 import torch
-import os
-from datetime import datetime
-import random
-import string
-import time
-import csv
-import numpy as np
-import botorch
-
-# Import BoTorch and GPyTorch modules
 from botorch.models import SingleTaskMultiOutputGP
 from botorch.models.transforms import Standardize
 from botorch.fit import fit_gpytorch_model
@@ -267,7 +258,7 @@ def evaluate_candidate(candidate):
 
 if __name__ == "__main__":
     # Load pretraining data from CSV file
-    pretraining_data_path = main_home_dir + 'ag-dot-angle-pretraining.csv'  # Replace with your CSV file path
+    pretraining_data_path = main_work_dir + 'ag-dot-angle-pretraining.csv'  # Replace with your CSV file path
     df = pd.read_csv(pretraining_data_path)
 
     # Inputs (include 'cs' since it's now a variable)
