@@ -7,6 +7,7 @@ from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 import re
 import os
+import math
 
 def obj_func_calc(wvls, R_meep):
     '''
@@ -178,6 +179,8 @@ for file_set in collect_calc_log_files(main_work_dir):
 
     b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
     
-    writer.writerow([path, sr, ht, cs, theta_deg, b, c, b_var, c_var, count])
+    if any(math.isnan(x) for x in [sr, ht, cs, theta_deg, b, c, b_var, c_var, count]):
+        writer.writerow([path, sr, ht, cs, theta_deg, b, c, b_var, c_var, count])
 
+    
 collection_file.close()  
