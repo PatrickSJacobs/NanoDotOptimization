@@ -292,6 +292,7 @@ if __name__ == "__main__":
 
     num_tasks = train_Y.shape[1]  # Should be 4
 
+    printing(f"num_tasks: {num_tasks}") 
     for iteration in range(num_iterations):
         # Fit the GP model
         
