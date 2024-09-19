@@ -290,9 +290,14 @@ if __name__ == "__main__":
                 ["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time",
                  "step count"])
 
+    num_tasks = train_Y.shape[1]  # Should be 4
+
     for iteration in range(num_iterations):
         # Fit the GP model
-        model = MultiTaskGP(train_X_with_task, train_Y, task_feature=train_X_with_task.size(1) - 1, outcome_transform=Standardize(m=4))
+        
+        model = model = MultiTaskGP(train_X, train_Y, task_feature=-1, num_tasks=num_tasks, outcome_transform=Standardize(m=num_tasks))
+
+
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
 
