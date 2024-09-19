@@ -291,7 +291,7 @@ if __name__ == "__main__":
     # --- 4. Convert Cleaned DataFrame to PyTorch Tensors ---
 
     # Convert input features to tensor
-    train_X = torch.tensor(df_clean[x_columns].values, dtype=torch.double)
+    train_X = torch.tensor(df_clean[x_columns].values, dtype=torch.float)
     print("\ntrain_X:")
     print(train_X)
 
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     print(train_X_with_task)
 
     # Convert output targets to tensor
-    train_Y = torch.tensor(df_clean[y_columns].values, dtype=torch.double)
+    train_Y = torch.tensor(df_clean[y_columns].values, dtype=torch.float)
     print("\ntrain_Y:")
     print(train_Y)
 
@@ -311,9 +311,6 @@ if __name__ == "__main__":
     assert not torch.isnan(train_X).any(), "NaNs found in train_X after cleaning!"
     assert not torch.isnan(train_Y).any(), "NaNs found in train_Y after cleaning!"
     print("\nVerification passed: No NaN values remain in train_X and train_Y.")
-
-    # Ensure train_Y has the correct shape
-    train_Y = train_Y.view(-1, 4)
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
