@@ -10,7 +10,7 @@ import pandas as pd
 import torch
 import botorch.models
 print(dir(botorch.models))
-from botorch.models import SingleTaskMultiOutputGP
+from botorch.models import MultiTaskGP
 from botorch.models.transforms import Standardize
 from botorch.fit import fit_gpytorch_model
 from botorch.acquisition.multi_objective import qExpectedHypervolumeImprovement
@@ -285,7 +285,7 @@ if __name__ == "__main__":
 
     for iteration in range(num_iterations):
         # Fit the GP model
-        model = SingleTaskMultiOutputGP(train_X, train_Y, outcome_transform=Standardize(m=4))
+        model = MultiTaskGP(train_X, train_Y, outcome_transform=Standardize(m=4))
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_model(mll)
 
