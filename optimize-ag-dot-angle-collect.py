@@ -6,6 +6,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 import re
+import os
 
 def obj_func_calc(wvls, R_meep):
     '''
@@ -133,7 +134,9 @@ def collect_calc_log_files(base_directory):
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
 main_work_dir = "/work2/08809/tg881088/" # Home directory for optimization
 
-collection_file = open(main_work_dir + "ag-dot-angle-pretraining.csv", 'w', newline='')
+training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
+os.remove(training_file)
+collection_file = open(training_file, 'w', newline='')
 writer = csv.writer(collection_file)
 writer.writerow(["path", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "count"])
 
