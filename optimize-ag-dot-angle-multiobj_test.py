@@ -8,6 +8,7 @@ from time import sleep
 import numpy as np
 import pandas as pd
 import torch
+import botorch
 from botorch.models import SingleTaskMultiOutputGP
 from botorch.models.transforms import Standardize
 from botorch.fit import fit_gpytorch_model
