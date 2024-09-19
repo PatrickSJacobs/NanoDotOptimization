@@ -257,60 +257,23 @@ def evaluate_candidate(candidate):
 
 if __name__ == "__main__":
     # Load pretraining data from CSV file
-    # Path to your pretraining data CSV file
-    pretraining_data_path = main_work_dir + "ag-dot-angle-pretraining.csv" # Replace with your actual path
-
-    # --- 1. Load the DataFrame ---
+    pretraining_data_path = main_work_dir + 'ag-dot-angle-pretraining.csv'  # Replace with your CSV file path
     df = pd.read_csv(pretraining_data_path)
-    print(f"Initial number of rows in DataFrame: {df.shape[0]}")
 
-    # --- 2. Define Input and Output Columns ---
-    # Input features
-    x_columns = ['sr', 'ht', 'cs', 'theta_deg']
-
-    # Output targets
-    y_columns = ['c-param', 'b-param', 'b_var', 'c_var']
-
-    # --- 3. Remove Rows with NaNs in Either Input or Output Columns ---
-    # Combine all relevant columns
-    all_columns = x_columns + y_columns
-
-    # Count the number of rows before cleaning
-    initial_row_count = df.shape[0]
-
-    # Drop rows with NaNs in any of the specified columns
-    df_clean = df.dropna(subset=all_columns)
-
-    # Count the number of rows after cleaning
-    cleaned_row_count = df_clean.shape[0]
-    rows_dropped = initial_row_count - cleaned_row_count
-
-    print(f"Number of rows after cleaning: {cleaned_row_count}")
-    print(f"Number of rows dropped due to NaNs: {rows_dropped}")
-
-    # --- 4. Convert Cleaned DataFrame to PyTorch Tensors ---
-
-    # Convert input features to tensor
-    train_X = torch.tensor(df_clean[x_columns].values, dtype=torch.float)
-    print("\ntrain_X:")
+    # Inputs (include 'cs' since it's now a variable)
+    train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
     print(train_X)
 
-    # --- 5. Add a Task Index to train_X ---
-    # If your model requires a task index, append it to train_X
-    task_indices = torch.arange(train_X.size(0)).unsqueeze(1)  # Shape: [num_samples, 1]
+    # Add a task index to train_X
+    task_indices = torch.arange(train_X.size(0)).unsqueeze(1)
     train_X_with_task = torch.cat([train_X, task_indices], dim=1)
-    print("\ntrain_X_with_task:")
-    print(train_X_with_task)
 
-    # Convert output targets to tensor
-    train_Y = torch.tensor(df_clean[y_columns].values, dtype=torch.float)
-    print("\ntrain_Y:")
+    # Outputs
+    train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
     print(train_Y)
 
-    # --- 6. (Optional) Verify No NaNs Remain in the Tensors ---
-    assert not torch.isnan(train_X).any(), "NaNs found in train_X after cleaning!"
-    assert not torch.isnan(train_Y).any(), "NaNs found in train_Y after cleaning!"
-    print("\nVerification passed: No NaN values remain in train_X and train_Y.")
+    # Ensure train_Y has the correct shape
+    train_Y = train_Y.view(-1, 4)
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([

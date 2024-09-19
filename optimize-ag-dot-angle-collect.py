@@ -178,7 +178,7 @@ for file_set in collect_calc_log_files(main_work_dir):
     R_meep = data["refl"].tolist()
     b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
     
-    if any(math.isnan(x) for x in [sr, ht, cs, theta_deg, b, c, b_var, c_var, count]):
+    if any(not math.isfinite(x) for x in [sr, ht, cs, theta_deg, b, c, b_var, c_var, count]):
         continue
     else:
          writer.writerow([path, sr, ht, cs, theta_deg, b, c, b_var, c_var, count])
