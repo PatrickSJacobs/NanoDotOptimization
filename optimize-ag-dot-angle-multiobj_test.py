@@ -262,8 +262,15 @@ if __name__ == "__main__":
 
     # Inputs (include 'cs' since it's now a variable)
     train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
+
+    # Add a task index to train_X
+    task_indices = torch.arange(train_X.size(0)).unsqueeze(1)
+    train_X_with_task = torch.cat([train_X, task_indices], dim=1)
+
     # Outputs
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
+
+    # Ensure train_Y has the correct shape
     train_Y = train_Y.view(-1, 4)
 
     # Bounds (include 'cs' bounds)
@@ -285,7 +292,7 @@ if __name__ == "__main__":
 
     for iteration in range(num_iterations):
         # Fit the GP model
-        model = MultiTaskGP(train_X, train_Y, task_feature=3, outcome_transform=Standardize(m=4))
+        model = MultiTaskGP(train_X_with_task, train_Y, task_feature=train_X_with_task.size(1) - 1, outcome_transform=Standardize(m=4))
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
 
