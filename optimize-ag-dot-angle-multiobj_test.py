@@ -261,6 +261,7 @@ if __name__ == "__main__":
     df = pd.read_csv(pretraining_data_path)
 
     # Inputs (include 'cs' since it's now a variable)
+    print(len(df[['sr']]))
     train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
 
     # Add a task index to train_X
