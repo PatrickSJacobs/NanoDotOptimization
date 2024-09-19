@@ -264,6 +264,7 @@ if __name__ == "__main__":
     train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
     # Outputs
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
+    train_Y = train_Y.view(-1, 4)
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
