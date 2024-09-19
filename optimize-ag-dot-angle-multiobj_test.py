@@ -296,7 +296,7 @@ if __name__ == "__main__":
     for iteration in range(num_iterations):
         # Fit the GP model
         
-        model = model = MultiTaskGP(train_X, train_Y, task_feature=-1, num_tasks=num_tasks, outcome_transform=Standardize(m=num_tasks))
+        model = model = MultiTaskGP(train_X, train_Y, task_feature=-1, outcome_transform=Standardize(m=num_tasks))
 
 
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
