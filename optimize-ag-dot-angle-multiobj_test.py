@@ -12,7 +12,7 @@ import torch
 # Import necessary modules from BoTorch and GPyTorch
 from botorch.models import MultiTaskGP
 from botorch.models.transforms import Standardize
-from botorch.fit import fit_gpytorch_model
+from botorch.optim.fit import fit_gpytorch_model
 from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
 from botorch.sampling.samplers import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
