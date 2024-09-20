@@ -278,8 +278,8 @@ if __name__ == "__main__":
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
     print(len(train_Y))
 
-    # Ensure train_Y has the correct shape
-    train_Y = train_Y.view(-1, 4)
+    ## Ensure train_Y has the correct shape
+    #train_Y = train_Y.view(-1, 4)
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
