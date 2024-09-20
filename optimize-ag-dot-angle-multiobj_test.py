@@ -286,10 +286,10 @@ if __name__ == "__main__":
     n_tasks = train_Y.shape[1]
 
     # Repeat train_X for each task
-    train_X_expanded = train_X.unsqueeze(1).repeat(1, n_tasks, 1).reshape(-1, train_X.shape[1])  # Shape: (n_samples * n_tasks, n_features)
+    train_X = train_X.unsqueeze(1).repeat(1, n_tasks, 1).reshape(-1, train_X.shape[1])  # Shape: (n_samples * n_tasks, n_features)
 
     # Flatten train_Y
-    train_Y_expanded = train_Y.reshape(-1, 1)  # Shape: (n_samples * n_tasks, 1)
+    train_Y = train_Y.reshape(-1, 1)  # Shape: (n_samples * n_tasks, 1)
 
     # Create task indices
     task_indices = torch.arange(n_tasks).repeat(n_samples)  # Shape: (n_samples * n_tasks)
@@ -307,15 +307,15 @@ if __name__ == "__main__":
         # Fit the GP model
         
         model = MultiTaskGP(
-            train_X=train_X_expanded,
-            train_Y=train_Y_expanded,
+            train_X=train_X,
+            train_Y=train_Y,
             task_feature=-1,       # We'll specify task indices separately
             #task_indices=task_indices,
         )
 
         
         #fit_fully_bayesian_model_nuts(model)
-        fit_fully_bayesian_model_nuts(
+        fit_gpytorch_mll(
             model
         )
 
