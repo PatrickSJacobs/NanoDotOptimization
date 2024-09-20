@@ -60,7 +60,6 @@ from botorch.acquisition.multi_objective.monte_carlo import (
 )
 from botorch.utils.sampling import sample_simplex
 from botorch.models.transforms import Standardize, Normalize
-from botorch import fit_gpytorch_model
 from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
