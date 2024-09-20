@@ -1,14 +1,23 @@
 import os
-import csv
 import random
 import string
 import time
 from datetime import datetime
 from time import sleep
-import numpy as np
-import pandas as pd
+from datetime import datetime
 
-from optimize_ag_dot_angle_multiobj_test import main_home_dir, folder_name, file_home_path, progress_file, file_work_path
+current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
+main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
+folder_name = "opt_%s" % str(current_time)  # Folder name for optimization files
+file_home_path = main_home_dir + folder_name + "_processed/"  # Folder name for optimization files
+main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
+file_work_path = main_work_dir + folder_name + "_raw/"  # Folder name for optimization files
+progress_file = file_home_path + "progress.txt"
+os.mkdir(file_home_path)  # Making folder name for optimization files
+os.mkdir(file_work_path)  # Making folder name for data log
+file_naught = open(progress_file, 'w')
+file_naught.writelines(["Beginning optimization %s" % "\n"])
+file_naught.close()
 #execution_dictionary = {}
 
 def printing(string):

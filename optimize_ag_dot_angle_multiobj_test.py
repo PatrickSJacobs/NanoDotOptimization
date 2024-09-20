@@ -1,22 +1,7 @@
+from ag_dot_angle_obj import obj_func_run, current_time, main_home_dir, folder_name, file_home_path, main_work_dir, file_work_path, progress_file
 import os
 import csv
-from datetime import datetime
 import pandas as pd
-
-current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
-main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
-folder_name = "opt_%s" % str(current_time)  # Folder name for optimization files
-file_home_path = main_home_dir + folder_name + "_processed/"  # Folder name for optimization files
-main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
-file_work_path = main_work_dir + folder_name + "_raw/"  # Folder name for optimization files
-progress_file = file_home_path + "progress.txt"
-os.mkdir(file_home_path)  # Making folder name for optimization files
-os.mkdir(file_work_path)  # Making folder name for data log
-file_naught = open(progress_file, 'w')
-file_naught.writelines(["Beginning optimization %s" % "\n"])
-file_naught.close()
-
-from ag_dot_angle_obj import obj_func_run
 
 def printing(string):
 
