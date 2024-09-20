@@ -278,8 +278,14 @@ if __name__ == "__main__":
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
     print(len(train_Y))
 
-    ## Ensure train_Y has the correct shape
-    train_Y = train_Y.view(-1, 4)
+    task_indices = torch.arange(4, dtype=torch.long).repeat(train_X.shape[0])
+
+    # Repeat each train_X row for each task
+    train_X = train_X.repeat(4, 1)
+
+    # Reshape train_Y to have shape n x 1, where n includes all tasks
+    train_Y = train_Y.T.flatten().view(-1, 1)  # Reshape train_Y to n x 1
+
     
     #train_Y = train_Y.reshape(-1, 1)
 
@@ -298,7 +304,10 @@ if __name__ == "__main__":
         # Fit the GP model
         
         model = SaasFullyBayesianMultiTaskGP(
-            train_X, train_Y, task_feature=-1)
+            train_X=torch.cat([train_X, task_indices.unsqueeze(-1)], dim=-1),
+            train_Y=train_Y,
+            task_feature=-1  # The task feature is now the last column
+        )
         
         fit_fully_bayesian_model_nuts(model)
         #posterior = mtsaas_gp.posterior(test_X)
