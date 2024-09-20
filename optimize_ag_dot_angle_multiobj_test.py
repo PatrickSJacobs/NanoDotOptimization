@@ -186,7 +186,7 @@ if __name__ == "__main__":
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
 
         # Fit the model
-        fit_gpytorch_model(mll)
+        fit_gpytorch_mll(mll)
 
         # Get standardized training outputs
         train_Y_std = model.outcome_transform(train_Y)[0]
