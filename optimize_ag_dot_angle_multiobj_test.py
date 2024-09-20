@@ -31,56 +31,14 @@ def make_filename(sr, ht, cs, theta_deg):
 
 
 import torch
-# Import necessary modules from BoTorch and GPyTorch
-
-#from botorch.models.transforms import Standardize
-
-#from botorch.fit import fit_fully_bayesian_model_nuts
-
-#from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
-
-#from botorch.sampling.normal import SobolQMCNormalSampler
-
-#from botorch.optim import optimize_acqf
 
 from botorch.utils.multi_objective.pareto import is_non_dominated
-
-#from gpytorch.mlls import ExactMarginalLogLikelihood
-
-#from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
 
 from botorch.models.multitask import MultiTaskGP
 
 from botorch.fit import fit_gpytorch_mll
 
-#from botorch.models.gp_regression import SingleTaskGP
-
-#from botorch.models.model_list_gp_regression import ModelListGP
-
-#from botorch.models.transforms.outcome import Standardize
-
-#from gpytorch.mlls.sum_marginal_log_likelihood import SumMarginalLogLikelihood
-
-#from botorch.utils.transforms import unnormalize, normalize
-
-#from botorch.utils.sampling import draw_sobol_samples
-
-#from botorch.optim.optimize import optimize_acqf, optimize_acqf_list
-
-#from botorch.acquisition.objective import GenericMCObjective
-
-#from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
-
-#from botorch.utils.multi_objective.box_decompositions.non_dominated import FastNondominatedPartitioning
-
-#from botorch.acquisition.multi_objective.monte_carlo import (
-#    qExpectedHypervolumeImprovement,
-#    qNoisyExpectedHypervolumeImprovement,
-#)
-
-#from botorch.utils.sampling import sample_simplex
-
-from botorch.models.transforms import Standardize, Normalize
+from botorch.models.transforms import Standardize
 
 from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
 
@@ -89,7 +47,6 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
 
 from gpytorch.mlls import ExactMarginalLogLikelihood
-
 
 
 def get_values(x: [float], param: str):
@@ -202,6 +159,8 @@ if __name__ == "__main__":
     # Flatten train_Y
     train_Y_expanded = train_Y.transpose(0, 1).reshape(-1, 1)  # (N*T) x 1
 
+    train_X_expanded = train_X_expanded.float()
+    train_Y_expanded = train_Y_expanded.float() 
 
     for iteration in range(num_iterations):
         # Fit the MultiTaskGP model
