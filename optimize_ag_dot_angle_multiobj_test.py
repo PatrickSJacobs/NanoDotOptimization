@@ -49,13 +49,13 @@ from botorch.utils.multi_objective.pareto import is_non_dominated
 
 #from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
 
-#from botorch.models import MultiTaskGP
+from botorch.models.multitask import MultiTaskGP, FixedNoiseMultiTaskGP
 
 from botorch.fit import fit_gpytorch_mll
 
 #from botorch.models.gp_regression import SingleTaskGP
 
-from botorch.models.model_list_gp_regression import ModelListGP
+#from botorch.models.model_list_gp_regression import ModelListGP
 
 #from botorch.models.transforms.outcome import Standardize
 
@@ -160,6 +160,7 @@ if __name__ == "__main__":
     # Outputs
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
     print(len(train_Y))
+    
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
@@ -190,42 +191,42 @@ if __name__ == "__main__":
     n_tasks = train_Y.shape[-1]
     printing(f"n_tasks: {n_tasks}")
 
+    # Prepare the training data for MultiTaskGP
+    task_feature = train_X_normalized.shape[-1]  # Index for the task feature
+
+    # Create task indices
+    tasks = torch.arange(n_tasks).unsqueeze(0).repeat(train_X_normalized.shape[0], 1)  # N x T
+
+    # Expand train_X and append task indices
+    train_X_expanded = train_X_normalized.unsqueeze(1).repeat(1, n_tasks, 1)  # N x T x D
+    train_X_expanded = torch.cat([train_X_expanded, tasks.unsqueeze(-1)], dim=-1)  # N x T x (D + 1)
+    train_X_expanded = train_X_expanded.view(-1, train_X_expanded.shape[-1])  # (N*T) x (D + 1)
+
+    # Flatten train_Y
+    train_Y_expanded = train_Y.transpose(0, 1).reshape(-1, 1)  # (N*T) x 1
+
+
     for iteration in range(num_iterations):
-        # Normalize inputs
-        train_X_normalized = (train_X - bounds[0]) / (bounds[1] - bounds[0])
-
-        # Fit the multi-output GP model
-        # We will use MultiOutputGP with an IndexKernel to model correlations between outputs
-
-        # Create a Multitask Gaussian Likelihood
-        likelihood = MultitaskGaussianLikelihood(num_tasks=n_tasks)
-
-        # Define the model
-        model = MultiOutputGP(
-            train_X=train_X_normalized,
-            train_Y=train_Y,
-            likelihood=likelihood,
-            outcome_transform=Standardize(m=n_tasks),
+        # Fit the MultiTaskGP model
+        model = MultiTaskGP(
+            train_X=train_X_expanded,
+            train_Y=train_Y_expanded,
+            task_feature=task_feature,
+            outcome_transform=Standardize(m=1),
         )
 
-        # Define the marginal log likelihood
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
-
-        # Fit the model
         fit_gpytorch_mll(mll)
 
-        # Get standardized training outputs
-        train_Y_std = model.outcome_transform(train_Y)[0]
-
-        # Compute feasibility mask
-        is_feasible = (c1(train_Y_std) >= 0) & (c2(train_Y_std) >= 0) & (c3(train_Y_std) >= 0) & (c4(train_Y_std) >= 0)
+        # Compute feasibility mask using raw outputs
+        is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
         is_feasible = is_feasible.all(dim=-1)
 
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
             break
 
-        feasible_Y = train_Y_std[is_feasible]
+        feasible_Y = train_Y[is_feasible]
 
         # Define reference point for hypervolume calculation
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
@@ -237,7 +238,7 @@ if __name__ == "__main__":
         acq_func = qNoisyExpectedHypervolumeImprovement(
             model=model,
             ref_point=ref_point,
-            X_baseline=train_X_normalized,
+            X_baseline=train_X_expanded,
             constraints=constraints,
             sampler=sampler,
             prune_baseline=True,
@@ -246,14 +247,17 @@ if __name__ == "__main__":
         # Optimize the acquisition function to get the next candidate
         candidate_normalized, acq_value = optimize_acqf(
             acq_function=acq_func,
-            bounds=torch.stack([torch.zeros(train_X.shape[-1]), torch.ones(train_X.shape[-1])]),
+            bounds=torch.stack([
+                torch.zeros(train_X_expanded.shape[-1]),
+                torch.ones(train_X_expanded.shape[-1]),
+            ]),
             q=1,
             num_restarts=5,
             raw_samples=20,  # For initialization
         )
 
-        # Unnormalize the candidate
-        candidate = candidate_normalized * (bounds[1] - bounds[0]) + bounds[0]
+        # Exclude the task feature when evaluating the candidate
+        candidate = candidate_normalized[..., :-1] * (bounds[1] - bounds[0]) + bounds[0]
 
         # Evaluate the candidate
         y_new = evaluate_candidate(candidate)
@@ -261,6 +265,20 @@ if __name__ == "__main__":
         # Update training data
         train_X = torch.cat([train_X, candidate], dim=0)
         train_Y = torch.cat([train_Y, y_new], dim=0)
+
+        # Update expanded training data
+        # Normalize the new candidate
+        candidate_normalized = (candidate - bounds[0]) / (bounds[1] - bounds[0])
+        # Repeat for each task
+        candidate_expanded = candidate_normalized.unsqueeze(1).repeat(1, n_tasks, 1)
+        # Append task indices
+        candidate_expanded = torch.cat([candidate_expanded, tasks.unsqueeze(0)], dim=-1)
+        candidate_expanded = candidate_expanded.view(-1, candidate_expanded.shape[-1])
+
+        y_new_expanded = y_new.view(-1, 1)
+
+        train_X_expanded = torch.cat([train_X_expanded, candidate_expanded], dim=0)
+        train_Y_expanded = torch.cat([train_Y_expanded, y_new_expanded], dim=0)
 
         # Print progress
         printing(f"Iteration {iteration + 1}/{num_iterations}")
