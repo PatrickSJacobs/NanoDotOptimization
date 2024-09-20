@@ -163,8 +163,8 @@ if __name__ == "__main__":
     print(train_Y_expanded.dtype)
     print(train_X_expanded.device)
     print(train_Y_expanded.device)
-    train_X_expanded = train_X_expanded.float()
-    train_Y_expanded = train_Y_expanded.float() 
+    train_X_expanded = train_X_expanded.double()
+    train_Y_expanded = train_Y_expanded.double() 
 
     task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
 
