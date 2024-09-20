@@ -284,7 +284,7 @@ if __name__ == "__main__":
     train_X = train_X.repeat(4, 1)
 
     # Reshape train_Y to have shape n x 1, where n includes all tasks
-    train_Y = train_Y.T.flatten().view(-1, 1)  # Reshape train_Y to n x 1
+    train_Y = train_Y.T.flatten().view(-1, 4)  # Reshape train_Y to n x 1
 
     
     #train_Y = train_Y.reshape(-1, 1)
