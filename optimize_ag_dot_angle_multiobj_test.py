@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
-        [0.005, 0.05, 0.25, 0.0],   # Lower bounds for sr, ht, cs, theta_deg
+        [0.005, 0.05, 0.025, 0.0],   # Lower bounds for sr, ht, cs, theta_deg
         [0.125, 0.1, 0.25, 90.0]     # Upper bounds for sr, ht, cs, theta_deg
     ], dtype=torch.double)
     bounds = bounds.double()
