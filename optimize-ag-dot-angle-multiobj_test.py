@@ -309,7 +309,15 @@ if __name__ == "__main__":
             task_feature=-1  # The task feature is now the last column
         )
         
-        fit_fully_bayesian_model_nuts(model)
+        #fit_fully_bayesian_model_nuts(model)
+        fit_fully_bayesian_model_nuts(
+            model,
+            warmup_steps=128,  # Reduce from 512 to 128
+            num_samples=128,   # Reduce from 256 to 128
+            thinning=16,       # Adjust thinning if necessary
+            disable_progbar=False  # You can set this to True to disable the progress bar
+        )
+
         #posterior = mtsaas_gp.posterior(test_X)
 
         # Get standardized training outputs
