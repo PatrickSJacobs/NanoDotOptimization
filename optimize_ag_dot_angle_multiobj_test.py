@@ -175,12 +175,15 @@ if __name__ == "__main__":
     sys.exit()
     for iteration in range(num_iterations):
         # Fit the MultiTaskGP model
+        print("Model training starts")
         model = MultiTaskGP(
             train_X=train_X_expanded,
             train_Y=train_Y_expanded,
             task_feature=task_feature,
             #outcome_transform=Standardize(m=1),
         )
+        print("Model finished training")
+
 
         print("Model's train inputs:")
         print(model.train_inputs)
