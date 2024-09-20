@@ -17,7 +17,7 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
-from botorch.models.fully_bayesian_multitask.SaasFullyBayesianMultiTaskGP import SaasFullyBayesianMultiTaskGP
+from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
 main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
