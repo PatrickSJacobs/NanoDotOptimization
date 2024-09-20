@@ -114,10 +114,6 @@ if __name__ == "__main__":
     # Outputs
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
     print(len(train_Y))
-    
-    train_X = train_X.double()
-    train_Y = train_Y.double()
-    
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
@@ -162,10 +158,6 @@ if __name__ == "__main__":
 
     # Flatten train_Y
     train_Y_expanded = train_Y.transpose(0, 1).reshape(-1, 1)  # (N*T) x 1
-
-    
-    train_X_expanded = train_X_expanded.double()
-    train_Y_expanded = train_Y_expanded.double() 
     
     task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
 
