@@ -16,5 +16,5 @@ python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-collect.p
 
 python -c "import botorch; print(botorch.__version__)"
 
-python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-multiobj_test.py
+python /home1/08809/tg881088/NanoDotOptimization/optimize_ag_dot_angle_multiobj_test.py
 
