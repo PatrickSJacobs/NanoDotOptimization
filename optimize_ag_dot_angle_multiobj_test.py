@@ -174,6 +174,8 @@ if __name__ == "__main__":
     print(train_X_expanded.device)
     print(train_Y_expanded.device)
     print(task_feature)
+    print(train_X_expanded)
+    print(train_Y_expanded)
 
 
     for iteration in range(num_iterations):
