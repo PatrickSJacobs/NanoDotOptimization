@@ -5,8 +5,8 @@
 #SBATCH -N 1
 #SBATCH --mail-user=pjacobs7@eagles.nccu.edu
 #SBATCH --mail-type=all
-#SBATCH -p skx-dev              # Queue name
-#SBATCH -t 02:00:00           # Run time (hh:mm:ss) - 20 hours
+#SBATCH -p skx              # Queue name
+#SBATCH -t 10:00:00           # Run time (hh:mm:ss) - 20 hours
 echo "SCRIPT $PE_HOSTFILE"
 
 source ~/.bashrc
