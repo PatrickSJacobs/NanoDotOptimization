@@ -278,16 +278,22 @@ if __name__ == "__main__":
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
     print(len(train_Y))
 
-    task_indices = torch.arange(4, dtype=torch.long).repeat(train_X.shape[0])
+    n_samples = train_X.shape[0]
+    n_tasks = train_Y.shape[1]  # Should be 4 in your case
 
-    # Repeat each train_X row for each task
-    train_X = train_X.repeat(4, 1)
+    # Repeat train_X for each task
+    train_X_expanded = train_X.repeat_interleave(n_tasks, dim=0)  # Shape: (n_samples * n_tasks, n_features)
 
-    # Reshape train_Y to have shape n x 1, where n includes all tasks
-    train_Y = train_Y.T.flatten().view(-1, 1)  # Reshape train_Y to n x 1
+    # Flatten train_Y
+    train_Y_expanded = train_Y.T.flatten().unsqueeze(-1)  # Shape: (n_samples * n_tasks, 1)
 
-    
-    #train_Y = train_Y.reshape(-1, 1)
+    # Create task indices
+    task_indices = torch.arange(n_tasks).repeat(n_samples)  # Shape: (n_samples * n_tasks)
+    task_indices = task_indices.unsqueeze(-1)  # Shape: (n_samples * n_tasks, 1)
+
+    # Combine train_X and task indices
+    train_X_with_task = torch.cat([train_X_expanded, task_indices], dim=1)  # Shape: (n_samples * n_tasks, n_features + 1)
+
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
@@ -297,23 +303,21 @@ if __name__ == "__main__":
 
     num_iterations = 4  # Number of optimization iterations
 
-    num_tasks = train_Y.shape[1]  # Should be 4
-
-    printing(f"num_tasks: {num_tasks}") 
+    printing(f"n_tasks: {n_tasks}") 
     for iteration in range(num_iterations):
         # Fit the GP model
         
         model = SaasFullyBayesianMultiTaskGP(
-            train_X=torch.cat([train_X, task_indices.unsqueeze(-1)], dim=-1),
-            train_Y=train_Y,
-            task_feature=-1  # The task feature is now the last column
+            train_X=train_X_with_task,
+            train_Y=train_Y_expanded,
+            task_feature=-1  # The last column is the task feature
         )
         
         #fit_fully_bayesian_model_nuts(model)
         fit_fully_bayesian_model_nuts(
             model,
             warmup_steps=2,  # Reduce from 512 to 128
-            num_samples=2,   # Reduce from 256 to 128
+            num_samples=128,   # Reduce from 256 to 128
             thinning=16,       # Adjust thinning if necessary
             disable_progbar=False  # You can set this to True to disable the progress bar
         )
@@ -393,3 +397,5 @@ if __name__ == "__main__":
         columns=['sr', 'ht', 'cs', 'theta_deg', 'c-param', 'b-param', 'b_var', 'c_var']
     )
     pareto_df.to_csv(os.path.join(file_home_path, 'pareto_front.csv'), index=False)
+    
+    
