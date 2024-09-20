@@ -279,9 +279,9 @@ if __name__ == "__main__":
     print(len(train_Y))
 
     ## Ensure train_Y has the correct shape
-    #train_Y = train_Y.view(-1, 4)
+    train_Y = train_Y.view(-1, 4)
     
-    train_Y = train_Y.reshape(-1, 1)
+    #train_Y = train_Y.reshape(-1, 1)
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
