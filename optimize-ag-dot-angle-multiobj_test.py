@@ -1,28 +1,7 @@
 import os
 import csv
-import random
-import string
-import time
 from datetime import datetime
-from time import sleep
-import numpy as np
 import pandas as pd
-import torch
-
-# Import necessary modules from BoTorch and GPyTorch
-from botorch.models.transforms import Standardize
-from botorch.fit import fit_fully_bayesian_model_nuts
-from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
-from botorch.sampling.normal import SobolQMCNormalSampler
-from botorch.optim import optimize_acqf
-from botorch.utils.multi_objective.pareto import is_non_dominated
-from gpytorch.mlls import ExactMarginalLogLikelihood
-from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
-from botorch.models import MultiTaskGP
-from botorch.fit import fit_gpytorch_mll
-
-
-
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
 main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
 folder_name = "opt_%s" % str(current_time)  # Folder name for optimization files
@@ -36,7 +15,7 @@ file_naught = open(progress_file, 'w')
 file_naught.writelines(["Beginning optimization %s" % "\n"])
 file_naught.close()
 
-#execution_dictionary = {}
+from ag_dot_angle_obj import obj_func_run
 
 def printing(string):
 
@@ -64,160 +43,45 @@ def make_filename(sr, ht, cs, theta_deg):
                                                       )  # filename to be used
     return filename
 
-def obj_func_run(x: [float]):
-    """
-    (3) Running the Optimization with Test Values
-        - Given the test parameters, construct a optimization to get the reflectance from the situation with respect to the parameters
-        - Optimization is performed and the worker waits until the data is ready for extraction
-        - The data is extracted, logged, and sent to obj_func_calc which performs the final processing of the wavelength and reflectance data
-        - The objective function results are logged and any unnecessary files are deleted.
-        - The objective function results are sent back to the optimizer
-    """
-    sr = x[0]
-    ht = x[1]
-    cs = x[2]
-    theta_deg = x[3]
-    #cs = 0.001 * 250
-    #theta_deg = x[2]
 
-    sleep(10)# Sleep to give code time to process parallelization
-
-    # Parameters to be used in current evaluation
-    printing((sr, ht, cs, theta_deg))
-
-    filename = make_filename(sr, ht, cs, theta_deg)
-
-    #Creating Scheme executable for current optimization; ag-dot-angle0.ctl cannot be used simultaneously with multiple workers)
-    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
-    lines = executable.readlines()
-    code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    new_name = file_home_path + "ag-dot-angle" + code
-    new_file = new_name + ".ctl"
-    file0 = open(new_file, 'w')
-    file0.writelines(lines)
-    file0.close()
-
-    # Creating ticker file to make sure the data is created and stable for processing
-    ticker_file = file_home_path + "ticker" + code + ".txt"
-    file2 = open(ticker_file, 'w')
-    file2.write("0")
-    file2.close()
-
-    # Creation of simulation "subjob" file
-    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
-    file1 = open(sbatch_file, 'w')
-
-    air_file = "%sair-angle_%s" % (file_home_path, filename)
-    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
-    
-    air_raw_path = air_file + ".out"
-    metal_raw_path = metal_file + ".out"
-    air_data_path = air_file + ".dat"
-    metal_data_path = metal_file + ".dat"
-    # cell_size = 2*(sr + cs)
-    cell_size = 2 * sr + cs
-    
-    info_file = new_name + ".txt"
-
-    with open(info_file, "w") as f:
-        for item in [
-            progress_file, 
-            air_data_path, 
-            metal_data_path, 
-            file_home_path, 
-            file_work_path, 
-            filename, 
-            ticker_file, 
-            air_raw_path, 
-            metal_raw_path, 
-            sr, 
-            ht, 
-            cs, 
-            theta_deg
-                    ]:
-            f.write(f"{item}\n")
-
-    file1.writelines(["#!/bin/bash%s" % "\n",
-                      "#SBATCH -J myMPI%s" % "\n",
-                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 32%s" % "\n",
-                      "#SBATCH -N 1%s" % "\n",
-                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
-                      "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p skx%s" % "\n",
-                      "#SBATCH -t 01:20:00%s" % "\n",
-                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
-                      "module load gcc/13.2.0%s" % "\n",
-                      "module load impi/21.11%s" % "\n",
-                      "module load meep/1.28%s" % "\n",
-                      "source ~/.bashrc%s" % "\n",
-                      "conda activate ndo%s" % "\n",
-                      #"echo new_file: %s %s" % (new_file, "\n"),
-                      #"echo air_raw_path: %s %s" % (air_raw_path, "\n"),
-                      #"echo air_data_path: %s %s" % (air_data_path, "\n"),
-                      #"echo metal_raw_path: %s %s" % (metal_raw_path, "\n"),
-                      #"echo metal_data_path: %s %s" % (metal_data_path, "\n"),
-                      #"echo ticker_file: %s %s" % (ticker_file, "\n"),
-                      #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "ibrun -np 32 meep no-metal?=true sy=%s theta_deg=%s %s | tee %s;%s" % (cell_size, theta_deg, new_file, air_raw_path, "\n"),
-                      #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
-                      #"ibrun -np 4 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "mpirun -np 32 meep no-metal?=false sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "echo %s;%s" % (info_file, "\n"),
-                      #"wait;%s" % ("\n"),
-                      "python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info_file, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")
-
-                      ])
-    
-    file1.close()
-
-    sleep(15)  # Pause to give time for simulation file to be created
-    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
-
-    success = 0
-
-    #(4) Extracting Data From optimization
-    max_time = (100*100)
-    #max_time = (50)
-    time_count = 0
-    # Wait for data to be stable and ready for processing
-    while success == 0:
-        try:
-            a = open(ticker_file, "r").read()
-            a = int(a)
-            if a == 1:
-                printing(f"files pass:{(air_data_path, metal_data_path)}")
-                success = 1   
-        except:
-            pass
-        
-        if time_count == max_time:
-                raise Exception(f"ticker not existing: {ticker_file}")
-
-        time_count = time_count + 1
-        time.sleep(1)
-        
-    os.system("ssh login1 rm -r " +
-            ticker_file + " " +
-            air_raw_path + " " +
-            metal_raw_path + " " +
-            metal_data_path + " " +
-            air_data_path + " " +
-            new_file + " " +
-            main_home_dir + "ag-dot-angle" + code + "* " +
-            file_home_path + "ag-dot-angle" + code + "* ")
-
-    printing(f"finished deleting files; code: {code}")
-
-    # (9) Returning of Result and Continuity of Optimization
-    printing(f'Executed: {filename}')
-    
-    return filename
+import torch
+# Import necessary modules from BoTorch and GPyTorch
+from botorch.models.transforms import Standardize
+from botorch.fit import fit_fully_bayesian_model_nuts
+from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
+from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.optim import optimize_acqf
+from botorch.utils.multi_objective.pareto import is_non_dominated
+from gpytorch.mlls import ExactMarginalLogLikelihood
+from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
+from botorch.models import MultiTaskGP
+from botorch.fit import fit_gpytorch_mll
+from botorch.models.gp_regression import SingleTaskGP
+from botorch.models.model_list_gp_regression import ModelListGP
+from botorch.models.transforms.outcome import Standardize
+from gpytorch.mlls.sum_marginal_log_likelihood import SumMarginalLogLikelihood
+from botorch.utils.transforms import unnormalize, normalize
+from botorch.utils.sampling import draw_sobol_samples
+from botorch.optim.optimize import optimize_acqf, optimize_acqf_list
+from botorch.acquisition.objective import GenericMCObjective
+from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
+from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+    FastNondominatedPartitioning,
+)
+from botorch.acquisition.multi_objective.monte_carlo import (
+    qExpectedHypervolumeImprovement,
+    qNoisyExpectedHypervolumeImprovement,
+)
+from botorch.utils.sampling import sample_simplex
+from botorch.models.transforms import Standardize, Normalize
+from botorch import fit_gpytorch_model
+from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
+from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.optim import optimize_acqf
+from botorch.utils.multi_objective.pareto import is_non_dominated
+from botorch.models import MultiOutputGP, FixedNoiseMultiOutputGP
+from gpytorch.mlls import ExactMarginalLogLikelihood
+from gpytorch.likelihoods import MultitaskGaussianLikelihood
 
 def get_values(x: [float], param: str):
     sr = x[0]
@@ -259,9 +123,13 @@ def evaluate_candidate(candidate):
     y = torch.tensor([[y0, y1, y2, y3]], dtype=torch.double)
     return y
 
+
+# Your existing code for file paths and utility functions remains the same
+# ...
+
 if __name__ == "__main__":
     # Load pretraining data from CSV file
-     # Initialize CSV log file if it doesn't exist
+    # Initialize CSV log file if it doesn't exist
     calc_log_obj_path = os.path.join(file_home_path, "calc_log_obj.csv")
     if not os.path.exists(calc_log_obj_path):
         with open(calc_log_obj_path, 'w', newline='') as file:
@@ -269,8 +137,7 @@ if __name__ == "__main__":
             writer.writerow(
                 ["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time",
                  "step count"])
-            
-            
+
     pretraining_data_path = main_work_dir + 'ag-dot-angle-pretraining.csv'  # Replace with your CSV file path
     df = pd.read_csv(pretraining_data_path)
 
@@ -282,44 +149,58 @@ if __name__ == "__main__":
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
     print(len(train_Y))
 
-    n_samples = train_X.shape[0]
-    n_tasks = train_Y.shape[1]
-
-    # Repeat train_X for each task
-    train_X = train_X.unsqueeze(1).repeat(1, n_tasks, 1).reshape(-1, train_X.shape[1])  # Shape: (n_samples * n_tasks, n_features)
-
-    # Flatten train_Y
-    train_Y = train_Y.reshape(-1, 1)  # Shape: (n_samples * n_tasks, 1)
-
-    # Create task indices
-    task_indices = torch.arange(n_tasks).repeat(n_samples)  # Shape: (n_samples * n_tasks)
-
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
         [0.005, 0.05, 0.25, 0.0],   # Lower bounds for sr, ht, cs, theta_deg
         [0.125, 0.1, 0.25, 90.0]     # Upper bounds for sr, ht, cs, theta_deg
-    ], dtype=torch.double).T
+    ], dtype=torch.double)
+
+    # Normalize the training inputs
+    train_X_normalized = (train_X - bounds[0]) / (bounds[1] - bounds[0])
 
     num_iterations = 4  # Number of optimization iterations
 
-    printing(f"n_tasks: {n_tasks}") 
+    # Define constraints as functions (accepting posterior samples Y)
+    def c1(samples):
+        return 5 - samples[..., 0]  # c-param <= 5
+
+    def c2(samples):
+        return samples[..., 1] - 1  # b-param >= 1
+
+    def c3(samples):
+        return 50 - samples[..., 1]  # b-param <= 50
+
+    def c4(samples):
+        return 10 - samples[..., 2]  # b_var <= 10
+
+    constraints = [c1, c2, c3, c4]
+
+    n_tasks = train_Y.shape[-1]
+    printing(f"n_tasks: {n_tasks}")
+
     for iteration in range(num_iterations):
-        # Fit the GP model
-        
-        model = MultiTaskGP(
-            train_X=train_X,
+        # Normalize inputs
+        train_X_normalized = (train_X - bounds[0]) / (bounds[1] - bounds[0])
+
+        # Fit the multi-output GP model
+        # We will use MultiOutputGP with an IndexKernel to model correlations between outputs
+
+        # Create a Multitask Gaussian Likelihood
+        likelihood = MultitaskGaussianLikelihood(num_tasks=n_tasks)
+
+        # Define the model
+        model = MultiOutputGP(
+            train_X=train_X_normalized,
             train_Y=train_Y,
-            task_feature=-1,       # We'll specify task indices separately
-            #task_indices=task_indices,
+            likelihood=likelihood,
+            outcome_transform=Standardize(m=n_tasks),
         )
 
-        
-        #fit_fully_bayesian_model_nuts(model)
-        fit_gpytorch_mll(
-            model
-        )
+        # Define the marginal log likelihood
+        mll = ExactMarginalLogLikelihood(model.likelihood, model)
 
-        #posterior = mtsaas_gp.posterior(test_X)
+        # Fit the model
+        fit_gpytorch_model(mll)
 
         # Get standardized training outputs
         train_Y_std = model.outcome_transform(train_Y)[0]
@@ -335,32 +216,32 @@ if __name__ == "__main__":
         feasible_Y = train_Y_std[is_feasible]
 
         # Define reference point for hypervolume calculation
-        printing("No reference point")
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
         ref_point = ref_point.tolist()
         printing(f"ref_point: {ref_point}")
-        # Remove partitioning (not needed for qNEHVI)
-        # partitioning = NondominatedPartitioning(ref_point=torch.tensor(ref_point), Y=feasible_Y)
 
         # Define the acquisition function using qNEHVI
         sampler = SobolQMCNormalSampler(num_samples=128)
         acq_func = qNoisyExpectedHypervolumeImprovement(
             model=model,
             ref_point=ref_point,
-            X_baseline=train_X,
+            X_baseline=train_X_normalized,
             constraints=constraints,
             sampler=sampler,
             prune_baseline=True,
         )
 
         # Optimize the acquisition function to get the next candidate
-        candidate, acq_value = optimize_acqf(
+        candidate_normalized, acq_value = optimize_acqf(
             acq_function=acq_func,
-            bounds=bounds,
+            bounds=torch.stack([torch.zeros(train_X.shape[-1]), torch.ones(train_X.shape[-1])]),
             q=1,
             num_restarts=5,
             raw_samples=20,  # For initialization
         )
+
+        # Unnormalize the candidate
+        candidate = candidate_normalized * (bounds[1] - bounds[0]) + bounds[0]
 
         # Evaluate the candidate
         y_new = evaluate_candidate(candidate)
@@ -394,5 +275,3 @@ if __name__ == "__main__":
         columns=['sr', 'ht', 'cs', 'theta_deg', 'c-param', 'b-param', 'b_var', 'c_var']
     )
     pareto_df.to_csv(os.path.join(file_home_path, 'pareto_front.csv'), index=False)
-    
-    
