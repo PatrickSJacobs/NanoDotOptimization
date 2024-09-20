@@ -18,6 +18,8 @@ from botorch.optim import optimize_acqf
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
+from botorch.models import MultiTaskGP
+
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
 main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
@@ -279,21 +281,16 @@ if __name__ == "__main__":
     print(len(train_Y))
 
     n_samples = train_X.shape[0]
-    n_tasks = train_Y.shape[1]  # Should be 4 in your case
+    n_tasks = train_Y.shape[1]
 
     # Repeat train_X for each task
-    train_X_expanded = train_X.repeat_interleave(n_tasks, dim=0)  # Shape: (n_samples * n_tasks, n_features)
+    train_X_expanded = train_X.unsqueeze(1).repeat(1, n_tasks, 1).view(-1, train_X.shape[1])  # Shape: (n_samples * n_tasks, n_features)
 
     # Flatten train_Y
-    train_Y_expanded = train_Y.T.flatten().unsqueeze(-1)  # Shape: (n_samples * n_tasks, 1)
+    train_Y_expanded = train_Y.view(-1, 1)  # Shape: (n_samples * n_tasks, 1)
 
     # Create task indices
     task_indices = torch.arange(n_tasks).repeat(n_samples)  # Shape: (n_samples * n_tasks)
-    task_indices = task_indices.unsqueeze(-1)  # Shape: (n_samples * n_tasks, 1)
-
-    # Combine train_X and task indices
-    train_X_with_task = torch.cat([train_X_expanded, task_indices], dim=1)  # Shape: (n_samples * n_tasks, n_features + 1)
-
 
     # Bounds (include 'cs' bounds)
     bounds = torch.tensor([
@@ -307,11 +304,14 @@ if __name__ == "__main__":
     for iteration in range(num_iterations):
         # Fit the GP model
         
-        model = SaasFullyBayesianMultiTaskGP(
-            train_X=train_X_with_task,
+        model = MultiTaskGP(
+            train_X=train_X_expanded,
             train_Y=train_Y_expanded,
-            task_feature=-1  # The last column is the task feature
+            task_feature=None,       # We'll specify task indices separately
+            task_indices=task_indices,
+            outcome_transform=Standardize(m=1)
         )
+
         
         #fit_fully_bayesian_model_nuts(model)
         fit_fully_bayesian_model_nuts(
