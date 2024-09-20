@@ -49,7 +49,7 @@ from botorch.utils.multi_objective.pareto import is_non_dominated
 
 #from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
 
-from botorch.models.multitask import MultiTaskGP, FixedNoiseMultiTaskGP
+from botorch.models.multitask import MultiTaskGP
 
 from botorch.fit import fit_gpytorch_mll
 
