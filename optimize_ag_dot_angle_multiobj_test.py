@@ -146,7 +146,7 @@ if __name__ == "__main__":
     printing(f"n_tasks: {n_tasks}")
 
     # Prepare the training data for MultiTaskGP
-    task_feature = train_X_normalized.shape[-1]  # Index for the task feature
+    #task_feature = train_X_normalized.shape[-1]  # Index for the task feature
 
     # Create task indices
     tasks = torch.arange(n_tasks).unsqueeze(0).repeat(train_X_normalized.shape[0], 1)  # N x T
@@ -159,8 +159,14 @@ if __name__ == "__main__":
     # Flatten train_Y
     train_Y_expanded = train_Y.transpose(0, 1).reshape(-1, 1)  # (N*T) x 1
 
+    print(train_X_expanded.dtype)
+    print(train_Y_expanded.dtype)
+    print(train_X_expanded.device)
+    print(train_Y_expanded.device)
     train_X_expanded = train_X_expanded.float()
     train_Y_expanded = train_Y_expanded.float() 
+
+    task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
 
     for iteration in range(num_iterations):
         # Fit the MultiTaskGP model
@@ -168,9 +174,12 @@ if __name__ == "__main__":
             train_X=train_X_expanded,
             train_Y=train_Y_expanded,
             task_feature=task_feature,
-            outcome_transform=Standardize(m=1),
+            #outcome_transform=Standardize(m=1),
         )
 
+        print("Model's train inputs:")
+        print(model.train_inputs)
+        
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
 
