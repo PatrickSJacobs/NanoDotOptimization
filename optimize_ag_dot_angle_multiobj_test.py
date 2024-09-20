@@ -117,7 +117,6 @@ if __name__ == "__main__":
     
     train_X = train_X.double()
     train_Y = train_Y.double()
-    bounds = bounds.double()
     
 
     # Bounds (include 'cs' bounds)
@@ -125,6 +124,7 @@ if __name__ == "__main__":
         [0.005, 0.05, 0.25, 0.0],   # Lower bounds for sr, ht, cs, theta_deg
         [0.125, 0.1, 0.25, 90.0]     # Upper bounds for sr, ht, cs, theta_deg
     ], dtype=torch.double)
+    bounds = bounds.double()
 
     # Normalize the training inputs
     train_X_normalized = (train_X - bounds[0]) / (bounds[1] - bounds[0])
