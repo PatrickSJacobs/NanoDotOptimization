@@ -19,6 +19,8 @@ from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from botorch.models.fully_bayesian_multitask import SaasFullyBayesianMultiTaskGP
 from botorch.models import MultiTaskGP
+from botorch.fit import fit_gpytorch_mll
+
 
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
