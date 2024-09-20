@@ -55,7 +55,7 @@ from botorch.fit import fit_gpytorch_mll
 
 #from botorch.models.gp_regression import SingleTaskGP
 
-#from botorch.models.model_list_gp_regression import ModelListGP
+from botorch.models.model_list_gp_regression import ModelListGP
 
 #from botorch.models.transforms.outcome import Standardize
 
