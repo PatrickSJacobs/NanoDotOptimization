@@ -2,6 +2,7 @@ from ag_dot_angle_obj import obj_func_run, current_time, main_home_dir, folder_n
 import os
 import csv
 import pandas as pd
+import sys
 
 def printing(string):
 
@@ -122,8 +123,10 @@ if __name__ == "__main__":
     ], dtype=torch.double)
     bounds = bounds.double()
 
+    print("not normalized")
     # Normalize the training inputs
     train_X_normalized = (train_X - bounds[0]) / (bounds[1] - bounds[0])
+    print("normalized")
 
     num_iterations = 4  # Number of optimization iterations
 
@@ -169,7 +172,7 @@ if __name__ == "__main__":
     print(train_X_expanded)
     print(train_Y_expanded)
 
-
+    sys.exit()
     for iteration in range(num_iterations):
         # Fit the MultiTaskGP model
         model = MultiTaskGP(
