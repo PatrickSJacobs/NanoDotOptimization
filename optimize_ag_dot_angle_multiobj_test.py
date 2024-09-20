@@ -88,11 +88,8 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 
 from botorch.optim import optimize_acqf
 
-from botorch.models import MultiOutputGP, FixedNoiseMultiOutputGP
-
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from gpytorch.likelihoods import MultitaskGaussianLikelihood
 
 
 def get_values(x: [float], param: str):
