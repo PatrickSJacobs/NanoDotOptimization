@@ -308,7 +308,7 @@ if __name__ == "__main__":
             train_X=train_X_expanded,
             train_Y=train_Y_expanded,
             task_feature=None,       # We'll specify task indices separately
-            task_indices=task_indices,
+            #task_indices=task_indices,
             outcome_transform=Standardize(m=1)
         )
 
