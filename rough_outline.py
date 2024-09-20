@@ -11,13 +11,13 @@ import torch
 
 # Import necessary modules from BoTorch and GPyTorch
 from botorch.models.transforms import Standardize
-from botorch.fit import fit_fully_bayesian_model_nuts
+from botorch import fit_gpytorch_mll
 from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
-from botorch.models.fully_bayesian_multitask.SaasFullyBayesianMultiTaskGP import SaasFullyBayesianMultiTaskGP
+from botorch.models import SingleTaskGP
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
 main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
@@ -257,22 +257,16 @@ def evaluate_candidate(candidate):
 
 if __name__ == "__main__":
     # Load pretraining data from CSV file
-     # Initialize CSV log file if it doesn't exist
-    calc_log_obj_path = os.path.join(file_home_path, "calc_log_obj.csv")
-    if not os.path.exists(calc_log_obj_path):
-        with open(calc_log_obj_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(
-                ["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time",
-                 "step count"])
-            
-            
     pretraining_data_path = main_work_dir + 'ag-dot-angle-pretraining.csv'  # Replace with your CSV file path
     df = pd.read_csv(pretraining_data_path)
 
     # Inputs (include 'cs' since it's now a variable)
     train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
     print(len(train_X))
+
+    # Add a task index to train_X
+    task_indices = torch.arange(train_X.size(0)).unsqueeze(1)
+    train_X_with_task = torch.cat([train_X, task_indices], dim=1)
 
     # Outputs
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
@@ -289,17 +283,25 @@ if __name__ == "__main__":
 
     num_iterations = 4  # Number of optimization iterations
 
+    # Initialize CSV log file if it doesn't exist
+    calc_log_obj_path = os.path.join(file_home_path, "calc_log_obj.csv")
+    if not os.path.exists(calc_log_obj_path):
+        with open(calc_log_obj_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                ["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time",
+                 "step count"])
+
     num_tasks = train_Y.shape[1]  # Should be 4
 
     printing(f"num_tasks: {num_tasks}") 
     for iteration in range(num_iterations):
         # Fit the GP model
         
-        model = SaasFullyBayesianMultiTaskGP(
-            train_X, train_Y, task_feature=-1)
-        
-        fit_fully_bayesian_model_nuts(model)
-        #posterior = mtsaas_gp.posterior(test_X)
+        model = SingleTaskGP(train_X, train_Y, outcome_transform=Standardize(m=num_tasks))
+
+        mll = ExactMarginalLogLikelihood(model.likelihood, model)
+        fit_gpytorch_mll(mll)
 
         # Get standardized training outputs
         train_Y_std = model.outcome_transform(train_Y)[0]
