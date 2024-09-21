@@ -26,7 +26,7 @@ from scipy.signal import find_peaks
 import sys
 import traceback
 import numpy as np
-from pymoo.util.non_dominated_sorting import NonDominatedSorting
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
