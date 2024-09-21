@@ -200,7 +200,7 @@ if __name__ == "__main__":
         # Compute feasibility mask using raw outputs
         is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
         is_feasible = is_feasible.all(dim=-1)
-
+        sys.exit("is feasible")
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
             break
