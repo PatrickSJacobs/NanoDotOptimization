@@ -339,41 +339,6 @@ if __name__ == "__main__":
         dominance_comparator=DominanceComparator(),
     )
 
-
-    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining-unpruned.csv")
-
-    # Suppose you have your dataset loaded into the following arrays:
-    parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
-    # Outputs
-    objectives = df1[['c-param', 'b-param', 'b_var', 'c_var']].values
-
-    # Ensure that your objectives are formatted correctly
-    # For minimization problems, objectives should be the values as is
-    # For maximization problems, convert objectives by negating them
-
-    # If you have maximization objectives, uncomment the following line
-    # objectives = -objectives
-
-    # Find the Pareto front using pymoo's NonDominatedSorting
-    nds = NonDominatedSorting()
-
-    # Get indices of Pareto-optimal solutions
-    pareto_front_indices = nds.do(objectives, only_non_dominated_front=True)
-
-    # Extract Pareto front solutions
-    pareto_parameters = parameters[pareto_front_indices]
-    pareto_objectives = objectives[pareto_front_indices]
-
-    # Output the Pareto front solutions and their parameters
-    print("Number of Pareto-optimal solutions found:", len(pareto_front_indices))
-
-    for i, idx in enumerate(pareto_front_indices):
-        print(f"\nSolution {i+1}:")
-        print(f"Parameters: {pareto_parameters[i]}")
-        print(f"Objectives: {pareto_objectives[i]}")
-
-    sys.exit()
-
     algorithm.run()
     front = algorithm.get_result()
 
