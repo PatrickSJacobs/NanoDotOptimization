@@ -25,6 +25,9 @@ import statistics
 from scipy.signal import find_peaks
 import sys
 import traceback
+import numpy as np
+from pymoo.util.non_dominated_sorting import NonDominatedSorting
+
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
@@ -286,8 +289,8 @@ problem = (
     .set_name("Testing")
     .add_variable(0.001 * 5, 0.001 * 125)
     .add_variable(0.001 * 50, 0.001 * 100)
-    #.add_variable(0.001 * 25, 0.001 * 250)
-    .add_variable(0.001 * 250, 0.001 * 250)
+    .add_variable(0.001 * 25, 0.001 * 250)
+    #.add_variable(0.001 * 250, 0.001 * 250)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 90.0)
     .add_function(c)
@@ -307,8 +310,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    #max_evaluations = 64
-    max_evaluations = 5
+    max_evaluations = 160
+    #max_evaluations = 5
 
     '''
 
@@ -329,13 +332,47 @@ if __name__ == "__main__":
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
         #population_size=16,
-        population_size=5,
-        cr=0.5,
-        f=0.8,
+        population_size=32,
+        cr=0.9,
+        f=0.4,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
         dominance_comparator=DominanceComparator(),
     )
 
+
+    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining-unpruned.csv")
+
+    # Suppose you have your dataset loaded into the following arrays:
+    parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
+    # Outputs
+    objectives = df1[['c-param', 'b-param', 'b_var', 'c_var']].values
+
+    # Ensure that your objectives are formatted correctly
+    # For minimization problems, objectives should be the values as is
+    # For maximization problems, convert objectives by negating them
+
+    # If you have maximization objectives, uncomment the following line
+    # objectives = -objectives
+
+    # Find the Pareto front using pymoo's NonDominatedSorting
+    nds = NonDominatedSorting()
+
+    # Get indices of Pareto-optimal solutions
+    pareto_front_indices = nds.run(objectives, only_non_dominated_front=True)
+
+    # Extract Pareto front solutions
+    pareto_parameters = parameters[pareto_front_indices]
+    pareto_objectives = objectives[pareto_front_indices]
+
+    # Output the Pareto front solutions and their parameters
+    print("Number of Pareto-optimal solutions found:", len(pareto_front_indices))
+
+    for i, idx in enumerate(pareto_front_indices):
+        print(f"\nSolution {i+1}:")
+        print(f"Parameters: {pareto_parameters[i]}")
+        print(f"Objectives: {pareto_objectives[i]}")
+
+    sys.exit()
 
     algorithm.run()
     front = algorithm.get_result()
