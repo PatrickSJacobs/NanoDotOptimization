@@ -1,13 +1,24 @@
-
-from pathlib import Path
+# Standard Library Imports
 import csv
+import math
+import os
+import re
+from pathlib import Path
+
+# Third-Party Imports
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
-import re
-import os
-import math
+from scipy.stats import zscore
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.decomposition import PCA
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import pairwise_distances_argmin_min
+from sklearn.preprocessing import StandardScaler
+
+# [Your other code goes here]
+
 
 def obj_func_calc(wvls, R_meep):
     '''
@@ -132,55 +143,147 @@ def collect_calc_log_files(base_directory):
     
     return calc_log_files
 
-main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
-main_work_dir = "/work2/08809/tg881088/" # Home directory for optimization
+# [Include all your existing function definitions here: obj_func_calc, date_to_scalar, extract_date_from_folder, collect_calc_log_files]
 
-training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
-os.remove(training_file)
-collection_file = open(training_file, 'w', newline='')
-writer = csv.writer(collection_file)
-writer.writerow(["path", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "count"])
+def prune_dataset(df, m):
+    """
+    Prunes the dataset to reduce it to m statistically significant points.
+    
+    Parameters:
+    - df (pd.DataFrame): The original dataset.
+    - m (int): The desired number of points after pruning.
+    
+    Returns:
+    - pd.DataFrame: The pruned dataset containing m points.
+    """
+    # Step 1: Remove Exact Duplicates
+    df_dedup = df.drop_duplicates(subset=["sr", "ht", "cs", "theta_deg", 
+                                         "b-param", "c-param", "b_var", "c_var"])
+    print(f"After removing exact duplicates: {len(df_dedup)} records")
 
-# Print the collected calc_log files
-count = 0
+    # Step 2: Normalize Features
+    features = ["sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var"]
+    scaler = StandardScaler()
+    df_normalized = df_dedup.copy()
+    df_normalized[features] = scaler.fit_transform(df_dedup[features])
 
-for file_set in collect_calc_log_files(main_work_dir):
-    
-    path = file_set[0]
-    date = file_set[1]
-    
-    count += 1
-    
-    scaling_factor = 10000
-    
-    if date < 20231127:
-        scaling_factor = 1000
+    # Step 3: Remove Near-Duplicates Using Clustering (Optional but recommended for initial cleaning)
+    # You can adjust or remove this step based on dataset size and requirements
+    dbscan = DBSCAN(eps=0.5, min_samples=1, metric='euclidean')
+    clusters = dbscan.fit_predict(df_normalized[features])
+    df_normalized['cluster'] = clusters
+    df_near_dedup = df_normalized.groupby('cluster').first().reset_index(drop=True)
+    df_pruned = df_dedup.iloc[df_near_dedup.index]
+    print(f"After removing near-duplicates: {len(df_pruned)} records")
 
-    
-    sr = float(path.split('_sr_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
-    ht =  float(path.split('_ht_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
-    
-    cs = 0.4 - 2 * sr
-    cs_accessible = True
-    cs_split = None
-    try:
-        cs_split = path.split('_cs_')[1]
-    except:
-        cs_accessible = False
-        
-    if cs_accessible:   
-        cs = float(cs_split.split('nm_')[0].replace("_", ".")) / scaling_factor
+    # Step 4: Filter Based on Feature Variance
+    z_scores = zscore(df_pruned[features])
+    abs_z_scores = abs(z_scores)
+    mask = (abs_z_scores > 1).any(axis=1)
+    df_variance_filtered = df_pruned[mask]
+    print(f"After variance filtering: {len(df_variance_filtered)} records")
 
-    theta_deg = float(path.split('_deg_')[1].split('.csv')[0].replace("_", ".")) % 360
-        
-    data = pd.read_csv(path)
-    wvls = data["wvl"].tolist()
-    R_meep = data["refl"].tolist()
-    b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
+    # Step 5: Apply Outlier Detection
+    iso_forest = IsolationForest(contamination=0.05, random_state=42)
+    outlier_preds = iso_forest.fit_predict(df_variance_filtered[features])
+    df_no_outliers = df_variance_filtered[outlier_preds == 1]
+    print(f"After outlier removal: {len(df_no_outliers)} records")
+
+    # Step 6: Dimensionality Reduction (Optional but helps in clustering)
+    pca = PCA(n_components=0.95, random_state=42)
+    df_pca = pca.fit_transform(df_no_outliers[features])
+    print(f"Reduced to {df_pca.shape[1]} principal components")
+
+    # Step 7: Final Clustering to Reduce to m Points
+    if m >= len(df_no_outliers):
+        print(f"Desired number of points m={m} is greater than or equal to the dataset size.")
+        return df_no_outliers.copy()
+
+    kmeans = KMeans(n_clusters=m, random_state=42)
+    clusters_final = kmeans.fit_predict(df_pca)
+    df_no_outliers['final_cluster'] = clusters_final
+
+    # Select the closest point to each cluster centroid
+    closest, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, df_pca)
+    df_final = df_no_outliers.iloc[closest].reset_index(drop=True)
+    print(f"After clustering to {m} points: {len(df_final)} records")
+
+    return df_final
+
+def main():
+    main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
+    main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
+
+    training_file = main_work_dir + "ag-dot-angle-pretraining-unpruned.csv"
+
+    # Initialize an empty DataFrame
+    columns = ["path", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "count"]
+    dataset_df = pd.DataFrame(columns=columns)
     
-    if any(not math.isfinite(x) for x in [sr, ht, cs, theta_deg, b, c, b_var, c_var, count]):
-        continue
-    else:
-         writer.writerow([path, sr, ht, cs, theta_deg, b, c, b_var, c_var, count])
+    count = 0
     
-collection_file.close()  
+    for file_set in collect_calc_log_files(main_work_dir):
+        path, date = file_set
+        count += 1
+        scaling_factor = 10000 if date >= 20231127 else 1000
+
+        try:
+            # Parse parameters from the file path
+            sr = float(path.split('_sr_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
+            ht = float(path.split('_ht_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
+            cs = 0.4 - 2 * sr
+
+            try:
+                cs_split = path.split('_cs_')[1]
+                cs = float(cs_split.split('nm_')[0].replace("_", ".")) / scaling_factor
+            except IndexError:
+                pass  # cs remains as 0.4 - 2 * sr if '_cs_' not found
+
+            theta_deg = float(path.split('_deg_')[1].split('.csv')[0].replace("_", ".")) % 360
+
+            # Read reflectance data
+            data = pd.read_csv(path)
+            wvls = data["wvl"].tolist()
+            R_meep = data["refl"].tolist()
+
+            # Calculate parameters
+            b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
+
+            # Check for finite values
+            if any(not math.isfinite(x) for x in [sr, ht, cs, theta_deg, b, c, b_var, c_var, count]):
+                continue
+
+            # Append the row to the DataFrame
+            dataset_df = dataset_df.append({
+                "path": path,
+                "sr": sr,
+                "ht": ht,
+                "cs": cs,
+                "theta_deg": theta_deg,
+                "b-param": b,
+                "c-param": c,
+                "b_var": b_var,
+                "c_var": c_var,
+                "count": count
+            }, ignore_index=True)
+
+        except Exception as e:
+            print(f"Error processing file {path}: {e}")
+            continue
+
+    # Save the collected data to CSV
+    dataset_df.to_csv(training_file, index=False)
+    print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
+
+    num_points = 300
+    # Prune the dataset
+    df_final = prune_dataset(dataset_df, num_points)
+
+    # Save the pruned dataset
+    pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
+    df_final.to_csv(pruned_training_file, index=False)
+
+    print(f"Final pruned dataset contains {len(df_final)} records.")
+
+if __name__ == "__main__":
+    main()
