@@ -172,7 +172,6 @@ if __name__ == "__main__":
     print(train_X_expanded)
     print(train_Y_expanded)
 
-    sys.exit()
     for iteration in range(num_iterations):
         # Fit the MultiTaskGP model
         print("Model training starts")
