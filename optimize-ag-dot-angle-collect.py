@@ -324,7 +324,7 @@ def main():
         num_points, 
         {
             "b-param": 50,
-            "b_var": 10,
+            "b_var": 50,
             }
         )
 
