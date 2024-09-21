@@ -191,7 +191,7 @@ if __name__ == "__main__":
         
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         print("made mll")
-        sys.exit()
+        
         fit_gpytorch_mll(mll)
         print("finished fitting mll")
 
