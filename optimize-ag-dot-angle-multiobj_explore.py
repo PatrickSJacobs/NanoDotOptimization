@@ -358,7 +358,7 @@ if __name__ == "__main__":
     nds = NonDominatedSorting()
 
     # Get indices of Pareto-optimal solutions
-    pareto_front_indices = nds.run(objectives, only_non_dominated_front=True)
+    pareto_front_indices = nds.do(objectives, only_non_dominated_front=True)
 
     # Extract Pareto front solutions
     pareto_parameters = parameters[pareto_front_indices]
