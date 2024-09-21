@@ -181,17 +181,18 @@ if __name__ == "__main__":
             task_feature=task_feature,
             #outcome_transform=Standardize(m=1),
         )
-        sys.exit()
+        
 
         print("Model finished training")
-
+        sys.exit()
 
         print("Model's train inputs:")
         print(model.train_inputs)
         
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
-        
+        print("finished fitting mll")
+
         sys.exit()
 
         # Compute feasibility mask using raw outputs
