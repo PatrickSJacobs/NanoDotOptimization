@@ -254,7 +254,7 @@ def main():
                 continue
 
             # Append the row to the DataFrame
-            dataset_df = dataset_df.append({
+            dataset_df = dataset_df.concat({
                 "path": path,
                 "sr": sr,
                 "ht": ht,
