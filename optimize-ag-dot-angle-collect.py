@@ -11,10 +11,8 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 from sklearn.cluster import KMeans
-from sklearn.metrics import pairwise_distances_argmin_min
 from sklearn.preprocessing import StandardScaler
-import pandas as pd
-import numpy as np
+from sklearn.metrics import pairwise_distances_argmin_min
 # [Your other code goes here]
 
 def obj_func_calc(wvls, R_meep):
@@ -141,6 +139,7 @@ def collect_calc_log_files(base_directory):
     return calc_log_files
 
 # [Include all your existing function definitions here: obj_func_calc, date_to_scalar, extract_date_from_folder, collect_calc_log_files]
+
 
 def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbose=True):
     """
@@ -320,11 +319,14 @@ def main():
 
     num_points = 1000
     # Prune the dataset
-    df_final = prune_dataset(dataset_df, {
-    "b-param": 50,
-    "b_var": 10,
-    
-})
+    df_final = prune_dataset(
+        dataset_df, 
+        num_points, 
+        {
+            "b-param": 50,
+            "b_var": 10,
+            }
+        )
 
     # Save the pruned dataset
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
