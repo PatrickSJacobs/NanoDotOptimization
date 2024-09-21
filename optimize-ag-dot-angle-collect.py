@@ -142,144 +142,73 @@ def collect_calc_log_files(base_directory):
     return calc_log_files
 
 # [Include all your existing function definitions here: obj_func_calc, date_to_scalar, extract_date_from_folder, collect_calc_log_files]
-
-def prune_dataset(df, m, perform_cleaning=True, verbose=True):
+def prune_dataset(df, m, features=None, random_state=42):
     """
-    Prunes the dataset to reduce it to m statistically significant points.
+    Prunes the dataset to reduce it to m statistically significant points using KMeans clustering.
 
     Parameters:
     - df (pd.DataFrame): The original dataset.
     - m (int): The desired number of points after pruning.
-    - perform_cleaning (bool): Whether to perform preliminary cleaning steps.
-    - verbose (bool): Whether to print pruning steps' information.
+    - features (list of str, optional): List of feature column names to use for clustering.
+                                         If None, all numeric columns are used.
+    - random_state (int, optional): Seed for reproducibility. Default is 42.
 
     Returns:
-    - pd.DataFrame: The pruned dataset containing m points.
+    - pd.DataFrame: The pruned dataset containing m representative points.
     """
-    if perform_cleaning:
-        # Step 1: Remove Exact Duplicates
-        df_dedup = df.drop_duplicates(subset=["sr", "ht", "cs", "theta_deg", 
-                                             "b-param", "c-param", "b_var", "c_var"])
-        if verbose:
-            print(f"After removing exact duplicates: {len(df_dedup)} records")
-
-        # Early Exit if Dataset Too Small
-        if len(df_dedup) < m:
-            if verbose:
-                print(f"Dataset size {len(df_dedup)} is less than desired m={m}. Skipping further pruning.")
-            return df_dedup.copy()
-
-        # Step 2: Normalize Features
-        features = ["sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var"]
-        scaler = StandardScaler()
-        df_normalized = df_dedup.copy()
-        df_normalized[features] = scaler.fit_transform(df_dedup[features])
-        if verbose:
-            print("Features normalized.")
-
-        # Step 3: Remove Near-Duplicates Using Clustering (DBSCAN)
-        dbscan_eps = 0.5  # Initial value, can be adjusted
-        dbscan = DBSCAN(eps=dbscan_eps, min_samples=1, metric='euclidean')
-        clusters = dbscan.fit_predict(df_normalized[features])
-        df_normalized['cluster'] = clusters
-        df_near_dedup = df_normalized.groupby('cluster').first().reset_index(drop=True)
-        df_pruned = df_dedup.iloc[df_near_dedup.index]
-        if verbose:
-            print(f"After removing near-duplicates with DBSCAN (eps={dbscan_eps}): {len(df_pruned)} records")
-
-        # Check if dataset is still >= m
-        if len(df_pruned) < m:
-            if verbose:
-                print(f"Dataset size {len(df_pruned)} after near-duplicate removal is less than m={m}. Adjusting DBSCAN parameters.")
-            # Adjust DBSCAN to be less aggressive
-            dbscan_eps = dbscan_eps * 1.5  # Increase eps to cluster fewer points
-            dbscan = DBSCAN(eps=dbscan_eps, min_samples=1, metric='euclidean')
-            clusters = dbscan.fit_predict(df_normalized[features])
-            df_normalized['cluster'] = clusters
-            df_near_dedup = df_normalized.groupby('cluster').first().reset_index(drop=True)
-            df_pruned = df_dedup.iloc[df_near_dedup.index]
-            if verbose:
-                print(f"After adjusting DBSCAN (eps={dbscan_eps}): {len(df_pruned)} records")
-            
-            # If still too small, skip near-duplicate removal
-            if len(df_pruned) < m:
-                if verbose:
-                    print(f"Dataset size {len(df_pruned)} is still less than m={m}. Skipping near-duplicate removal.")
-                df_pruned = df_dedup.copy()
-
-        # Step 4: Filter Based on Feature Variance
-        z_scores = zscore(df_pruned[features])
-        abs_z_scores = abs(z_scores)
-        mask = (abs_z_scores > 1).any(axis=1)
-        df_variance_filtered = df_pruned[mask]
-        if verbose:
-            print(f"After variance filtering (z-score > 1): {len(df_variance_filtered)} records")
-
-        # Check if dataset is still >= m
-        if len(df_variance_filtered) < m:
-            if verbose:
-                print(f"Dataset size {len(df_variance_filtered)} after variance filtering is less than m={m}. Adjusting variance threshold.")
-            # Relax variance threshold
-            mask = (abs_z_scores > 0.5).any(axis=1)
-            df_variance_filtered = df_pruned[mask]
-            if verbose:
-                print(f"After relaxing variance filtering (z-score > 0.5): {len(df_variance_filtered)} records")
-            
-            # If still too small, skip variance filtering
-            if len(df_variance_filtered) < m:
-                if verbose:
-                    print(f"Dataset size {len(df_variance_filtered)} is still less than m={m}. Skipping variance filtering.")
-                df_variance_filtered = df_pruned.copy()
-
-        # Step 5: Apply Outlier Detection
-        contamination = 0.05  # Initial value, can be adjusted
-        iso_forest = IsolationForest(contamination=contamination, random_state=42)
-        outlier_preds = iso_forest.fit_predict(df_variance_filtered[features])
-        df_no_outliers = df_variance_filtered[outlier_preds == 1]
-        if verbose:
-            print(f"After outlier removal (contamination={contamination}): {len(df_no_outliers)} records")
-
-        # Check if dataset is still >= m
-        if len(df_no_outliers) < m:
-            if verbose:
-                print(f"Dataset size {len(df_no_outliers)} after outlier removal is less than m={m}. Adjusting contamination rate.")
-            # Decrease contamination to remove fewer outliers
-            contamination = contamination * 0.5  # Reduce contamination rate
-            iso_forest = IsolationForest(contamination=contamination, random_state=42)
-            outlier_preds = iso_forest.fit_predict(df_variance_filtered[features])
-            df_no_outliers = df_variance_filtered[outlier_preds == 1]
-            if verbose:
-                print(f"After adjusting outlier removal (contamination={contamination}): {len(df_no_outliers)} records")
-            
-            # If still too small, skip outlier removal
-            if len(df_no_outliers) < m:
-                if verbose:
-                    print(f"Dataset size {len(df_no_outliers)} is still less than m={m}. Skipping outlier removal.")
-                df_no_outliers = df_variance_filtered.copy()
-
-        # Step 6: Dimensionality Reduction (PCA)
-        pca = PCA(n_components=0.95, random_state=42)
-        df_pca = pca.fit_transform(df_no_outliers[features])
-        if verbose:
-            print(f"Reduced to {df_pca.shape[1]} principal components (95% variance retained)")
-
-        # Step 7: Final Clustering to Reduce to m Points
-        if m >= len(df_no_outliers):
-            if verbose:
-                print(f"Desired number of points m={m} is greater than or equal to the dataset size {len(df_no_outliers)}. Returning the entire dataset.")
-            return df_no_outliers.copy()
-
-        kmeans = KMeans(n_clusters=m, random_state=42)
-        clusters_final = kmeans.fit_predict(df_pca)
-        df_no_outliers['final_cluster'] = clusters_final
-
-        # Select the closest point to each cluster centroid
-        closest, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, df_pca)
-        df_final = df_no_outliers.iloc[closest].reset_index(drop=True)
-        if verbose:
-            print(f"After clustering to {m} points: {len(df_final)} records")
-
-        return df_final
+    # Validate input
+    if not isinstance(df, pd.DataFrame):
+        raise ValueError("Input df must be a pandas DataFrame.")
+    
+    if not isinstance(m, int) or m <= 0:
+        raise ValueError("Parameter m must be a positive integer.")
+    
+    # Select features for clustering
+    if features is None:
+        # Use all numeric columns if features not specified
+        features = df.select_dtypes(include=[np.number]).columns.tolist()
+        if not features:
+            raise ValueError("No numeric columns available for clustering.")
+    else:
+        # Ensure specified features exist in the DataFrame
+        missing_features = [feat for feat in features if feat not in df.columns]
+        if missing_features:
+            raise ValueError(f"The following features are not in the DataFrame: {missing_features}")
+    
+    # Check if m is greater than the number of data points
+    if m >= len(df):
+        print(f"Desired number of points m={m} is greater than or equal to the dataset size {len(df)}. Returning the original dataset.")
+        return df.copy()
+    
+    # Extract the feature matrix
+    X = df[features].values
+    
+    # Handle missing values by imputing or removing
+    if np.isnan(X).any():
+        raise ValueError("Feature matrix contains NaN values. Please handle missing data before clustering.")
+    
+    # Standardize the features
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # Initialize KMeans
+    kmeans = KMeans(n_clusters=m, random_state=random_state, n_init=10)
+    
+    # Fit KMeans
+    kmeans.fit(X_scaled)
+    
+    # Get cluster centers
+    centers = kmeans.cluster_centers_
+    
+    # Find the closest data point in each cluster to the centroid
+    closest, _ = pairwise_distances_argmin_min(centers, X_scaled)
+    
+    # Select the representative points
+    df_final = df.iloc[closest].reset_index(drop=True)
+    
+    print(f"Pruned dataset contains {len(df_final)} records after KMeans clustering to {m} points.")
+    
+    return df_final
 
 def main():
     main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
