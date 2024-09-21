@@ -184,12 +184,13 @@ if __name__ == "__main__":
         
 
         print("Model finished training")
-        sys.exit()
+        
 
         print("Model's train inputs:")
         print(model.train_inputs)
         
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
+        print("made mll")
         fit_gpytorch_mll(mll)
         print("finished fitting mll")
 
