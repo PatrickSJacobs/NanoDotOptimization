@@ -255,7 +255,9 @@ def main():
 
             print(type(dataset_df))
             # Append the row to the DataFrame
-            dataset_df =  pd.concat([dataset_df, {
+            
+            dataset_df =  pd.concat([dataset_df, 
+                                     pd.DataFrame([{
                 "path": path,
                 "sr": sr,
                 "ht": ht,
@@ -266,7 +268,7 @@ def main():
                 "b_var": b_var,
                 "c_var": c_var,
                 "count": count
-            }], ignore_index=True)
+            }])], ignore_index=True)
         except Exception as e:
             print(f"Error processing file {path}: {e}")
             continue
