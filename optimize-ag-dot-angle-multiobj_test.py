@@ -200,18 +200,18 @@ if __name__ == "__main__":
         # Compute feasibility mask using raw outputs
         is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
         is_feasible = is_feasible.all(dim=-1)
-        sys.exit("is feasible")
+        
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
             break
 
         feasible_Y = train_Y[is_feasible]
-
+        sys.exit("is feasible")
         # Define reference point for hypervolume calculation
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
         ref_point = ref_point.tolist()
         printing(f"ref_point: {ref_point}")
-        sys.exit()
+       
         # Define the acquisition function using qNEHVI
         sampler = SobolQMCNormalSampler(num_samples=128)
         acq_func = qNoisyExpectedHypervolumeImprovement(
