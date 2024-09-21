@@ -195,12 +195,13 @@ if __name__ == "__main__":
         fit_gpytorch_mll(mll)
         print("finished fitting mll")
 
-        
-
         # Compute feasibility mask using raw outputs
         is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
+        printing(is_feasible)
+
         is_feasible = is_feasible.all(dim=-1)
-        
+        printing(is_feasible)
+
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
             break
