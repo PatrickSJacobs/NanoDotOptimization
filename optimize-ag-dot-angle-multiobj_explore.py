@@ -339,7 +339,7 @@ if __name__ == "__main__":
         dominance_comparator=DominanceComparator(),
     )
     
-    from pymoo.util.non_dominated_sorting import NonDominatedSorting
+    from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
 
     def select_diverse_solutions(pareto_parameters, pareto_objectives, m):
