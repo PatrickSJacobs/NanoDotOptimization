@@ -310,8 +310,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    #max_evaluations = 160
-    max_evaluations = 8
+    max_evaluations = 160
+    #max_evaluations = 8
 
     '''
 
@@ -367,7 +367,7 @@ if __name__ == "__main__":
     pareto_objectives = objectives[pareto_front_indices]
 
     # Select m diverse solutions
-    population_size = 4
+    population_size = 32
     selected_indices = select_diverse_solutions(pareto_parameters, pareto_objectives, population_size)
 
     # Extract the selected solutions
@@ -404,7 +404,7 @@ if __name__ == "__main__":
 
     algorithm.run()
     front = algorithm.result()
-    printing(front)
+    print(front)
 
     for sol in range(len(front)):
         vars = front[sol].variables
