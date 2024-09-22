@@ -292,7 +292,7 @@ problem = (
     .add_variable(0.001 * 25, 0.001 * 250)
     #.add_variable(0.001 * 250, 0.001 * 250)
     #.add_variable(0.0, 0.0)
-    .add_variable(0.0, 90.0)
+    .add_variable(0.0, 0.0)
     .add_function(c)
     .add_function(b)
     .add_function(b_var)
@@ -310,8 +310,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 160
-    #max_evaluations = 5
+    #max_evaluations = 160
+    max_evaluations = 8
 
     '''
 
@@ -332,15 +332,77 @@ if __name__ == "__main__":
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
         #population_size=16,
-        population_size=32,
+        population_size=4,
         cr=0.9,
         f=0.4,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
         dominance_comparator=DominanceComparator(),
     )
+    
+    from pymoo.util.non_dominated_sorting import NonDominatedSorting
+    from sklearn.cluster import KMeans
 
+    def select_diverse_solutions(pareto_parameters, pareto_objectives, m):
+        # Combine parameters and objectives for clustering
+        combined = np.hstack((pareto_parameters, pareto_objectives))
+        
+        # Normalize the data
+        combined_normalized = (combined - np.min(combined, axis=0)) / (np.max(combined, axis=0) - np.min(combined, axis=0))
+        
+        # Perform K-means clustering
+        kmeans = KMeans(n_clusters=m, random_state=42)
+        kmeans.fit(combined_normalized)
+        
+        # Select the solution closest to each cluster center
+        selected_indices = []
+        for i in range(m):
+            cluster_points = combined_normalized[kmeans.labels_ == i]
+            center = kmeans.cluster_centers_[i]
+            distances = np.linalg.norm(cluster_points - center, axis=1)
+            closest_point_index = np.argmin(distances)
+            selected_indices.append(np.where((combined_normalized == cluster_points[closest_point_index]).all(axis=1))[0][0])
+        
+        return selected_indices
+
+    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining-unpruned.csv")
+
+    parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
+    objectives = df1[['c-param', 'b-param', 'b_var']].values
+
+    # Find the Pareto front
+    nds = NonDominatedSorting()
+    pareto_front_indices = nds.do(objectives, only_non_dominated_front=True)
+
+    # Extract Pareto front solutions
+    pareto_parameters = parameters[pareto_front_indices]
+    pareto_objectives = objectives[pareto_front_indices]
+
+    # Select m diverse solutions
+    m = 32  # Replace with your desired number of solutions
+    selected_indices = select_diverse_solutions(pareto_parameters, pareto_objectives, m)
+
+    # Extract the selected solutions
+    selected_parameters = pareto_parameters[selected_indices]
+    selected_objectives = pareto_objectives[selected_indices]
+
+    # Output the selected solutions
+    print(f"Number of selected Pareto-optimal solutions: {m}")
+    for i in range(m):
+        print(f"\nSolution {i+1}:")
+        print(f"Parameters: {selected_parameters[i]}")
+        print(f"Objectives: {selected_objectives[i]}")
+
+    # Prepare the selected solutions for GDE3
+    gde3_initial_population = selected_parameters
+
+    print("\nInitial population for GDE3:")
+    print(gde3_initial_population)
+
+    sys.exit()
+    
     algorithm.run()
-    front = algorithm.get_result()
+    front = algorithm.result()
+    printing(front)
 
     for sol in range(len(front)):
         vars = front[sol].variables
