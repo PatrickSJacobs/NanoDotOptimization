@@ -398,9 +398,10 @@ if __name__ == "__main__":
         f=0.4,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
         dominance_comparator=DominanceComparator(),
-        population=gde3_initial_population
     )
     
+    algorithm.solutions = gde3_initial_population
+
     algorithm.run()
     front = algorithm.result()
     printing(front)
