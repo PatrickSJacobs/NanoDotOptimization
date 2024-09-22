@@ -386,7 +386,7 @@ if __name__ == "__main__":
     print("\nInitial population for GDE3:")
     print(gde3_initial_population)
 
-    #sys.exit()
+    sys.exit()
     
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
