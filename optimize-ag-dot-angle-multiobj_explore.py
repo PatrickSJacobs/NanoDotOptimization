@@ -327,17 +327,6 @@ if __name__ == "__main__":
     )
 
     '''
-
-    algorithm = GDE3(
-        population_evaluator=MultiprocessEvaluator(processes=16),
-        problem=problem,
-        #population_size=16,
-        population_size=4,
-        cr=0.9,
-        f=0.4,
-        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
-        dominance_comparator=DominanceComparator(),
-    )
     
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
@@ -378,16 +367,16 @@ if __name__ == "__main__":
     pareto_objectives = objectives[pareto_front_indices]
 
     # Select m diverse solutions
-    m = 32  # Replace with your desired number of solutions
-    selected_indices = select_diverse_solutions(pareto_parameters, pareto_objectives, m)
+    population_size = 4
+    selected_indices = select_diverse_solutions(pareto_parameters, pareto_objectives, population_size)
 
     # Extract the selected solutions
     selected_parameters = pareto_parameters[selected_indices]
     selected_objectives = pareto_objectives[selected_indices]
 
     # Output the selected solutions
-    print(f"Number of selected Pareto-optimal solutions: {m}")
-    for i in range(m):
+    print(f"Number of selected Pareto-optimal solutions: {population_size}")
+    for i in range(population_size):
         print(f"\nSolution {i+1}:")
         print(f"Parameters: {selected_parameters[i]}")
         print(f"Objectives: {selected_objectives[i]}")
@@ -399,6 +388,18 @@ if __name__ == "__main__":
     print(gde3_initial_population)
 
     #sys.exit()
+    
+    algorithm = GDE3(
+        population_evaluator=MultiprocessEvaluator(processes=16),
+        problem=problem,
+        #population_size=16,
+        population_size=population_size,
+        cr=0.9,
+        f=0.4,
+        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
+        dominance_comparator=DominanceComparator(),
+        population=gde3_initial_population
+    )
     
     algorithm.run()
     front = algorithm.result()
