@@ -89,7 +89,7 @@ def obj_func_run(x: [float]):
     sleep(10)# Sleep to give code time to process parallelization
 
     # Parameters to be used in current evaluation
-    printing((sr, ht, cs, theta_deg))
+    #printing((sr, ht, cs, theta_deg))
 
     filename = make_filename(sr, ht, cs, theta_deg)
 
@@ -197,7 +197,7 @@ def obj_func_run(x: [float]):
             a = open(ticker_file, "r").read()
             a = int(a)
             if a == 1:
-                printing(f"files pass:{(air_data_path, metal_data_path)}")
+                #printing(f"files pass:{(air_data_path, metal_data_path)}")
                 success = 1   
         except:
             pass
@@ -218,10 +218,10 @@ def obj_func_run(x: [float]):
             main_home_dir + "ag-dot-angle" + code + "* " +
             file_home_path + "ag-dot-angle" + code + "* ")
 
-    printing(f"finished deleting files; code: {code}")
+    #printing(f"finished deleting files; code: {code}")
 
     # (9) Returning of Result and Continuity of Optimization
-    printing(f'Executed: {filename}')
+    #printing(f'Executed: {filename}')
     
     return filename
 
@@ -239,7 +239,7 @@ def get_values(x: [float], param: str):
 
     log_answer = check_log(filename, param)
     if len(log_answer) > 0:
-        printing(f'Referenced: {filename}')
+        #printing(f'Referenced: {filename}')
         return log_answer[0]
     else:
         obj_func_run(x)
@@ -262,7 +262,7 @@ def b_var(x: [float]):
 #def c_var(x: [float]): return get_values(x, "c_var")
 
 
-def c_upper_constraint(x: [float]): return 5 - get_values(x, "c-param")
+def c_upper_constraint(x: [float]): return 20 - get_values(x, "c-param")
 def c_lower_constraint(x: [float]): return get_values(x, "c-param")
 
 def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
@@ -351,6 +351,7 @@ if __name__ == "__main__":
         
         return selected_indices
 
+    #df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
     df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining-unpruned.csv")
 
     parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
@@ -406,7 +407,7 @@ if __name__ == "__main__":
 
     for sol in range(len(front)):
         vars = front[sol].variables
-        #print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
+        print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
         printing(f'(Solution #{sol + 1}): (Filename - {make_filename(float(vars[0]), float(vars[1]), float(vars[2]), float(vars[3]))})')
         printing(f'             Variables={vars}')
         printing(f'             Objectives={front[sol].objectives}')
