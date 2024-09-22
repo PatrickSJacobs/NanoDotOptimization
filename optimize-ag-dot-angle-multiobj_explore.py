@@ -367,7 +367,7 @@ if __name__ == "__main__":
     df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining-unpruned.csv")
 
     parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
-    objectives = df1[['c-param', 'b-param', 'b_var']].values
+    #objectives = df1[['c-param', 'b-param', 'b_var']].values
 
     # Find the Pareto front
     nds = NonDominatedSorting()
@@ -398,7 +398,7 @@ if __name__ == "__main__":
     print("\nInitial population for GDE3:")
     print(gde3_initial_population)
 
-    sys.exit()
+    #sys.exit()
     
     algorithm.run()
     front = algorithm.result()
