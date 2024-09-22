@@ -259,9 +259,7 @@ def b_var(x: [float]):
     return get_values(x, "b_var")
 
 
-def c_var(x: [float]):
-
-    return get_values(x, "c_var")
+#def c_var(x: [float]): return get_values(x, "c_var")
 
 
 def c_upper_constraint(x: [float]): return 5 - get_values(x, "c-param")
@@ -295,7 +293,7 @@ problem = (
     .add_function(c)
     .add_function(b)
     .add_function(b_var)
-    .add_function(c_var)
+    #.add_function(c_var)
     .add_constraint(b_lower_constraint)
     .add_constraint(b_upper_constraint)
     .add_constraint(c_lower_constraint)
