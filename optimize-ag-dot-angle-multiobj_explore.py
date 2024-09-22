@@ -264,9 +264,8 @@ def c_var(x: [float]):
     return get_values(x, "c_var")
 
 
-def c_constraint(x: [float]):
-
-    return 5 - get_values(x, "c-param")
+def c_upper_constraint(x: [float]): return 5 - get_values(x, "c-param")
+def c_lower_constraint(x: [float]): return get_values(x, "c-param")
 
 def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
 def b_upper_constraint(x: [float]): return 50 - get_values(x, "b-param")  # b-param should be <= 60
@@ -299,7 +298,8 @@ problem = (
     .add_function(c_var)
     .add_constraint(b_lower_constraint)
     .add_constraint(b_upper_constraint)
-    .add_constraint(c_constraint)
+    .add_constraint(c_lower_constraint)
+    .add_constraint(c_upper_constraint)
     .add_constraint(b_var_constraint)
 )
 
@@ -367,8 +367,7 @@ if __name__ == "__main__":
     df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining-unpruned.csv")
 
     parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
-    #objectives = df1[['c-param', 'b-param', 'b_var']].values
-    objectives = df1[['b-param', 'b_var']].values
+    objectives = df1[['c-param', 'b-param', 'b_var']].values
 
     # Find the Pareto front
     nds = NonDominatedSorting()
