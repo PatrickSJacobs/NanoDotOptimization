@@ -35,25 +35,16 @@ Solution 1:
 Parameters: [0.1168  0.05558 0.25    0.     ]
 Objectives: [ 2.01663933 61.78466696 92.03298286]
 
-Solution 2:
-Parameters: [0.07858 0.05388 0.25    0.     ]
-Objectives: [ 5.1422069  46.07951972  7.83188062]
+
 
 Solution 3:
 Parameters: [0.08836 0.06293 0.07498 0.     ]
 Objectives: [1.98057751e-02 4.43914043e+02 6.29094584e+03]
 
-Solution 4:
-Parameters: [0.0348 0.1235 0.3304 0.    ]
-Objectives: [133.08136876  13.61638255   2.75473875]
 
-Solution 5:
-Parameters: [0.0538 0.1008 0.2924 0.    ]
-Objectives: [15.30664757 27.61491077  9.05433832]
 
-Solution 6:
-Parameters: [8.129e-02 5.029e-02 1.451e-01 5.490e+01]
-Objectives: [ 3.43382108 92.59117761  9.83485077]
+
+
 
 Solution 7:
 Parameters: [0.05695 0.05167 0.03995 0.     ]
@@ -131,9 +122,7 @@ Solution 25:
 Parameters: [8.9790e-02 5.9430e-02 1.4174e-01 9.0000e+01]
 Objectives: [  2.45407383 104.69125486  27.04219838]
 
-Solution 26:
-Parameters: [0.0669 0.0759 0.2662 0.    ]
-Objectives: [ 8.13875699 40.65552636  9.71552723]
+
 
 Solution 27:
 Parameters: [0.12094 0.09806 0.25    0.     ]
@@ -143,9 +132,6 @@ Solution 28:
 Parameters: [0.12174 0.09733 0.08271 0.     ]
 Objectives: [1.73343264e-01 7.23617746e+02 1.33917860e+03]
 
-Solution 29:
-Parameters: [0.01265 0.08967 0.52237 0.     ]
-Objectives: [2.52558213e+04 9.29947303e-01 2.33186331e+00]
 
 Solution 30:
 Parameters: [0.11868 0.05    0.18418 0.     ]

@@ -45,8 +45,26 @@ if __name__ == "__main__":
     main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
     
     # Array of strings to filter files by
-    filter_strings = [filename_tag([0.08056, 0.07215, 0.5801, 0.0])]
-    
+    filter_strings = [filename_tag(i) for i in [
+    [0.01265, 0.08967, 0.52237, 0.00000],  # Solution 29
+    [0.0669, 0.0759, 0.2662, 0.00000],     # Solution 26
+    [0.08129, 0.05029, 0.1451, 54.90000],  # Solution 6
+    [0.0595, 0.0631, 0.281, 0.00000],      # Solution 12
+    [0.07858, 0.05388, 0.25, 0.00000],     # Solution 2
+    [0.0538, 0.1008, 0.2924, 0.00000],     # Solution 5
+    [0.0348, 0.1235, 0.3304, 0.00000],     # Solution 4
+    [0.00573, 0.07468, 0.52564, 0.00000],  # Solution 13
+    [0.05667, 0.0538, 0.24976, 0.00000],   # Solution 18
+    [0.07568, 0.05, 0.16359, 0.00000],     # Solution 20
+    [0.0669, 0.0759, 0.2662, 0.00000],     # Solution 26 (repeated)
+    [0.01265, 0.08967, 0.52237, 0.00000],  # Solution 29 (repeated)
+    [0.11868, 0.05, 0.18418, 0.00000],     # Solution 30
+    [0.09467, 0.05944, 0.22999, 0.00000],  # Solution 31
+    [0.08129, 0.05029, 0.1451, 54.90000],  # Solution 6 (repeated)
+]
+]
+       
+       
     filtered_files = collect_calc_log_files(main_work_dir, filter_strings)
     
     for file in filtered_files:

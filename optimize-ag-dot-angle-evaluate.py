@@ -10,6 +10,8 @@ from scipy.signal import find_peaks
 import sys
 import traceback
 import time
+import statistics
+
 
 info_file = sys.argv[1]
 #no_metal = True
@@ -77,11 +79,11 @@ def obj_func_calc(wvls, R_meep):
             maxis += [j]
             ind += [i]
 
-    ind = [i for i in range(min(ind), max(ind) + 1)]
+    ind = [i for i in range(min(ind), max(ind)+1)]
     maxis = [ys[i] for i in ind]
 
-    neg_ys_prime = [element + mam for element in [(-1) * y for y in maxis]]
-    neg_ys = [element + mam for element in [(-1) * y for y in ys]]
+    neg_ys_prime = [element + mam for element in [(-1)*y for y in maxis]]
+    neg_ys = [element + mam for element in [(-1)*y for y in ys]]
 
     peaks, _ = find_peaks(neg_ys_prime)
     maxi = 0
@@ -99,14 +101,11 @@ def obj_func_calc(wvls, R_meep):
 
         ys_fixed = [ys[i] for i in index_list]
 
-        # Use a cumulative sum instead of creating a large list
-        weighted_sum = sum(wvl * freq for wvl, freq in zip([xs[i] for i in index_list], np.ceil(np.array(ys_fixed) / np.min(ys_fixed))))
-        total_freq = sum(np.ceil(np.array(ys_fixed) / np.min(ys_fixed)))
-        
-        if total_freq > 0:
-            maxi = weighted_sum / total_freq
-        else:
-            maxi = xs[ys.index(mam)]
+        L = []
+        for (wvl, freq) in zip([xs[i] for i in index_list], np.ceil(np.array(ys_fixed) / np.min(ys_fixed))):
+            L += [wvl for i in range(int(freq))]
+
+        maxi = statistics.mean(L)
 
     else:
         maxi = xs[ys.index(mam)]
