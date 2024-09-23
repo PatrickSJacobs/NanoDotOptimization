@@ -1,0 +1,194 @@
+cat myMPI.o1060101
+SCRIPT
+/home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-collect.py:299: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  dataset_df =  pd.concat([dataset_df,
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+/home1/08809/tg881088/miniconda3/envs/ndo/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py:1010: RuntimeWarning: overflow encountered in square
+  cost = np.sum(infodict['fvec'] ** 2)
+Collected dataset contains 3702 records before pruning.
+No initial filtering based on thresholds applied.
+Selected features for clustering (all numeric columns): ['sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var', 'c_var']
+Features standardized using StandardScaler.
+KMeans clustering performed with n_clusters=300.
+Pruned dataset contains 300 records after KMeans clustering to 300 points.
+Final pruned dataset contains 300 records.
+Number of selected Pareto-optimal solutions: 32
+
+Solution 1:
+Parameters: [0.1168  0.05558 0.25    0.     ]
+Objectives: [ 2.01663933 61.78466696 92.03298286]
+
+Solution 2:
+Parameters: [0.07858 0.05388 0.25    0.     ]
+Objectives: [ 5.1422069  46.07951972  7.83188062]
+
+Solution 3:
+Parameters: [0.08836 0.06293 0.07498 0.     ]
+Objectives: [1.98057751e-02 4.43914043e+02 6.29094584e+03]
+
+Solution 4:
+Parameters: [0.0348 0.1235 0.3304 0.    ]
+Objectives: [133.08136876  13.61638255   2.75473875]
+
+Solution 5:
+Parameters: [0.0538 0.1008 0.2924 0.    ]
+Objectives: [15.30664757 27.61491077  9.05433832]
+
+Solution 6:
+Parameters: [8.129e-02 5.029e-02 1.451e-01 5.490e+01]
+Objectives: [ 3.43382108 92.59117761  9.83485077]
+
+Solution 7:
+Parameters: [0.05695 0.05167 0.03995 0.     ]
+Objectives: [  0.54472196 514.73517161 211.03322444]
+
+Solution 8:
+Parameters: [0.10081 0.09667 0.06872 0.     ]
+Objectives: [4.32777655e-01 3.99788643e+02 9.21386896e+02]
+
+Solution 9:
+Parameters: [0.09741 0.09021 0.29578 0.     ]
+Objectives: [  2.80764532  48.94134368 123.04997889]
+
+Solution 10:
+Parameters: [0.08056 0.07215 0.5801  0.     ]
+Objectives: [ 9.2158972   1.88337922 11.64200058]
+
+Solution 11:
+Parameters: [0.06218 0.09436 0.04576 0.     ]
+Objectives: [2.74460082e-02 5.80379594e+02 4.51652782e+03]
+
+Solution 12:
+Parameters: [0.0595 0.0631 0.281  0.    ]
+Objectives: [14.16544849 34.65842109  7.46886953]
+
+Solution 13:
+Parameters: [0.00573 0.07468 0.52564 0.     ]
+Objectives: [3.97978073e+04 3.57138163e-01 8.65948952e-01]
+
+Solution 14:
+Parameters: [0.125   0.05377 0.13148 0.     ]
+Objectives: [  1.00329884 127.14596825  79.74135364]
+
+Solution 15:
+Parameters: [0.10022 0.073   0.25    0.     ]
+Objectives: [ 2.35102403 59.47371577 64.20817298]
+
+Solution 16:
+Parameters: [0.09577 0.05263 0.22999 0.     ]
+Objectives: [ 2.8977086  60.2458037  21.54915102]
+
+Solution 17:
+Parameters: [0.09462 0.07075 0.06937 0.     ]
+Objectives: [1.94968812e-01 5.65054264e+02 7.54025449e+02]
+
+Solution 18:
+Parameters: [0.05667 0.0538  0.24976 0.     ]
+Objectives: [11.2371013  52.93425219  1.19122287]
+
+Solution 19:
+Parameters: [0.125   0.05226 0.25    0.     ]
+Objectives: [  1.00520328 127.16057213  79.64371613]
+
+Solution 20:
+Parameters: [0.07568 0.05    0.16359 0.     ]
+Objectives: [ 3.94303063 82.97587061 12.51130869]
+
+Solution 21:
+Parameters: [0.02524 0.08622 0.025   0.     ]
+Objectives: [2.20671124e-01 1.44910959e+02 1.23731949e+03]
+
+Solution 22:
+Parameters: [0.12364 0.07758 0.2265  0.     ]
+Objectives: [  1.29514047  75.7824473  175.62974886]
+
+Solution 23:
+Parameters: [0.07331 0.09827 0.05839 0.     ]
+Objectives: [4.95791489e-01 3.17691608e+02 8.18450470e+02]
+
+Solution 24:
+Parameters: [0.11463 0.08531 0.08323 0.     ]
+Objectives: [6.71730573e-03 5.92008757e+02 1.14618715e+04]
+
+Solution 25:
+Parameters: [8.9790e-02 5.9430e-02 1.4174e-01 9.0000e+01]
+Objectives: [  2.45407383 104.69125486  27.04219838]
+
+Solution 26:
+Parameters: [0.0669 0.0759 0.2662 0.    ]
+Objectives: [ 8.13875699 40.65552636  9.71552723]
+
+Solution 27:
+Parameters: [0.12094 0.09806 0.25    0.     ]
+Objectives: [  1.4040055   70.30925688 253.82708114]
+
+Solution 28:
+Parameters: [0.12174 0.09733 0.08271 0.     ]
+Objectives: [1.73343264e-01 7.23617746e+02 1.33917860e+03]
+
+Solution 29:
+Parameters: [0.01265 0.08967 0.52237 0.     ]
+Objectives: [2.52558213e+04 9.29947303e-01 2.33186331e+00]
+
+Solution 30:
+Parameters: [0.11868 0.05    0.18418 0.     ]
+Objectives: [ 1.41365426 87.16263917 51.79091144]
+
+Solution 31:
+Parameters: [0.09467 0.05944 0.22999 0.     ]
+Objectives: [ 3.14361755 58.41240855 20.06601059]
+
+Solution 32:
+Parameters: [0.125   0.1     0.09659 0.     ]
+Objectives: [7.06867503e-02 2.29005776e+02 2.09721648e+03]
+
+Initial population for GDE3:
+[[1.1680e-01 5.5580e-02 2.5000e-01 0.0000e+00]
+ [7.8580e-02 5.3880e-02 2.5000e-01 0.0000e+00]
+ [8.8360e-02 6.2930e-02 7.4980e-02 0.0000e+00]
+ [3.4800e-02 1.2350e-01 3.3040e-01 0.0000e+00]
+ [5.3800e-02 1.0080e-01 2.9240e-01 0.0000e+00]
+ [8.1290e-02 5.0290e-02 1.4510e-01 5.4900e+01]
+ [5.6950e-02 5.1670e-02 3.9950e-02 0.0000e+00]
+ [1.0081e-01 9.6670e-02 6.8720e-02 0.0000e+00]
+ [9.7410e-02 9.0210e-02 2.9578e-01 0.0000e+00]
+ [8.0560e-02 7.2150e-02 5.8010e-01 0.0000e+00]
+ [6.2180e-02 9.4360e-02 4.5760e-02 0.0000e+00]
+ [5.9500e-02 6.3100e-02 2.8100e-01 0.0000e+00]
+ [5.7300e-03 7.4680e-02 5.2564e-01 0.0000e+00]
+ [1.2500e-01 5.3770e-02 1.3148e-01 0.0000e+00]
+ [1.0022e-01 7.3000e-02 2.5000e-01 0.0000e+00]
+ [9.5770e-02 5.2630e-02 2.2999e-01 0.0000e+00]
+ [9.4620e-02 7.0750e-02 6.9370e-02 0.0000e+00]
+ [5.6670e-02 5.3800e-02 2.4976e-01 0.0000e+00]
+ [1.2500e-01 5.2260e-02 2.5000e-01 0.0000e+00]
+ [7.5680e-02 5.0000e-02 1.6359e-01 0.0000e+00]
+ [2.5240e-02 8.6220e-02 2.5000e-02 0.0000e+00]
+ [1.2364e-01 7.7580e-02 2.2650e-01 0.0000e+00]
+ [7.3310e-02 9.8270e-02 5.8390e-02 0.0000e+00]
+ [1.1463e-01 8.5310e-02 8.3230e-02 0.0000e+00]
+ [8.9790e-02 5.9430e-02 1.4174e-01 9.0000e+01]
+ [6.6900e-02 7.5900e-02 2.6620e-01 0.0000e+00]
+ [1.2094e-01 9.8060e-02 2.5000e-01 0.0000e+00]
+ [1.2174e-01 9.7330e-02 8.2710e-02 0.0000e+00]
+ [1.2650e-02 8.9670e-02 5.2237e-01 0.0000e+00]
+ [1.1868e-01 5.0000e-02 1.8418e-01 0.0000e+00]
+ [9.4670e-02 5.9440e-02 2.2999e-01 0.0000e+00]
+ [1.2500e-01 1.0000e-01 9.6590e-02 0.0000e+00]]
