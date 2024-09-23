@@ -359,7 +359,7 @@ if __name__ == "__main__":
         return selected_indices
 
     #df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
-    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining-unpruned.csv")
+    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
 
     parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
     objectives = df1[['c-param', 'b-param', 'b_var']].values

@@ -319,12 +319,12 @@ def main():
     dataset_df.to_csv(training_file, index=False)
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
-    num_points = 300
+    num_points = 3000
     # Prune the dataset
     df_final = prune_dataset(
         dataset_df, 
         num_points, 
-        #{ "b-param": 50, "b_var": 50, }
+        { "c-param": 10, "b_var": 10, }
         )
 
     # Save the pruned dataset
