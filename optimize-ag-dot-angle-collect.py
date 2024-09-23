@@ -13,6 +13,7 @@ from scipy.signal import find_peaks
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import pairwise_distances_argmin_min
+import statistics
 # [Your other code goes here]
 
 def obj_func_calc(wvls, R_meep):
@@ -97,8 +98,6 @@ def obj_func_calc(wvls, R_meep):
     b, c = popt
     b_var = popv[0][0]
     c_var = popv[1][1]
-
-    printing("finished obj_eval")
 
     return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
