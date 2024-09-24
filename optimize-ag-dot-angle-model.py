@@ -83,9 +83,9 @@ del y_b_train
 del y_bvar_train
 del y_bvar_test
 
-def b(x): return model_b.predict(x.reshape(1, -1))
-def c(x): return model_c.predict(x.reshape(1, -1))
-def b_var(x): return model_bvar.predict(x.reshape(1, -1))
+def b(x): return model_b.predict(np.array(x).reshape(1, -1))
+def c(x): return model_c.predict(np.array(x).reshape(1, -1))
+def b_var(x): return model_bvar.predict(np.array(x).reshape(1, -1))
 #def c_var(x: [float]): return get_values(x, "c_var")
 def c_upper_constraint(x): return 20 - c(x)
 def c_lower_constraint(x): return c(x)
