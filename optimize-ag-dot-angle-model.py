@@ -48,7 +48,8 @@ def printing(string):
     print(string)
     pass
 
-pretraining_data_path = os.path.join(main_work_dir, 'ag-dot-angle-pretraining-unpruned.csv')  # Replace with your CSV file path
+#pretraining_data_path = os.path.join(main_work_dir, 'ag-dot-angle-pretraining-unpruned.csv')  # Replace with your CSV file path
+pretraining_data_path = os.path.join(main_work_dir, 'ag-dot-angle-pretraining.csv')  # Replace with your CSV file path
 data = pd.read_csv(pretraining_data_path)
 
 # Inputs
