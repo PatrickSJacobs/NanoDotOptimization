@@ -400,7 +400,7 @@ if __name__ == "__main__":
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
         #population_size=16,
-        population_size=population_size,
+        population_size=32,
         cr=0.9,
         f=0.4,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
