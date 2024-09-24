@@ -165,13 +165,13 @@ if __name__ == "__main__":
     
     task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
 
-    print(train_X_expanded.dtype)
-    print(train_Y_expanded.dtype)
-    print(train_X_expanded.device)
-    print(train_Y_expanded.device)
-    print(task_feature)
-    print(train_X_expanded)
-    print(train_Y_expanded)
+    #print(train_X_expanded.dtype)
+    #print(train_Y_expanded.dtype)
+    #print(train_X_expanded.device)
+    #print(train_Y_expanded.device)
+    #print(task_feature)
+    #print(train_X_expanded)
+    #print(train_Y_expanded)
 
     for iteration in range(num_iterations):
         # Fit the MultiTaskGP model
@@ -198,17 +198,18 @@ if __name__ == "__main__":
 
         # Compute feasibility mask using raw outputs
         is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
-        printing(is_feasible)
+        print(f"is_feasible: {is_feasible}")
 
         is_feasible = is_feasible.all(dim=-1)
-        printing(is_feasible)
+        print(f"is_feasible: {is_feasible}")
+        sys.exit("is feasible")
 
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
             break
 
         feasible_Y = train_Y[is_feasible]
-        sys.exit("is feasible")
+        
         # Define reference point for hypervolume calculation
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
         ref_point = ref_point.tolist()
