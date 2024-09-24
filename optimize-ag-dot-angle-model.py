@@ -54,6 +54,7 @@ data = pd.read_csv(pretraining_data_path)
 # Inputs
 X = data[['sr', 'ht', 'cs', 'theta_deg']].values
 
+print(len(X))
 y_c = data['c-param'].values  # Objective 1
 y_b = data['b-param'].values  # Objective 2
 y_bvar = data['b_var'].values  # Objective 3
@@ -229,7 +230,6 @@ if __name__ == "__main__":
 
     for sol in range(len(front)):
         vars = front[sol].variables
-        print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
         printing(f'(Solution #{sol + 1}):')
         printing(f'             Variables={vars}')
         printing(f'             Objectives={front[sol].objectives}')
