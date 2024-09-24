@@ -291,9 +291,9 @@ def b_var_constraint(x: [float]):
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
-    .add_variable(0.0001 , 1)
-    .add_variable(0.0001, 1)
-    .add_variable(0.0001 , 1)
+    .add_variable(0.001 * 5, 0.001 * 5)
+    .add_variable(0.001 * 100, 0.001 * 100)
+    .add_variable(0.001 * 25, 0.001 * 250)
     #.add_variable(0.001 * 250, 0.001 * 250)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 0.0)
@@ -315,8 +315,8 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
-    max_evaluations = 160
-    #max_evaluations = 8
+    #max_evaluations = 160
+    max_evaluations = 8
 
     '''
 
@@ -331,7 +331,7 @@ if __name__ == "__main__":
         #dominance_comparator=DominanceComparator(),
     )
 
-    '''
+    
     
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
@@ -394,6 +394,7 @@ if __name__ == "__main__":
     print(gde3_initial_population)
 
     #sys.exit()
+    '''
     
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
@@ -406,7 +407,7 @@ if __name__ == "__main__":
         dominance_comparator=DominanceComparator(),
     )
     
-    algorithm.solutions = gde3_initial_population
+    #algorithm.solutions = gde3_initial_population
 
     algorithm.run()
     front = algorithm.result()
