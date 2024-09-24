@@ -113,7 +113,8 @@ if __name__ == "__main__":
     print(len(train_X))
 
     # Outputs
-    train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
+    #train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var', 'c_var']].values, dtype=torch.double)
+    train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var']].values, dtype=torch.double)
     print(len(train_Y))
 
     # Bounds (include 'cs' bounds)
