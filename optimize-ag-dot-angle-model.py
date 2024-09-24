@@ -1,87 +1,265 @@
-# Standard Library Imports
+
+from jmetal.core.problem import OnTheFlyFloatProblem
+from jmetal.algorithm.multiobjective.gde3 import GDE3
+#from jmetal.util.evaluator import MultiprocessEvaluator
+#from jmetal.util.termination_criterion import StoppingByEvaluations
+from jmetal.util.comparator import DominanceComparator
+#from jmetal.util.solution import get_non_dominated_solutions
+#from jmetal.algorithm.multiobjective.nsgaii import NSGAII
+#from jmetal.operator import PolynomialMutation, SBXCrossover
+#from jmetal.problem.multiobjective.zdt import ZDT1Modified
+from jmetal.util.evaluator import MultiprocessEvaluator
+#from jmetal.util.solution import print_function_values_to_file, print_variables_to_file
+from jmetal.util.termination_criterion import StoppingByEvaluations
+from datetime import datetime
+import time
+import string
+import random
+from time import sleep
 import csv
-import math
-import os
-import re
-from pathlib import Path
 import numpy as np
 import pandas as pd
+import os
 from scipy.optimize import curve_fit
-from scipy.signal import find_peaks
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import pairwise_distances_argmin_min
 import statistics
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
+import sys
+import traceback
+import numpy as np
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+import xgboost as xgb
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
+
+current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
+main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
+folder_name = "opt_%s" % str(current_time)# Folder name for optimization files
+file_home_path = main_home_dir + folder_name + "_processed/" # Folder name for optimization files
+main_work_dir = "/work2/08809/tg881088/" # Home directory for optimization
+file_work_path = main_work_dir + folder_name + "_raw/" # Folder name for optimization files
+progress_file = file_home_path + "progress.txt"
+os.mkdir(file_home_path)# Making folder name for optimization files
+os.mkdir(file_work_path)# Making folder name for data log
+file_naught = open(progress_file, 'w')
+file_naught.writelines(["Beginning optimization %s" % "\n"])
+file_naught.close()
+
+#execution_dictionary = {}
+
+def printing(string):
+
+    file_printout = open(progress_file, 'r').readlines()
+    lines = file_printout + [f"{str(string)}\n"]
+    file_printer = open(progress_file, 'w')
+    file_printer.writelines(lines)
+    file_printer.close()
+    print(string)
+    pass
+
+def check_log(filename: str, param: str):
+    df = pd.read_csv(file_home_path + "calc_log_obj.csv")
+    return list(dict(df.loc[df['filename'] == filename])[param])
+
+def make_filename(sr, ht, cs, theta_deg):
+    display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0,
+                                  1)).replace(".", "_")  # angle to be used
+
+    filename = "%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (str(folder_name),
+                                                      str(round(sr * 10000, 1)).replace(".", "_") + "nm",
+                                                      str(round(ht * 10000, 1)).replace(".", "_") + "nm",
+                                                      str(round(cs * 10000, 1)).replace(".", "_") + "nm",
+                                                      display_theta_deg,
+                                                      )  # filename to be used
+    return filename
+
+pretraining_data_path = os.path.join(main_work_dir, 'ag-dot-angle-pretraining-unpruned.csv')  # Replace with your CSV file path
+data = pd.read_csv(pretraining_data_path)
+
+# Inputs
+X = data[['sr', 'ht', 'cs', 'theta_deg']].values
+
+y_c = data['c-param'].values  # Objective 1
+y_b = data['b-param'].values  # Objective 2
+y_bvar = data['b_var'].values  # Objective 3
+
+# Train/test split
+X_train, X_test, y_c_train, y_c_test = train_test_split(X, y_c, test_size=0.1, random_state=42)
+_, _, y_b_train, y_b_test = train_test_split(X, y_b, test_size=0.1, random_state=42)
+_, _, y_bvar_train, y_bvar_test = train_test_split(X, y_bvar, test_size=0.1, random_state=42)
+
+del _
+
+# Train XGBoost models for each objective
+model_c = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100)
+model_b = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100)
+model_bvar = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100)
+
+# Train the models
+model_c.fit(X_train, y_c_train)
+model_b.fit(X_train, y_b_train)
+model_bvar.fit(X_train, y_bvar_train)
+
+del X_train
+del y_c_train
+del X_test
+del y_c_test
+del y_b_train
+del y_bvar_train
+del y_bvar_test
+
+def b(x): return model_b.predict(x.reshape(1, -1))
+def c(x): return model_c.predict(x.reshape(1, -1))
+def b_var(x): return model_bvar.predict(x.reshape(1, -1))
+#def c_var(x: [float]): return get_values(x, "c_var")
+def c_upper_constraint(x): return 20 - c(x)
+def c_lower_constraint(x): return c(x)
+def b_lower_constraint(x): return b(x) - 1  # b-param should be >= 1
+def b_upper_constraint(x): return 50 -  b(x)  # b-param should be <= 60
+def b_var_constraint(x): return 10 - b_var(x)
+
+
+#bounds = {'sr': (0.001 * 5, 0.001 * 125), 'ht': (0.001 * 50, 0.001 * 100), 'cs': (0.001 * 25, 0.001 * 250), 'theta_deg': (0.0, 0.0)}# Bounds for optimization
+
+'''.add_variable(0.001 * 5, 0.001 * 125)
+    .add_variable(0.001 * 50, 0.001 * 100)
+    .add_variable(0.001 * 25, 0.001 * 250)
+    #.add_variable(0.001 * 250, 0.001 * 250)
+    #.add_variable(0.0, 0.0)
+    .add_variable(0.0, 0.0)'''
+    
+problem = (
+    OnTheFlyFloatProblem()
+    .set_name("Testing")
+    .add_variable(0.001 * 5, 0.001 * 125)
+    .add_variable(0.001 * 50, 0.001 * 100)
+    .add_variable(0.001 * 25, 0.001 * 250)
+    #.add_variable(0.001 * 250, 0.001 * 250)
+    #.add_variable(0.0, 0.0)
+    .add_variable(0.0, 0.0)
+    .add_function(c)
+    .add_function(b)
+    .add_function(b_var)
+    #.add_function(c_var)
+    .add_constraint(b_lower_constraint)
+    .add_constraint(b_upper_constraint)
+    .add_constraint(c_lower_constraint)
+    .add_constraint(c_upper_constraint)
+    .add_constraint(b_var_constraint)
+)
 
 if __name__ == "__main__":
-    main_work_dir = "/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/data/"  # Home directory for optimization
+
+    with open(file_home_path + "calc_log_obj.csv", 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
+        file.close()
+
+    max_evaluations = 160
+    #max_evaluations = 8
+
+    '''
+
+    algorithm = NSGAII(
+        population_evaluator=MultiprocessEvaluator(processes=16),
+        problem=problem,
+        population_size=16,
+        offspring_population_size=16,
+        mutation=PolynomialMutation(probability=1.0 / problem.number_of_variables(), distribution_index=20),
+        crossover=SBXCrossover(probability=1.0, distribution_index=20),
+        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
+        #dominance_comparator=DominanceComparator(),
+    )
+
+    '''
+    
+    from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+    from sklearn.cluster import KMeans
+
+    def select_diverse_solutions(pareto_parameters, pareto_objectives, m):
+        # Combine parameters and objectives for clustering
+        combined = np.hstack((pareto_parameters, pareto_objectives))
+        
+        # Normalize the data
+        combined_normalized = (combined - np.min(combined, axis=0)) / (np.max(combined, axis=0) - np.min(combined, axis=0))
+        
+        # Perform K-means clustering
+        kmeans = KMeans(n_clusters=m, random_state=42)
+        kmeans.fit(combined_normalized)
+        
+        # Select the solution closest to each cluster center
+        selected_indices = []
+        for i in range(m):
+            cluster_points = combined_normalized[kmeans.labels_ == i]
+            center = kmeans.cluster_centers_[i]
+            distances = np.linalg.norm(cluster_points - center, axis=1)
+            closest_point_index = np.argmin(distances)
+            selected_indices.append(np.where((combined_normalized == cluster_points[closest_point_index]).all(axis=1))[0][0])
+        
+        return selected_indices
+
+    #df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
     df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
 
     parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
     objectives = df1[['c-param', 'b-param', 'b_var']].values
+
+    # Find the Pareto front
+    nds = NonDominatedSorting()
+    pareto_front_indices = nds.do(objectives, only_non_dominated_front=True)
+
+    # Extract Pareto front solutions
+    pareto_parameters = parameters[pareto_front_indices]
+    pareto_objectives = objectives[pareto_front_indices]
+
+    # Select m diverse solutions
+    population_size = 32
+    selected_indices = select_diverse_solutions(pareto_parameters, pareto_objectives, population_size)
+
+    # Extract the selected solutions
+    selected_parameters = pareto_parameters[selected_indices]
+    selected_objectives = pareto_objectives[selected_indices]
+
+    # Output the selected solutions
+    print(f"Number of selected Pareto-optimal solutions: {population_size}")
+    for i in range(population_size):
+        print(f"\nSolution {i+1}:")
+        print(f"Parameters: {selected_parameters[i]}")
+        print(f"Objectives: {selected_objectives[i]}")
+
+    # Prepare the selected solutions for GDE3
+    gde3_initial_population = selected_parameters
+
+    print("\nInitial population for GDE3:")
+    print(gde3_initial_population)
+
+    #sys.exit()
     
-    # Define kernel for GPR
-    kernel = C(1.0, (1e-4, 1e1)) * RBF(1.0, (1e-4, 1e1))
+    algorithm = GDE3(
+        population_evaluator=MultiprocessEvaluator(processes=16),
+        problem=problem,
+        #population_size=16,
+        population_size=population_size,
+        cr=0.9,
+        f=0.4,
+        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
+        dominance_comparator=DominanceComparator(),
+    )
     
-    print("starting models")
-    # Initialize GPR models for each output dimension
-    gpr_models = [GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=100) for _ in range(3)]
-    print("made models")
+    algorithm.solutions = gde3_initial_population
 
-    print("fitting models")
-    # Train a GPR model for each output dimension
-    for i in range(3):
-        print(f"fitting model {i+1}")
-        gpr_models[i].fit(parameters, objectives[:, i])
-        print(f"finished fitting model {i+1}")
+    algorithm.run()
+    front = algorithm.result()
+    print(front)
 
-        
-    # Test data: new input of shape m x 4
-    X_test = np.array([
-    [0.01265, 0.08967, 0.52237, 0.00000],  # Solution 29
-    [0.0669, 0.0759, 0.2662, 0.00000],     # Solution 26
-    [0.08129, 0.05029, 0.1451, 54.90000],  # Solution 6
-    [0.0595, 0.0631, 0.281, 0.00000],      # Solution 12
-    [0.07858, 0.05388, 0.25, 0.00000],     # Solution 2
-    [0.0538, 0.1008, 0.2924, 0.00000],     # Solution 5
-    [0.0348, 0.1235, 0.3304, 0.00000],     # Solution 4
-    [0.00573, 0.07468, 0.52564, 0.00000],  # Solution 13
-    [0.05667, 0.0538, 0.24976, 0.00000],   # Solution 18
-    [0.07568, 0.05, 0.16359, 0.00000],     # Solution 20
-    [0.0669, 0.0759, 0.2662, 0.00000],     # Solution 26 (repeated)
-    [0.01265, 0.08967, 0.52237, 0.00000],  # Solution 29 (repeated)
-    [0.11868, 0.05, 0.18418, 0.00000],     # Solution 30
-    [0.09467, 0.05944, 0.22999, 0.00000],  # Solution 31
-    [0.08129, 0.05029, 0.1451, 54.90000],  # Solution 6 (repeated)
-])
+    for sol in range(len(front)):
+        vars = front[sol].variables
+        print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
+        printing(f'(Solution #{sol + 1}):')
+        printing(f'             Variables={vars}')
+        printing(f'             Objectives={front[sol].objectives}')
 
-    # Predict for each output dimension
-    y_pred = np.zeros((X_test.shape[0], 3))  # Store predictions for each of the 3 outputs
-    y_std = np.zeros((X_test.shape[0], 3))   # Store standard deviations for each of the 3 outputs
-
-    for i in range(3):
-        y_pred[:, i], y_std[:, i] = gpr_models[i].predict(X_test, return_std=True)
-
-    # Output predictions and uncertainties
-    print(X_test)
-    print("Predicted values:\n", y_pred)
-    print("\nPrediction uncertainties (std dev):\n", y_std)
-
-    # For visualization, let's assume we're working with the first output dimension only
-    plt.figure(figsize=(10, 6))
-    plt.plot(np.arange(X_test.shape[0]), y_pred[:, 0], 'b-', label='Predicted Output 1')
-    plt.fill_between(np.arange(X_test.shape[0]),
-                    y_pred[:, 0] - 2 * y_std[:, 0], 
-                    y_pred[:, 0] + 2 * y_std[:, 0],
-                    color='lightblue', alpha=0.5, label='Confidence Interval (±2 std)')
-    plt.title('GPR Prediction for Output 1 with Confidence Interval')
-    plt.xlabel('Test Sample Index')
-    plt.ylabel('Output Value')
-    plt.legend()
-    plt.show()
+    printing(f"Computing time: {algorithm.total_computing_time}")
 
 
