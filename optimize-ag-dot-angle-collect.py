@@ -221,7 +221,7 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
         if verbose:
             pass
             #print(f"Selected features for clustering: {features}")
-        pass
+    
     
     # Extract the feature matrix
     X = df_filtered[features].values
