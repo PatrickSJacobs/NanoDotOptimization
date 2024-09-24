@@ -14,6 +14,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import pairwise_distances_argmin_min
 import statistics
+
 # [Your other code goes here]
 
 def obj_func_calc(wvls, R_meep):
@@ -99,8 +100,9 @@ def obj_func_calc(wvls, R_meep):
     b_var = popv[0][0]
     c_var = popv[1][1]
 
-    return b, c**2 * 10 - 10, b_var * 100, c_var * 100
+    printing("finished obj_eval")
 
+    return b, c**2 * 10 - 10, b_var * 100, c_var * 100
 
 def date_to_scalar(year, month, day):
     """Convert date components to a scalar."""
@@ -318,13 +320,12 @@ def main():
     dataset_df.to_csv(training_file, index=False)
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
-    '''
     num_points = 300
     # Prune the dataset
     df_final = prune_dataset(
         dataset_df, 
         num_points, 
-        #{ "c-param": 10, "b_var": 10, }
+        { "c-param": 30, "b-param": 50, "b_var": 50, }
         )
 
     # Save the pruned dataset
@@ -332,7 +333,6 @@ def main():
     df_final.to_csv(pruned_training_file, index=False)
 
     print(f"Final pruned dataset contains {len(df_final)} records.")
-    '''
 
 if __name__ == "__main__":
     main()
