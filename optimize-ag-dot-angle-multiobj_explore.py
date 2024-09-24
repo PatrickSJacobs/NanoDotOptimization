@@ -5,7 +5,7 @@ from jmetal.algorithm.multiobjective.gde3 import GDE3
 #from jmetal.util.termination_criterion import StoppingByEvaluations
 from jmetal.util.comparator import DominanceComparator
 #from jmetal.util.solution import get_non_dominated_solutions
-from jmetal.algorithm.multiobjective.nsgaii import NSGAIII
+from jmetal.algorithm.multiobjective.nsgaiii import NSGAIII
 from jmetal.operator import PolynomialMutation, SBXCrossover
 from jmetal.problem.multiobjective.zdt import ZDT1Modified
 from jmetal.util.evaluator import MultiprocessEvaluator
