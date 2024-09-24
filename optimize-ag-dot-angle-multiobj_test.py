@@ -70,7 +70,6 @@ def c4(samples):
     return 10 - samples[..., 2]  # b_var <= 10
 '''
 
-
 def c1(samples):
     return samples[..., 0]  # c-param <= 5
 
@@ -158,29 +157,29 @@ if __name__ == "__main__":
     # **Mapping from task indices to positions**
     task_to_index = {task.item(): idx for idx, task in enumerate(task_indices)}
 
-    # **Custom constraint function to handle per-task samples**
+    # **Modified constraint_wrapper to return individual wrapped constraints**
     def constraint_wrapper(constraints, task_feature):
-        def constraint(samples, X):
-            # samples: [num_samples, q, 1]
-            # X: [num_samples, q, D+1]
-            # Extract task indices from X
-            task_idx = X[..., task_feature].long().squeeze(-1)  # [num_samples, q]
-            # Initialize output tensor
-            num_tasks = len(task_indices)
-            outputs = torch.zeros(samples.shape[:-1] + (num_tasks,), device=samples.device)
-            # Assign samples to the correct position in outputs
-            for i in range(num_tasks):
-                mask = task_idx == task_indices[i]
-                outputs[mask, i] = samples[mask, 0, 0]
-            # Apply constraints
-            constraint_values = torch.ones(samples.shape[:-1], dtype=torch.bool, device=samples.device)
-            for c in constraints:
-                constraint_values &= c(outputs) >= 0
-            return constraint_values
-        return constraint
+        wrapped_constraints = []
+        for idx, c in enumerate(constraints):
+            def wrapped_constraint(samples, X, c=c, idx=idx):
+                # samples: [num_samples, q, 1]
+                # X: [num_samples, q, D+1]
+                # Extract task indices from X
+                task_idx = X[..., task_feature].long().squeeze(-1)  # [num_samples, q]
+                # Initialize output tensor
+                num_tasks = len(task_indices)
+                outputs = torch.zeros(samples.shape[:-2] + (num_tasks,), device=samples.device)
+                # Assign samples to the correct position in outputs
+                for i in range(num_tasks):
+                    mask = task_idx == task_indices[i]
+                    outputs[mask, i] = samples[mask, 0, 0]
+                # Apply constraint
+                return c(outputs)
+            wrapped_constraints.append(wrapped_constraint)
+        return wrapped_constraints
 
     # Wrap constraints
-    constraints_wrapped = constraint_wrapper([c1, c2, c3, c4], task_feature=task_feature)
+    constraints_wrapped = constraint_wrapper(constraints, task_feature=task_feature)
 
     for iteration in range(num_iterations):
         # Initialize and fit the MultiTaskGP model
