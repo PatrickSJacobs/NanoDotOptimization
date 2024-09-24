@@ -121,17 +121,22 @@ if __name__ == "__main__":
     train_Y_expanded = train_Y.transpose(0, 1).reshape(-1, 1)  # [N*num_tasks, 1]
 
     task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
+    
+    from botorch.models import SingleTaskGP
+    from gpytorch.mlls import ExactMarginalLogLikelihood
+    from botorch.fit import fit_gpytorch_model
+    from botorch.models.transforms import Standardize
+
 
     for iteration in range(num_iterations):
         # Initialize and fit the MultiTaskGP model
-        model = MultiTaskGP(
-            train_X=train_X_expanded,
-            train_Y=train_Y_expanded,
-            task_feature=task_feature,
-            outcome_transform=Standardize(m=1),
-        )
+        # Define the model using SingleTaskGP with a standardization transform on the outputs
+        model = SingleTaskGP(train_X_expanded, train_Y_expanded, outcome_transform=Standardize(m=train_Y_expanded.shape[-1]))
+
+        # Define the marginal log likelihood and fit the model
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
-        fit_gpytorch_mll(mll)
+        fit_gpytorch_model(mll)
+
         print("Model fitted")
 
         # Compute feasibility mask using model predictions
