@@ -236,7 +236,7 @@ if __name__ == "__main__":
             model=model,
             ref_point=ref_point,
             X_baseline=X_baseline_expanded,
-            constraints=constraints_wrapped,
+            #constraints=constraints_wrapped,
             sampler=sampler,
             prune_baseline=True,
             cache_root=False,
