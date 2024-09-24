@@ -165,7 +165,6 @@ if __name__ == "__main__":
         fit_gpytorch_mll(mll)
         print("Model fitted")
 
-        
         # Compute feasibility mask using raw outputs
         is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
         is_feasible = is_feasible.all(dim=-1)
@@ -173,10 +172,23 @@ if __name__ == "__main__":
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
             break
-        
-        
+
         feasible_Y = train_Y[is_feasible]
         feasible_X = train_X_normalized[is_feasible]
+
+        # Extract Pareto-optimal points to use as baseline
+        pareto_mask = is_non_dominated(feasible_Y)
+        pareto_Y = feasible_Y[pareto_mask]
+        pareto_X = feasible_X[pareto_mask]
+
+        # Limit the number of baseline points to avoid high dimensionality
+        # If the number of Pareto points is too large, randomly select a subset
+        max_baseline_points = 50
+        if pareto_X.shape[0] > max_baseline_points:
+            indices = torch.randperm(pareto_X.shape[0])[:max_baseline_points]
+            X_baseline = pareto_X[indices]
+        else:
+            X_baseline = pareto_X
 
         # Define reference point for hypervolume calculation
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
@@ -185,10 +197,11 @@ if __name__ == "__main__":
 
         # Define the acquisition function using qNEHVI
         sampler = SobolQMCNormalSampler(num_samples=128)
+
         acq_func = qNoisyExpectedHypervolumeImprovement(
             model=model,
             ref_point=ref_point,
-            X_baseline=train_X_normalized,
+            X_baseline=X_baseline,
             constraints=constraints,
             sampler=sampler,
             prune_baseline=True,
