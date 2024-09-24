@@ -44,10 +44,11 @@ def collect_calc_log_files(base_directory, filter_strings):
 if __name__ == "__main__":
     main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
     
+    '''
     # Array of strings to filter files by
     filter_strings = [filename_tag(i) for i in [
-   [0.05103, 0.08608, 0.49075, 0.0],
-   '''[0.0669, 0.0759, 0.2662, 0.0],
+   [0.05103, 0.08608, 0.49075, 0.0]
+   [0.0669, 0.0759, 0.2662, 0.0],
     [0.06791, 0.05, 0.25, 0.0],
     [0.07675, 0.05137, 0.1771, 0.0],
     
@@ -78,7 +79,13 @@ if __name__ == "__main__":
     [0.077, 0.0579, 0.246, 0.0],
     [0.07216, 0.05, 0.12685, 0.0],
     [0.08314, 0.05, 0.21324, 0.0],
-    [0.0796, 0.0558, 0.2408, 0.0]# Solution 6 (repeated)'''
+    [0.0796, 0.0558, 0.2408, 0.0]# Solution 6 (repeated)
+]
+]'''
+    
+    # Array of strings to filter files by
+    filter_strings = [filename_tag(i) for i in [
+   [0.05103, 0.08608, 0.49075, 0.0]# Solution 6 (repeated)
 ]
 ]
        
