@@ -72,6 +72,7 @@ def c4(samples):
 
 
 def c1(samples):
+    print(samples[..., 0])
     return samples[..., 0]  # c-param <= 5
 
 def c2(samples):
