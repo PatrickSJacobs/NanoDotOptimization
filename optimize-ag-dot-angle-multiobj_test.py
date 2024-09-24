@@ -171,7 +171,7 @@ if __name__ == "__main__":
         printing(f"ref_point: {ref_point}")
 
         # Define the acquisition function using qNEHVI
-        sampler = SobolQMCNormalSampler(num_samples=128)
+        sampler = SobolQMCNormalSampler(sample_shape=torch.Size([128]))
         acq_func = qNoisyExpectedHypervolumeImprovement(
             model=model,
             ref_point=ref_point,
