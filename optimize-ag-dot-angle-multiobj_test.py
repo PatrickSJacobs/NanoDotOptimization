@@ -123,9 +123,7 @@ if __name__ == "__main__":
     task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
     
     from botorch.models import SingleTaskGP
-    from gpytorch.mlls import ExactMarginalLogLikelihood
-    from botorch.fit import fit_gpytorch_model
-    from botorch.models.transforms import Standardize
+
 
 
     for iteration in range(num_iterations):
@@ -135,7 +133,7 @@ if __name__ == "__main__":
 
         # Define the marginal log likelihood and fit the model
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
-        fit_gpytorch_model(mll)
+        fit_gpytorch_mll(mll)
 
         print("Model fitted")
 
