@@ -124,10 +124,10 @@ if __name__ == "__main__":
         return samples[..., 1] - 1  # b-param >= 1
 
     def c3(samples):
-        return 100 - samples[..., 1]  # b-param <= 50
+        return 1000 - samples[..., 1]  # b-param <= 50
 
     def c4(samples):
-        return 12 - samples[..., 2]  # b_var <= 10
+        return 120 - samples[..., 2]  # b_var <= 10
 
     constraints = [c1, c2, c3, c4]
 
