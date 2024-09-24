@@ -325,7 +325,7 @@ def main():
     df_final = prune_dataset(
         dataset_df, 
         num_points, 
-        { "c-param": 30, "b-param": 50, "b_var": 50, }
+        { "c-param": 10, "b_var": 10, }
         )
 
     # Save the pruned dataset
