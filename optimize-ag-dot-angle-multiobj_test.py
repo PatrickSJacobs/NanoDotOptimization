@@ -72,6 +72,7 @@ def c4(samples):
 
 
 def c1(samples):
+    print(samples)
     print(samples[..., 0])
     return samples[..., 0]  # c-param <= 5
 
@@ -204,7 +205,7 @@ if __name__ == "__main__":
             feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values
         )
         ref_point = ref_point.tolist()
-        printing(f"ref_point: {ref_point}")
+        #printing(f"ref_point: {ref_point}")
 
         # Define the acquisition function using qNEHVI
         sampler = SobolQMCNormalSampler(sample_shape=torch.Size([128]))
