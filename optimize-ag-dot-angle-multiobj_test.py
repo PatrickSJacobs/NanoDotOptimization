@@ -34,6 +34,7 @@ import torch
 from botorch.utils.multi_objective.pareto import is_non_dominated
 
 from botorch.models import SingleTaskGP
+from botorch.models.fully_bayesian import SaasFullyBayesianSingleTaskGP
 from botorch.models.model_list_gp_regression import ModelListGP
 
 from botorch.fit import fit_gpytorch_mll
@@ -140,7 +141,7 @@ if __name__ == "__main__":
         models = []
         for i in range(train_Y.shape[-1]):
             train_y = train_Y[:, i:i+1]
-            model = SingleTaskGP(train_X, train_y, outcome_transform=Standardize(m=1))
+            model = SaasFullyBayesianSingleTaskGP(train_X, train_y, outcome_transform=Standardize(m=1))
             models.append(model)
         model = ModelListGP(*models)
         mll = SumMarginalLogLikelihood(model.likelihood, model)
