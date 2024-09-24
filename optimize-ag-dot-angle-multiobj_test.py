@@ -117,12 +117,19 @@ if __name__ == "__main__":
     num_iterations = 4  # Number of optimization iterations
 
     # Define constraints as functions (accepting posterior samples Y)
+    def c1(samples):
+        return samples[..., 0]  # c-param <= 5
 
     def c2(samples):
-        return samples[..., 1] - 1  # b-param >= 1
+        return samples[..., 1]  # b-param >= 1
 
+    def c3(samples):
+        return samples[..., 1]  # b-param <= 50
 
-    constraints = [c2]
+    def c4(samples):
+        return samples[..., 2]  # b_var <= 10
+
+    constraints = [c1, c2, c3, c4]
 
     n_tasks = train_Y.shape[-1]
     printing(f"n_tasks: {n_tasks}")
@@ -175,7 +182,7 @@ if __name__ == "__main__":
         print("finished fitting mll")
 
         # Compute feasibility mask using raw outputs
-        is_feasible = (c2(train_Y) >= 0)
+        is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
         print(f"is_feasible: {is_feasible}")
 
         is_feasible = is_feasible.all(dim=-1)
@@ -247,7 +254,7 @@ if __name__ == "__main__":
 
     # After optimization, process the results
     # Compute feasibility mask for final train_Y
-    is_feasible = (c2(train_Y) >= 0)
+    is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
     is_feasible = is_feasible.all(dim=-1)
 
     # Get feasible train_Y and train_X
