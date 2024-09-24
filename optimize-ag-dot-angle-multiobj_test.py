@@ -65,7 +65,7 @@ def get_values(x: [float], param: str):
 # Define constraints as functions (accepting posterior samples Y)
 def c1(samples):
     #return 5 - samples[..., 0]  # c-param <= 5
-    return 5 - samples[..., 0]  # c-param <= 5
+    return samples[..., 0]  # c-param <= 5
 
 
 def c2(samples):
