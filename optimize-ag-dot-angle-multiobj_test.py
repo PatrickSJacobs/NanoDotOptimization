@@ -64,21 +64,6 @@ def get_values(x: [float], param: str):
         obj_func_run(x)
         return check_log(filename, param)[0]
 
-# Define constraints as functions (accepting posterior samples Y)
-def c1(samples):
-    return 5 - samples[..., 0]  # c-param <= 5
-
-def c2(samples):
-    return samples[..., 1] - 1  # b-param >= 1
-
-def c3(samples):
-    return 50 - samples[..., 1]  # b-param <= 50
-
-def c4(samples):
-    return 10 - samples[..., 2]  # b_var <= 10
-
-constraints = [c1, c2, c3, c4]
-
 # Define the function to evaluate the candidate
 def evaluate_candidate(candidate):
     x = candidate.squeeze(0).tolist()
@@ -139,10 +124,10 @@ if __name__ == "__main__":
         return samples[..., 1] - 1  # b-param >= 1
 
     def c3(samples):
-        return 100 -samples[..., 1]  # b-param <= 50
+        return 100 - samples[..., 1]  # b-param <= 50
 
     def c4(samples):
-        return 12 -samples[..., 2]  # b_var <= 10
+        return 12 - samples[..., 2]  # b_var <= 10
 
     constraints = [c1, c2, c3, c4]
 
