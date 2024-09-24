@@ -56,6 +56,7 @@ def get_values(x: [float], param: str):
         return check_log(filename, param)[0]
 
 # Define constraints as functions (accepting posterior samples Y)
+'''
 def c1(samples):
     return 5 - samples[..., 0]  # c-param <= 5
 
@@ -67,6 +68,21 @@ def c3(samples):
 
 def c4(samples):
     return 10 - samples[..., 2]  # b_var <= 10
+'''
+
+
+def c1(samples):
+    return samples[..., 0]  # c-param <= 5
+
+def c2(samples):
+    return samples[..., 1]  # b-param >= 1
+
+def c3(samples):
+    return samples[..., 1]  # b-param <= 50
+
+def c4(samples):
+    return samples[..., 2]  # b_var <= 10
+
 
 constraints = [c1, c2, c3, c4]
 
