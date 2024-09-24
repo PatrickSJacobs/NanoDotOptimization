@@ -81,7 +81,7 @@ def obj_func_calc(wvls, R_meep):
 
     # tsr = sum(x * i for i, x in enumerate(L, 1)) / len(L)
 
-    # print(tsr)
+    # #print(tsr)
     q = 1000
     # 1/(1 + (q/b*(x - a))^2)/c == 1/(pc)
 
@@ -159,7 +159,7 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
     - features (list of str, optional): List of feature column names to use for clustering.
                                         If None, all numeric columns are used.
     - random_state (int, optional): Seed for reproducibility. Default is 42.
-    - verbose (bool, optional): If True, prints information about pruning steps.
+    - verbose (bool, optional): If True, #prints information about pruning steps.
     
     Returns:
     - pd.DataFrame: The pruned dataset containing m representative points.
@@ -183,21 +183,26 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
         for col, thresh in thresholds.items():
             condition &= df[col] <= thresh
             if verbose:
-                print(f"Applying threshold: {col} <= {thresh}")
+                pass
+                #print(f"Applying threshold: {col} <= {thresh}")
         
         df_filtered = df[condition].copy()
+        
         if verbose:
-            print(f"After initial filtering based on thresholds: {len(df_filtered)} records retained.")
+            pass
+            #print(f"After initial filtering based on thresholds: {len(df_filtered)} records retained.")
     else:
         df_filtered = df.copy()
         if verbose:
-            print("No initial filtering based on thresholds applied.")
+            pass
+            #print("No initial filtering based on thresholds applied.")
     
     # Check if there are enough data points after filtering
     if len(df_filtered) < m:
         if verbose:
-            print(f"Warning: After filtering, the dataset contains {len(df_filtered)} records, which is less than the desired m={m}.")
-            print("Proceeding with the available data without further pruning.")
+            pass
+            #print(f"Warning: After filtering, the dataset contains {len(df_filtered)} records, which is less than the desired m={m}.")
+            #print("Proceeding with the available data without further pruning.")
         return df_filtered.copy()
     
     # Step 2: Feature Selection for Clustering
@@ -207,14 +212,16 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
         if not features:
             raise ValueError("No numeric columns available for clustering.")
         if verbose:
-            print(f"Selected features for clustering (all numeric columns): {features}")
+            #print(f"Selected features for clustering (all numeric columns): {features}")
     else:
         # Ensure specified features exist in the DataFrame
         missing_features = [feat for feat in features if feat not in df_filtered.columns]
         if missing_features:
             raise ValueError(f"The following features are not in the DataFrame: {missing_features}")
         if verbose:
-            print(f"Selected features for clustering: {features}")
+            pass
+            #print(f"Selected features for clustering: {features}")
+        pass
     
     # Extract the feature matrix
     X = df_filtered[features].values
@@ -227,20 +234,22 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     if verbose:
-        print("Features standardized using StandardScaler.")
+        #print("Features standardized using StandardScaler.")
     
     # Step 3: Check if m is feasible
     if m >= len(df_filtered):
         if verbose:
-            print(f"Desired number of points m={m} is greater than or equal to the dataset size {len(df_filtered)}.")
-            print("Returning the filtered dataset without further pruning.")
+            pass
+            #print(f"Desired number of points m={m} is greater than or equal to the dataset size {len(df_filtered)}.")
+            #print("Returning the filtered dataset without further pruning.")
         return df_filtered.copy()
     
     # Step 4: Initialize and Fit KMeans
     kmeans = KMeans(n_clusters=m, random_state=random_state, n_init=10)
     kmeans.fit(X_scaled)
     if verbose:
-        print(f"KMeans clustering performed with n_clusters={m}.")
+        pass
+        #print(f"KMeans clustering performed with n_clusters={m}.")
     
     # Step 5: Find the Closest Data Point to Each Cluster Centroid
     centers = kmeans.cluster_centers_
@@ -249,7 +258,8 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
     # Step 6: Select the Representative Points
     df_final = df_filtered.iloc[closest].reset_index(drop=True)
     if verbose:
-        print(f"Pruned dataset contains {len(df_final)} records after KMeans clustering to {m} points.")
+        pass
+        #print(f"Pruned dataset contains {len(df_final)} records after KMeans clustering to {m} points.")
     
     return df_final
 
@@ -312,12 +322,12 @@ def main():
                 "count": count
             }])], ignore_index=True)
         except Exception as e:
-            print(f"Error processing file {path}: {e}")
+            #print(f"Error processing file {path}: {e}")
             continue
 
     # Save the collected data to CSV
     dataset_df.to_csv(training_file, index=False)
-    print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
+    #print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
     num_points = 300
     # Prune the dataset
@@ -329,11 +339,13 @@ def main():
 
         )
 
+    print(df_final["path"].values)
+
     # Save the pruned dataset
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
     df_final.to_csv(pruned_training_file, index=False)
 
-    print(f"Final pruned dataset contains {len(df_final)} records.")
+    #print(f"Final pruned dataset contains {len(df_final)} records.")
 
 if __name__ == "__main__":
     main()
