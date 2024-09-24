@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
         is_feasible = is_feasible.all(dim=-1)
         print(f"is_feasible: {is_feasible}")
-        sys.exit("is feasible")
+        #sys.exit("is feasible")
 
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
