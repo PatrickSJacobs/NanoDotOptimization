@@ -72,8 +72,6 @@ def c4(samples):
 
 
 def c1(samples):
-    print(f"samples: {samples}")
-    print(f"samples - 0: {samples[..., 0]}")
     return samples[..., 0]  # c-param <= 5
 
 def c2(samples):
@@ -84,7 +82,6 @@ def c3(samples):
 
 def c4(samples):
     return samples[..., 2]  # b_var <= 10
-
 
 constraints = [c1, c2, c3, c4]
 
@@ -158,6 +155,33 @@ if __name__ == "__main__":
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         return mll, model
 
+    # **Mapping from task indices to positions**
+    task_to_index = {task.item(): idx for idx, task in enumerate(task_indices)}
+
+    # **Custom constraint function to handle per-task samples**
+    def constraint_wrapper(constraints, task_feature):
+        def constraint(samples, X):
+            # samples: [num_samples, q, 1]
+            # X: [num_samples, q, D+1]
+            # Extract task indices from X
+            task_idx = X[..., task_feature].long().squeeze(-1)  # [num_samples, q]
+            # Initialize output tensor
+            num_tasks = len(task_indices)
+            outputs = torch.zeros(samples.shape[:-1] + (num_tasks,), device=samples.device)
+            # Assign samples to the correct position in outputs
+            for i in range(num_tasks):
+                mask = task_idx == task_indices[i]
+                outputs[mask, i] = samples[mask, 0, 0]
+            # Apply constraints
+            constraint_values = torch.ones(samples.shape[:-1], dtype=torch.bool, device=samples.device)
+            for c in constraints:
+                constraint_values &= c(outputs) >= 0
+            return constraint_values
+        return constraint
+
+    # Wrap constraints
+    constraints_wrapped = constraint_wrapper([c1, c2, c3, c4], task_feature=task_feature)
+
     for iteration in range(num_iterations):
         # Initialize and fit the MultiTaskGP model
         mll, model = initialize_model(train_X_expanded, train_Y_expanded)
@@ -205,7 +229,7 @@ if __name__ == "__main__":
             feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values
         )
         ref_point = ref_point.tolist()
-        #printing(f"ref_point: {ref_point}")
+        printing(f"ref_point: {ref_point}")
 
         # Define the acquisition function using qNEHVI
         sampler = SobolQMCNormalSampler(sample_shape=torch.Size([128]))
@@ -213,7 +237,7 @@ if __name__ == "__main__":
             model=model,
             ref_point=ref_point,
             X_baseline=X_baseline_expanded,
-            constraints=constraints,
+            constraints=constraints_wrapped,
             sampler=sampler,
             prune_baseline=True,
             cache_root=False,
