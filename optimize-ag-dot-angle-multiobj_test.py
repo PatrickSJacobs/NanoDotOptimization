@@ -53,7 +53,7 @@ def c1(samples):
     return samples[..., 0]  # c-param <= 5
 
 def c2(samples):
-    return samples[..., 1] - 1  # b-param >= 1
+    return samples[..., 1] # b-param >= 1
 
 def c3(samples):
     return samples[..., 1]  # b-param <= 50
