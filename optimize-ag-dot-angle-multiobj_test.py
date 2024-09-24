@@ -28,16 +28,14 @@ import torch
 
 from botorch.utils.multi_objective.pareto import is_non_dominated
 
-from botorch.models import SingleTaskGP, ModelListGP
+from botorch.models import MultiTaskGP
 from botorch.fit import fit_gpytorch_mll
 from botorch.models.transforms import Standardize
 from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
-
 from botorch.sampling.normal import SobolQMCNormalSampler
-
 from botorch.optim import optimize_acqf
-
-from gpytorch.mlls import SumMarginalLogLikelihood
+from botorch.models.transforms.input import Normalize as InputNormalize
+from gpytorch.mlls import ExactMarginalLogLikelihood
 
 def get_values(x: [float], param: str):
     sr, ht, cs, theta_deg = x
@@ -52,19 +50,15 @@ def get_values(x: [float], param: str):
 
 # Define constraints as functions (accepting posterior samples Y)
 def c1(samples):
-    #return 5 - samples[..., 0]  # c-param <= 5
     return samples[..., 0]  # c-param <= 5
 
 def c2(samples):
-    #return samples[..., 1] - 1  # b-param >= 1
-    return samples[..., 1]  # b-param >= 1
+    return samples[..., 1] - 1  # b-param >= 1
 
 def c3(samples):
-    #return 50 - samples[..., 1]  # b-param <= 50
     return samples[..., 1]  # b-param <= 50
 
 def c4(samples):
-    #return 10 - samples[..., 2]  # b_var <= 10
     return samples[..., 2]  # b_var <= 10
 
 constraints = [c1, c2, c3, c4]
@@ -79,37 +73,6 @@ def evaluate_candidate(candidate):
     y = torch.tensor([[y0, y1, y2]], dtype=torch.double)
     return y
 
-# Custom Posterior class to combine posterior samples
-from botorch.posteriors import Posterior
-from torch.distributions import Normal
-
-class CombinedPosterior(Posterior):
-    def __init__(self, posteriors):
-        self.posteriors = posteriors
-        self.device = posteriors[0].device
-        self.dtype = posteriors[0].dtype
-
-    @property
-    def mean(self):
-        means = [p.mean for p in self.posteriors]
-        return torch.cat(means, dim=-1)
-
-    @property
-    def variance(self):
-        variances = [p.variance for p in self.posteriors]
-        return torch.cat(variances, dim=-1)
-
-    def rsample(self, sample_shape=torch.Size()):
-        samples = [p.rsample(sample_shape) for p in self.posteriors]
-        return torch.cat(samples, dim=-1)
-
-# Custom ModelListGP wrapper to combine posteriors
-class CustomModelListGP(ModelListGP):
-    def posterior(self, X, output_indices=None, observation_noise=False, **kwargs):
-        posteriors = [model.posterior(X, observation_noise=observation_noise, **kwargs) for model in self.models]
-        combined_posterior = CombinedPosterior(posteriors)
-        return combined_posterior
-
 if __name__ == "__main__":
     # Load pretraining data from CSV file
     calc_log_obj_path = os.path.join(file_home_path, "calc_log_obj.csv")
@@ -123,57 +86,67 @@ if __name__ == "__main__":
     pretraining_data_path = os.path.join(main_work_dir, 'ag-dot-angle-pretraining.csv')  # Replace with your CSV file path
     df = pd.read_csv(pretraining_data_path)
 
-    # Inputs (include 'cs' since it's now a variable)
+    # Inputs
     train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
-    print(len(train_X))
 
     # Outputs
     train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var']].values, dtype=torch.double)
-    print(len(train_Y))
 
-    # Bounds (include 'cs' bounds)
+    # Bounds
     bounds = torch.tensor([
         [0.005, 0.05, 0.025, 0.0],   # Lower bounds for sr, ht, cs, theta_deg
         [0.125, 0.1, 0.25, 90.0]     # Upper bounds for sr, ht, cs, theta_deg
     ], dtype=torch.double)
 
-    print("not normalized")
-    # Normalize the training inputs
-    train_X_normalized = (train_X - bounds[0]) / (bounds[1] - bounds[0])
-    print("normalized")
+    # Normalize the training inputs using InputNormalize
+    input_transform = InputNormalize(d=4, bounds=bounds)
+    train_X_normalized = input_transform(train_X)
 
     num_iterations = 4  # Number of optimization iterations
 
-    # Initialize model
-    def initialize_model(train_X, train_Y):
-        models = []
-        for i in range(train_Y.shape[-1]):
-            model = SingleTaskGP(
-                train_X,
-                train_Y[:, i:i+1],
-                outcome_transform=Standardize(m=1),
-            )
-            models.append(model)
-        model = CustomModelListGP(*models)
-        mll = SumMarginalLogLikelihood(model.likelihood, model)
-        return mll, model
+    # Define the number of tasks (objectives)
+    num_tasks = train_Y.shape[-1]
+    printing(f"Number of tasks: {num_tasks}")
 
-    mll, model = initialize_model(train_X_normalized, train_Y)
+    # Prepare the training data for MultiTaskGP
+    task_indices = torch.arange(num_tasks, dtype=torch.long)  # [0, 1, 2]
+    tasks = task_indices.unsqueeze(0).repeat(train_X_normalized.shape[0], 1)  # [N, num_tasks]
+
+    # Expand train_X_normalized to include task indices
+    train_X_expanded = train_X_normalized.unsqueeze(1).repeat(1, num_tasks, 1)  # [N, num_tasks, D]
+    train_X_expanded = torch.cat([train_X_expanded, tasks.unsqueeze(-1)], dim=-1)  # [N, num_tasks, D+1]
+    train_X_expanded = train_X_expanded.view(-1, train_X_expanded.shape[-1])  # [N*num_tasks, D+1]
+
+    # Expand train_Y accordingly
+    train_Y_expanded = train_Y.transpose(0, 1).reshape(-1, 1)  # [N*num_tasks, 1]
+
+    task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
 
     for iteration in range(num_iterations):
-        # Fit the model
+        # Initialize and fit the MultiTaskGP model
+        model = MultiTaskGP(
+            train_X=train_X_expanded,
+            train_Y=train_Y_expanded,
+            task_feature=task_feature,
+            outcome_transform=Standardize(m=1),
+        )
+        mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
         print("Model fitted")
 
-        # Compute feasibility mask using raw outputs
-        is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
+        # Compute feasibility mask using model predictions
+        with torch.no_grad():
+            posterior = model.posterior(train_X_expanded)
+            mean = posterior.mean.view(-1, num_tasks)
+
+        is_feasible = (c1(mean) >= 0) & (c2(mean) >= 0) & (c3(mean) >= 0) & (c4(mean) >= 0)
         is_feasible = is_feasible.all(dim=-1)
 
         if is_feasible.sum() == 0:
             printing("No feasible observations found.")
             break
 
-        feasible_Y = train_Y[is_feasible]
+        feasible_Y = mean[is_feasible]
         feasible_X = train_X_normalized[is_feasible]
 
         # Extract Pareto-optimal points to use as baseline
@@ -182,13 +155,18 @@ if __name__ == "__main__":
         pareto_X = feasible_X[pareto_mask]
 
         # Limit the number of baseline points to avoid high dimensionality
-        # If the number of Pareto points is too large, randomly select a subset
         max_baseline_points = 50
         if pareto_X.shape[0] > max_baseline_points:
             indices = torch.randperm(pareto_X.shape[0])[:max_baseline_points]
             X_baseline = pareto_X[indices]
         else:
             X_baseline = pareto_X
+
+        # Expand X_baseline to include task indices
+        tasks_baseline = task_indices.unsqueeze(0).repeat(X_baseline.shape[0], 1)  # [B, num_tasks]
+        X_baseline_expanded = X_baseline.unsqueeze(1).repeat(1, num_tasks, 1)  # [B, num_tasks, D]
+        X_baseline_expanded = torch.cat([X_baseline_expanded, tasks_baseline.unsqueeze(-1)], dim=-1)  # [B, num_tasks, D+1]
+        X_baseline_expanded = X_baseline_expanded.view(-1, X_baseline_expanded.shape[-1])  # [B*num_tasks, D+1]
 
         # Define reference point for hypervolume calculation
         ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
@@ -197,31 +175,33 @@ if __name__ == "__main__":
 
         # Define the acquisition function using qNEHVI
         sampler = SobolQMCNormalSampler(sample_shape=torch.Size([128]))
-
         acq_func = qNoisyExpectedHypervolumeImprovement(
             model=model,
             ref_point=ref_point,
-            X_baseline=X_baseline,
+            X_baseline=X_baseline_expanded,
             constraints=constraints,
             sampler=sampler,
             prune_baseline=True,
-            cache_root=False,  # Set to False when using custom models
+            cache_root=False,
         )
 
         # Optimize the acquisition function to get the next candidate
-        candidate_normalized, acq_value = optimize_acqf(
+        candidate_expanded, acq_value = optimize_acqf(
             acq_function=acq_func,
             bounds=torch.stack([
-                torch.zeros(train_X_normalized.shape[-1]),
-                torch.ones(train_X_normalized.shape[-1]),
+                torch.zeros(train_X_expanded.shape[-1]),
+                torch.ones(train_X_expanded.shape[-1]),
             ]),
             q=1,
             num_restarts=5,
             raw_samples=20,  # For initialization
         )
 
+        # Extract candidate without task indices
+        candidate_normalized = candidate_expanded[..., :-1]
+
         # Denormalize the candidate
-        candidate = candidate_normalized * (bounds[1] - bounds[0]) + bounds[0]
+        candidate = input_transform.untransform(candidate_normalized)
 
         # Evaluate the candidate
         y_new = evaluate_candidate(candidate)
@@ -231,11 +211,19 @@ if __name__ == "__main__":
         train_Y = torch.cat([train_Y, y_new], dim=0)
 
         # Normalize the new candidate
-        candidate_normalized = (candidate - bounds[0]) / (bounds[1] - bounds[0])
-        train_X_normalized = torch.cat([train_X_normalized, candidate_normalized], dim=0)
+        candidate_normalized = input_transform(candidate)
 
-        # Reinitialize the model with the updated data
-        mll, model = initialize_model(train_X_normalized, train_Y)
+        # Update expanded training data
+        # Repeat for each task
+        candidate_expanded = candidate_normalized.unsqueeze(1).repeat(1, num_tasks, 1)  # [1, num_tasks, D]
+        tasks_candidate = task_indices.unsqueeze(0)  # [1, num_tasks]
+        candidate_expanded = torch.cat([candidate_expanded, tasks_candidate.unsqueeze(-1)], dim=-1)  # [1, num_tasks, D+1]
+        candidate_expanded = candidate_expanded.view(-1, candidate_expanded.shape[-1])  # [num_tasks, D+1]
+
+        y_new_expanded = y_new.view(-1, 1)  # [num_tasks, 1]
+
+        train_X_expanded = torch.cat([train_X_expanded, candidate_expanded], dim=0)
+        train_Y_expanded = torch.cat([train_Y_expanded, y_new_expanded], dim=0)
 
         # Print progress
         printing(f"Iteration {iteration + 1}/{num_iterations}")
@@ -243,12 +231,16 @@ if __name__ == "__main__":
         printing(f"Objective values: {y_new}")
 
     # After optimization, process the results
-    # Compute feasibility mask for final train_Y
-    is_feasible = (c1(train_Y) >= 0) & (c2(train_Y) >= 0) & (c3(train_Y) >= 0) & (c4(train_Y) >= 0)
+    # Compute feasibility mask for final model predictions
+    with torch.no_grad():
+        posterior = model.posterior(train_X_expanded)
+        mean = posterior.mean.view(-1, num_tasks)
+
+    is_feasible = (c1(mean) >= 0) & (c2(mean) >= 0) & (c3(mean) >= 0) & (c4(mean) >= 0)
     is_feasible = is_feasible.all(dim=-1)
 
     # Get feasible train_Y and train_X
-    feasible_Y = train_Y[is_feasible]
+    feasible_Y = mean[is_feasible]
     feasible_X = train_X[is_feasible]
 
     # Extract the Pareto front
