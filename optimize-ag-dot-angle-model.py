@@ -12,26 +12,16 @@ from jmetal.util.evaluator import MultiprocessEvaluator
 #from jmetal.util.solution import print_function_values_to_file, print_variables_to_file
 from jmetal.util.termination_criterion import StoppingByEvaluations
 from datetime import datetime
-import time
-import string
-import random
-from time import sleep
 import csv
 import numpy as np
 import pandas as pd
 import os
-from scipy.optimize import curve_fit
-import statistics
-from scipy.signal import find_peaks
-import sys
-import traceback
 import numpy as np
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 import xgboost as xgb
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
@@ -57,22 +47,6 @@ def printing(string):
     file_printer.close()
     print(string)
     pass
-
-def check_log(filename: str, param: str):
-    df = pd.read_csv(file_home_path + "calc_log_obj.csv")
-    return list(dict(df.loc[df['filename'] == filename])[param])
-
-def make_filename(sr, ht, cs, theta_deg):
-    display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0,
-                                  1)).replace(".", "_")  # angle to be used
-
-    filename = "%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (str(folder_name),
-                                                      str(round(sr * 10000, 1)).replace(".", "_") + "nm",
-                                                      str(round(ht * 10000, 1)).replace(".", "_") + "nm",
-                                                      str(round(cs * 10000, 1)).replace(".", "_") + "nm",
-                                                      display_theta_deg,
-                                                      )  # filename to be used
-    return filename
 
 pretraining_data_path = os.path.join(main_work_dir, 'ag-dot-angle-pretraining-unpruned.csv')  # Replace with your CSV file path
 data = pd.read_csv(pretraining_data_path)
