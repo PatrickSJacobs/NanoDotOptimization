@@ -1,4 +1,13 @@
-from ag_dot_angle_obj import obj_func_run, current_time, main_home_dir, folder_name, file_home_path, main_work_dir, file_work_path, progress_file
+from ag_dot_angle_obj import (
+    obj_func_run,
+    current_time,
+    main_home_dir,
+    folder_name,
+    file_home_path,
+    main_work_dir,
+    file_work_path,
+    progress_file,
+)
 import os
 import csv
 import pandas as pd
@@ -25,9 +34,7 @@ def make_filename(sr, ht, cs, theta_deg):
     return filename
 
 import torch
-
 from botorch.utils.multi_objective.pareto import is_non_dominated
-
 from botorch.models import MultiTaskGP
 from botorch.fit import fit_gpytorch_mll
 from botorch.models.transforms import Standardize
@@ -50,16 +57,16 @@ def get_values(x: [float], param: str):
 
 # Define constraints as functions (accepting posterior samples Y)
 def c1(samples):
-    return samples[..., 0]  # c-param <= 5
+    return 5 - samples[..., 0]  # c-param <= 5
 
 def c2(samples):
-    return samples[..., 1] # b-param >= 1
+    return samples[..., 1] - 1  # b-param >= 1
 
 def c3(samples):
-    return samples[..., 1]  # b-param <= 50
+    return 50 - samples[..., 1]  # b-param <= 50
 
 def c4(samples):
-    return samples[..., 2]  # b_var <= 10
+    return 10 - samples[..., 2]  # b_var <= 10
 
 constraints = [c1, c2, c3, c4]
 
@@ -122,15 +129,20 @@ if __name__ == "__main__":
 
     task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
 
-    for iteration in range(num_iterations):
-        # Initialize and fit the MultiTaskGP model
+    def initialize_model(train_X_expanded, train_Y_expanded):
         model = MultiTaskGP(
             train_X=train_X_expanded,
             train_Y=train_Y_expanded,
             task_feature=task_feature,
+            rank=num_tasks,  # Set rank to the number of tasks
             outcome_transform=Standardize(m=1),
         )
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
+        return mll, model
+
+    for iteration in range(num_iterations):
+        # Initialize and fit the MultiTaskGP model
+        mll, model = initialize_model(train_X_expanded, train_Y_expanded)
         fit_gpytorch_mll(mll)
         print("Model fitted")
 
@@ -165,21 +177,25 @@ if __name__ == "__main__":
         # Expand X_baseline to include task indices
         tasks_baseline = task_indices.unsqueeze(0).repeat(X_baseline.shape[0], 1)  # [B, num_tasks]
         X_baseline_expanded = X_baseline.unsqueeze(1).repeat(1, num_tasks, 1)  # [B, num_tasks, D]
-        X_baseline_expanded = torch.cat([X_baseline_expanded, tasks_baseline.unsqueeze(-1)], dim=-1)  # [B, num_tasks, D+1]
+        X_baseline_expanded = torch.cat(
+            [X_baseline_expanded, tasks_baseline.unsqueeze(-1)], dim=-1
+        )  # [B, num_tasks, D+1]
         X_baseline_expanded = X_baseline_expanded.view(-1, X_baseline_expanded.shape[-1])  # [B*num_tasks, D+1]
 
         # Define reference point for hypervolume calculation
-        ref_point = feasible_Y.min(dim=0).values - 0.1 * (feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values)
+        ref_point = feasible_Y.min(dim=0).values - 0.1 * (
+            feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values
+        )
         ref_point = ref_point.tolist()
         printing(f"ref_point: {ref_point}")
 
         # Define the acquisition function using qNEHVI
-        sampler = SobolQMCNormalSampler(sample_shape=torch.Size([128]))
+        sampler = SobolQMCNormalSampler(num_samples=128)
         acq_func = qNoisyExpectedHypervolumeImprovement(
             model=model,
             ref_point=ref_point,
             X_baseline=X_baseline_expanded,
-            #constraints=constraints,
+            constraints=constraints,
             sampler=sampler,
             prune_baseline=True,
             cache_root=False,
@@ -212,15 +228,18 @@ if __name__ == "__main__":
 
         # Normalize the new candidate
         candidate_normalized = input_transform(candidate)
+        train_X_normalized = torch.cat([train_X_normalized, candidate_normalized], dim=0)
 
         # Update expanded training data
         # Repeat for each task
         candidate_expanded = candidate_normalized.unsqueeze(1).repeat(1, num_tasks, 1)  # [1, num_tasks, D]
         tasks_candidate = task_indices.unsqueeze(0)  # [1, num_tasks]
-        candidate_expanded = torch.cat([candidate_expanded, tasks_candidate.unsqueeze(-1)], dim=-1)  # [1, num_tasks, D+1]
+        candidate_expanded = torch.cat(
+            [candidate_expanded, tasks_candidate.unsqueeze(-1)], dim=-1
+        )  # [1, num_tasks, D+1]
         candidate_expanded = candidate_expanded.view(-1, candidate_expanded.shape[-1])  # [num_tasks, D+1]
 
-        y_new_expanded = y_new.view(-1, 1)  # [num_tasks, 1]
+        y_new_expanded = y_new.transpose(0, 1).reshape(-1, 1)  # [num_tasks, 1]
 
         train_X_expanded = torch.cat([train_X_expanded, candidate_expanded], dim=0)
         train_Y_expanded = torch.cat([train_Y_expanded, y_new_expanded], dim=0)
@@ -231,7 +250,6 @@ if __name__ == "__main__":
         printing(f"Objective values: {y_new}")
 
     # After optimization, process the results
-    # Compute feasibility mask for final model predictions
     with torch.no_grad():
         posterior = model.posterior(train_X_expanded)
         mean = posterior.mean.view(-1, num_tasks)
