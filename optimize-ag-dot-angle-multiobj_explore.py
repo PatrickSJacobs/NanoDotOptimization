@@ -359,21 +359,9 @@ if __name__ == "__main__":
 
     # Select m diverse solutions
     population_size = 16
-    selected_indices = select_diverse_solutions(pareto_parameters, pareto_objectives, population_size)
-
-    # Extract the selected solutions
-    selected_parameters = pareto_parameters[selected_indices]
-    selected_objectives = pareto_objectives[selected_indices]
-
-    # Output the selected solutions
-    print(f"Number of selected Pareto-optimal solutions: {population_size}")
-    for i in range(population_size):
-        print(f"\nSolution {i+1}:")
-        print(f"Parameters: {selected_parameters[i]}")
-        print(f"Objectives: {selected_objectives[i]}")
-
+    
     # Prepare the selected solutions for GDE3
-    gde3_initial_population = selected_parameters
+    gde3_initial_population = pareto_parameters
 
     print("\nInitial population for GDE3:")
     print(gde3_initial_population)
