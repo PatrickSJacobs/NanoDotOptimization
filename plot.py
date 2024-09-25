@@ -14,7 +14,7 @@ def list_files_in_directory(directory):
     # List all files in the directory
     return [str(file) for file in path.iterdir() if file.is_file()]
 
-directory_path = '/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/data/possible_candidates/sol'
+directory_path = '/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/data/possible_candidates/sol/'
 files = list_files_in_directory(directory_path)
 
 for file in files:
@@ -110,6 +110,7 @@ for file in files:
     plt.plot(u, p, "x")
     plt.plot(xs, y_line, '--', color='red')
     plt.title(f"{file.split('/')[-1]}")
+    #plt.ylim(0, 1)
     plt.suptitle(f"b = {b:.2f}, c = {c:.2f}, b_var = {b_var:.2f}, c_var = {c_var:.2f}")
 # Add the second subtitle using fig.text()
     pyplot.show()
