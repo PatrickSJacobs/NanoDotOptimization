@@ -5,19 +5,12 @@ from jmetal.algorithm.multiobjective.gde3 import GDE3
 #from jmetal.util.termination_criterion import StoppingByEvaluations
 from jmetal.util.comparator import DominanceComparator
 #from jmetal.util.solution import get_non_dominated_solutions
-from jmetal.algorithm.multiobjective.nsgaiii import NSGAIII, UniformReferenceDirectionFactory
-from jmetal.operator import PolynomialMutation, SBXCrossover
-from jmetal.problem.multiobjective.zdt import ZDT1Modified
+#from jmetal.algorithm.multiobjective.nsgaii import NSGAII
+#from jmetal.operator import PolynomialMutation, SBXCrossover
+#from jmetal.problem.multiobjective.zdt import ZDT1Modified
 from jmetal.util.evaluator import MultiprocessEvaluator
 #from jmetal.util.solution import print_function_values_to_file, print_variables_to_file
 from jmetal.util.termination_criterion import StoppingByEvaluations
-
-from jmetal.algorithm.multiobjective.spea2 import SPEA2
-from jmetal.operator.crossover import SBXCrossover
-from jmetal.operator.mutation import PolynomialMutation
-from jmetal.problem import ZDT1
-from jmetal.util.termination_criterion import StoppingByEvaluations
-
 from datetime import datetime
 import time
 import string
@@ -283,7 +276,7 @@ def c_constraint(x: [float]):
 
 def b_var_constraint(x: [float]):
 
-    return 10 - get_values(x, "b_var")
+    return 13 - get_values(x, "b_var")
 
 
 #bounds = {'sr': (0.001 * 5, 0.001 * 125), 'ht': (0.001 * 50, 0.001 * 100), 'cs': (0.001 * 25, 0.001 * 250), 'theta_deg': (0.0, 0.0)}# Bounds for optimization
@@ -299,14 +292,14 @@ problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
     .add_variable(0.001 * 5, 0.001 * 5)
-    .add_variable(0.001 * 50, 0.001 * 50)
+    .add_variable(0.001 * 50, 0.001 * 100)
     .add_variable(0.001 * 25, 0.001 * 250)
     #.add_variable(0.001 * 250, 0.001 * 250)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 0.0)
     .add_function(c)
     .add_function(b)
-    .add_function(b_var)
+    #.add_function(b_var)
     #.add_function(c_var)
     .add_constraint(b_lower_constraint)
     .add_constraint(b_upper_constraint)
@@ -323,22 +316,7 @@ if __name__ == "__main__":
         file.close()
 
     #max_evaluations = 160
-    max_evaluations = 8
-
-    '''
-
-    algorithm = NSGAIII(
-        population_evaluator=MultiprocessEvaluator(processes=16),
-        problem=problem,
-        population_size=16,
-        offspring_population_size=16,
-        mutation=PolynomialMutation(probability=1.0 / problem.number_of_variables(), distribution_index=20),
-        crossover=SBXCrossover(probability=1.0, distribution_index=20),
-        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
-        #dominance_comparator=DominanceComparator(),
-    )
-
-    
+    max_evaluations = 32    
     
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
@@ -402,6 +380,7 @@ if __name__ == "__main__":
 
     #sys.exit()
     
+    
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
@@ -413,29 +392,7 @@ if __name__ == "__main__":
         dominance_comparator=DominanceComparator(),
     )
     
-    
-    algorithm = NSGAIII(
-        population_evaluator=MultiprocessEvaluator(processes=16),
-        problem=problem,
-        population_size=32,
-        mutation=PolynomialMutation(probability=1.0 / problem.number_of_variables(), distribution_index=20),
-        crossover=SBXCrossover(probability=1.0, distribution_index=20),
-        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
-        #dominance_comparator=DominanceComparator(),
-    )
     #algorithm.solutions = gde3_initial_population
-
-    '''
-    
-    algorithm = SPEA2(
-    problem=problem,
-    population_size=32,
-    offspring_population_size=32,
-    mutation=PolynomialMutation(probability=1.0 / problem.number_of_variables, distribution_index=20),
-    crossover=SBXCrossover(probability=1.0, distribution_index=20),
-    termination_criterion=StoppingByEvaluations(max=max_evaluations)
-    )
-
 
     algorithm.run()
     front = algorithm.result()
