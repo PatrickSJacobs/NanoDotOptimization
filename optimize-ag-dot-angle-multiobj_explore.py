@@ -370,14 +370,14 @@ if __name__ == "__main__":
     
     
     algorithm = GDE3(
-        population_evaluator=MultiprocessEvaluator(processes=16),
-        problem=problem,
-        population_size=population_size,
-        cr=0.9,
-        f=0.4,
-        termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
-        dominance_comparator=DominanceComparator(),
-    )
+    population_evaluator=MultiprocessEvaluator(processes=16),
+    problem=problem,
+    population_size=16,  # Reduced population size
+    cr=0.1,              # Lower crossover probability
+    f=0.1,               # Lower scaling factor
+    termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
+    #dominance_comparator=DominanceComparator(),
+    )   
     
     algorithm.solutions = gde3_initial_population
 
