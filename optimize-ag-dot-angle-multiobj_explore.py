@@ -358,7 +358,7 @@ if __name__ == "__main__":
     pareto_objectives = objectives[pareto_front_indices]
 
     # Select m diverse solutions
-    population_size = 32
+    population_size = 16
     selected_indices = select_diverse_solutions(pareto_parameters, pareto_objectives, population_size)
 
     # Extract the selected solutions
@@ -384,15 +384,14 @@ if __name__ == "__main__":
     algorithm = GDE3(
         population_evaluator=MultiprocessEvaluator(processes=16),
         problem=problem,
-        #population_size=16,
-        population_size=32,
+        population_size=population_size,
         cr=0.9,
         f=0.4,
         termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
         dominance_comparator=DominanceComparator(),
     )
     
-    #algorithm.solutions = gde3_initial_population
+    algorithm.solutions = gde3_initial_population
 
     algorithm.run()
     front = algorithm.result()
