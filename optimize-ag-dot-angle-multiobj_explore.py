@@ -290,16 +290,16 @@ def b_var_constraint(x: [float]):
     .add_variable(0.0, 0.0)'''
     
     
-       
+      
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
     #.add_variable(0.001 * 5, 0.001 * 125)
-    .add_variable(0.0521, 0.0541)
+    .add_variable(0.040, 0.045)
     #.add_variable(0.001 * 50, 0.001 * 100)
-    .add_variable(0.0911 , 0.1111)
+    .add_variable(0.06, 0.07)
     #.add_variable(0.001 * 25, 0.001 * 250)
-    .add_variable(0.3038, 0.2838)
+    .add_variable(0.001 * 280, 0.001 * 300)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 0.0)
     .add_function(c)
