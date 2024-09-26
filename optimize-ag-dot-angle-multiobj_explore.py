@@ -182,7 +182,8 @@ def obj_func_run(x: [float]):
     
     file1.close()
 
-    sleep(15)  # Pause to give time for simulation file to be created
+    sleep(10)  # Pause to give time for simulation file to be created
+    printing(x)
     os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
 
     success = 0
@@ -292,7 +293,7 @@ problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
     #.add_variable(0.001 * 5, 0.001 * 125)
-    .add_variable(0.9, 0.11)
+    .add_variable(0.03, 0.06)
     #.add_variable(0.001 * 50, 0.001 * 100)
     .add_variable(0.07, 0.09)
     #.add_variable(0.001 * 25, 0.001 * 250)
