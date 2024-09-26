@@ -361,7 +361,7 @@ if __name__ == "__main__":
     pareto_objectives = objectives[pareto_front_indices]
 
     # Select m diverse solutions
-    population_size = 16
+    population_size = 4
     
     # Prepare the selected solutions for GDE3
     gde3_initial_population = pareto_parameters
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     algorithm = GDE3(
     population_evaluator=MultiprocessEvaluator(processes=16),
     problem=problem,
-    population_size=16,  # Reduced population size
+    population_size=population_size,  # Reduced population size
     cr=0.1,              # Lower crossover probability
     f=0.1,               # Lower scaling factor
     termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
