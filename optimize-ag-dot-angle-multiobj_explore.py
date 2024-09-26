@@ -295,7 +295,7 @@ problem = (
     #.add_variable(0.001 * 5, 0.001 * 125)
     .add_variable(0.1, 0.125)
     #.add_variable(0.001 * 50, 0.001 * 100)
-    .add_variable(0.07, 0.09)
+    .add_variable(0.05, 0.06)
     #.add_variable(0.001 * 25, 0.001 * 250)
     .add_variable(0.001 * 300, 0.001 * 310)
     #.add_variable(0.0, 0.0)
