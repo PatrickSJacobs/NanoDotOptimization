@@ -320,6 +320,7 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
 
+    '''
     #max_evaluations = 160
     max_evaluations = 32    
     
@@ -364,7 +365,7 @@ if __name__ == "__main__":
     pareto_objectives = objectives[pareto_front_indices]
 
     # Select m diverse solutions
-    population_size = 4
+   
     
     # Prepare the selected solutions for GDE3
     gde3_initial_population = pareto_parameters
@@ -374,7 +375,10 @@ if __name__ == "__main__":
 
     #sys.exit()
     
+    '''
     
+    max_evaluations = 32
+    population_size = 4
     algorithm = GDE3(
     population_evaluator=MultiprocessEvaluator(processes=16),
     problem=problem,
@@ -385,7 +389,7 @@ if __name__ == "__main__":
     #dominance_comparator=DominanceComparator(),
     )   
     
-    algorithm.solutions = gde3_initial_population
+    #algorithm.solutions = gde3_initial_population
 
     algorithm.run()
     front = algorithm.result()
