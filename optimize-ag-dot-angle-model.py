@@ -362,17 +362,18 @@ def compute_reference_point(train_obj, margin=0.05):
     
     return ref_point
 
-# Generate initial training data
-initial_n = 2 * (4 + 1)  # d=4
-train_x_initial, train_obj_initial = generate_initial_data(n=initial_n)
-print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial.shape}")
-
 # Compute reference point based on initial objective values
 ref_point = compute_reference_point(train_obj_initial, margin=0.05)
 print(f"Computed reference point: {ref_point}")
 
 # Initialize the custom problem with the computed reference point
 problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=ref_point).to(**tkwargs)
+
+# Generate initial training data
+initial_n = 2 * (4 + 1)  # d=4
+train_x_initial, train_obj_initial = generate_initial_data(n=initial_n)
+print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial.shape}")
+
 
 # Initialize hypervolume calculator now that reference point is set
 hv = Hypervolume(ref_point=problem.ref_point)
