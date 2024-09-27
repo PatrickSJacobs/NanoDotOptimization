@@ -317,8 +317,8 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler):
 # ### Perform Bayesian Optimization Loop with qNEHVI Only
 
 # Suppress specific warnings
-warnings.filterwarnings("ignore", category=BadInitialCandidatesWarning)
-warnings.filterwarnings("ignore", category=RuntimeWarning)
+#warnings.filterwarnings("ignore", category=BadInitialCandidatesWarning)
+#warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Define BO parameters
 N_BATCH = 20 if not SMOKE_TEST else 1
@@ -555,14 +555,14 @@ cm = plt.get_cmap("viridis")
 
 batch_number_qnehvi = torch.cat(
     [
-        torch.zeros(initial_n, device=tkwargs['device']),
+        torch.zeros(train_obj_initial.shape[0], device=tkwargs['device']),  # Change this to match number of data points
         torch.arange(1, N_BATCH + 1, device=tkwargs['device']).repeat_interleave(BATCH_SIZE)
     ]
 ).cpu().numpy()
 
 batch_number_random = torch.cat(
     [
-        torch.zeros(initial_n, device=tkwargs['device']),
+        torch.zeros(train_obj_random.shape[0], device=tkwargs['device']),  # Change this to match number of data points
         torch.arange(1, N_BATCH + 1, device=tkwargs['device']).repeat_interleave(BATCH_SIZE)
     ]
 ).cpu().numpy()
