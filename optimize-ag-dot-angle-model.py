@@ -382,6 +382,8 @@ problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=compute_refe
 from botorch.utils.multi_objective.hypervolume import Hypervolume  # Import outside functions
 
 hv = Hypervolume(ref_point=problem.ref_point)
+print(f"problem.ref_point: {problem.ref_point}")
+print(f"hv: {hv}")
 
 # ### Compute Initial Hypervolume
 
