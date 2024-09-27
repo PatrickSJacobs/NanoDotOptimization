@@ -275,7 +275,7 @@ def load_initial_data(file_path):
     return train_x, train_obj
 
 # Path to your initial data CSV file
-initial_data_path = "initial_data.csv"  # Replace with your actual file path
+initial_data_path = main_work_dir + "ag-dot-angle-pretraining.csv"  # Replace with your actual file path
 
 # Load the initial data
 train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
