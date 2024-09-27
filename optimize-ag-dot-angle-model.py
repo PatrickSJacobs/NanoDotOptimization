@@ -416,8 +416,15 @@ def initialize_model(train_x, train_obj, problem):
             - mll (gpytorch.mlls.SumMarginalLogLikelihood): Marginal log likelihood.
             - model (ModelListGP): Multi-output GP model.
     """
+    
+    train_x_min = torch.min(train_x, dim=0).values
+    train_x_max = torch.max(train_x, dim=0).values
+
+    # Create the bounds tensor for normalization based on the min and max values of the data
+    norm_bounds = torch.stack([train_x_min, train_x_max])
+
     # Normalize inputs
-    train_x_normalized = normalize(train_x, problem.bounds)
+    train_x_normalized = normalize(train_x, norm_bounds)
     # Define GP models for each objective
     models = []
     for i in range(train_obj.shape[-1]):
@@ -460,8 +467,15 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
             - new_x (torch.Tensor): Tensor of shape (BATCH_SIZE, d).
             - new_obj (torch.Tensor): Tensor of shape (BATCH_SIZE, M).
     """
+    
+    train_x_min = torch.min(train_x, dim=0).values
+    train_x_max = torch.max(train_x, dim=0).values
+
+    # Create the bounds tensor for normalization based on the min and max values of the data
+    norm_bounds = torch.stack([train_x_min, train_x_max])
+
     # Normalize training inputs
-    train_x_norm = normalize(train_x, problem.bounds)
+    train_x_norm = normalize(train_x, norm_bounds)
 
     # Define the qNEHVI acquisition function
     acq_func = qLogNoisyExpectedHypervolumeImprovement(
@@ -538,6 +552,8 @@ for iteration in range(1, N_BATCH + 1):
 
     # Update training data for qNEHVI
     train_x_initial = torch.cat([train_x_initial, new_x_qnehvi])
+    
+    
     train_obj_initial = torch.cat([train_obj_initial, new_obj_qnehvi])
 
     # Update batch numbers for qNEHVI
