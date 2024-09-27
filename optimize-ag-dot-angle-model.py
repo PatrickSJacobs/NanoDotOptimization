@@ -284,13 +284,19 @@ bounds = torch.tensor([
 
 # Path to your initial data CSV file
 initial_data_path = main_work_dir + "ag-dot-angle-pretraining.csv"  # Replace with your actual file path
-
 # Load the initial data
 train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
 
+# Calculate bounds for train_x_initial before normalization
+train_x_min = torch.min(train_x_initial, dim=0).values
+train_x_max = torch.max(train_x_initial, dim=0).values
+
+# Create the bounds tensor for normalization based on the min and max values of the data
+norm_bounds = torch.stack([train_x_min, train_x_max])
+
 from botorch.utils.transforms import normalize, unnormalize
 
-train_x_initial = normalize(train_x_initial, bounds)
+train_x_initial = normalize(train_x_initial, norm_bounds)
 
 
 print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial.shape}")
