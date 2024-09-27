@@ -9,7 +9,6 @@ import os
 import warnings
 import pandas as pd
 
-
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
 folder_name = "opt_%s" % str(current_time)# Folder name for optimization files
@@ -235,11 +234,13 @@ with open(file_home_path + "calc_log_obj.csv", 'w', newline='') as file:
 ################################################################################################################################################################
 
 import torch
-
+import botorch.settings
 from botorch.exceptions import BadInitialCandidatesWarning  # Import outside functions
 from botorch import fit_gpytorch_mll  # Import outside functions
 
 # ### Set dtype and device
+botorch.settings.debug(True)
+
 
 tkwargs = {
     "dtype": torch.double,
@@ -274,11 +275,24 @@ def load_initial_data(file_path):
     
     return train_x, train_obj
 
+
+# Define the parameter bounds (adjust as per your problem)
+bounds = torch.tensor([
+    [0.01, 0.01, 0.001 * 25, 0.0],
+    [0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0001]
+], **tkwargs)
+
 # Path to your initial data CSV file
 initial_data_path = main_work_dir + "ag-dot-angle-pretraining.csv"  # Replace with your actual file path
 
 # Load the initial data
 train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
+
+from botorch.utils.transforms import normalize, unnormalize
+
+train_x_initial = normalize(train_x_initial, bounds)
+
+
 print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial.shape}")
 
 # ### Define Constraint Functions (Separate Functions)
@@ -368,11 +382,6 @@ def compute_reference_point(train_obj, margin=0.05):
 
     return ref_point
 
-# Define the parameter bounds (adjust as per your problem)
-bounds = torch.tensor([
-    [0.01, 0.01, 0.001 * 25, 0.0],
-    [0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0001]
-], **tkwargs)
 
 # Define the optimization problem
 problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=compute_reference_point(train_obj_initial, margin=0.05))
