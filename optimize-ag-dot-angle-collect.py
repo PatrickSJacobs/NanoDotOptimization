@@ -319,17 +319,18 @@ def main():
     dataset_df.to_csv(training_file, index=False)
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
-    num_points = 30
+    num_points = 50
     # Prune the dataset
     df_final = prune_dataset(
         dataset_df, 
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
-        { "c-param": 5, "b-param": 50, "b_var": 20, }
+        { "c-param": 20, "b-param": 50, "b_var": 20, }
 
         )
 
-    print(df_final["path"].values)
+    print(df_final[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',]].values)
+    #print(df_final["path"].values)
 
     # Save the pruned dataset
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
