@@ -385,6 +385,9 @@ hv = Hypervolume(ref_point=problem.ref_point)
 
 # ### Compute Initial Hypervolume
 
+from botorch.utils.multi_objective.pareto import is_non_dominated  # Import outside functions
+
+
 def compute_hypervolume(train_obj, problem, hv):
     """
     Computes the hypervolume of the Pareto front.
@@ -527,7 +530,6 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
 
 # ### Perform Bayesian Optimization Loop with qNEHVI Only
 
-from botorch.utils.multi_objective.pareto import is_non_dominated  # Import outside functions
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=BadInitialCandidatesWarning)
