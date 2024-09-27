@@ -33,6 +33,7 @@ from matplotlib.cm import ScalarMappable
 import matplotlib
 
 from botorch.exceptions import BadInitialCandidatesWarning  # Added import
+from botorch.fit import fit_gpytorch_model  # Added import
 
 # ### Set dtype and device
 
@@ -432,8 +433,12 @@ qnehvi_sampler = SobolQMCNormalSampler(sample_shape=torch.Size([MC_SAMPLES]))
 for iteration in range(1, N_BATCH + 1):
     t0 = time.monotonic()
 
-    # Fit the qNEHVI model
-    mll_qnehvi(model_qnehvi).maximize()  # Correct way to fit the model
+    # Fit the qNEHVI model using fit_gpytorch_model
+    try:
+        fit_gpytorch_model(mll_qnehvi)
+    except Exception as e:
+        print(f"Model fitting failed at iteration {iteration}: {e}")
+        break
 
     # Optimize acquisition function and get new observations
     try:
@@ -550,17 +555,17 @@ cm = plt.get_cmap("viridis")
 
 batch_number_qnehvi = torch.cat(
     [
-        torch.zeros(initial_n),
-        torch.arange(1, N_BATCH + 1).repeat(BATCH_SIZE, 1).t().reshape(-1),
+        torch.zeros(initial_n, device=tkwargs['device']),
+        torch.arange(1, N_BATCH + 1, device=tkwargs['device']).repeat_interleave(BATCH_SIZE)
     ]
-).numpy()
+).cpu().numpy()
 
 batch_number_random = torch.cat(
     [
-        torch.zeros(initial_n),
-        torch.arange(1, N_BATCH + 1).repeat(BATCH_SIZE, 1).t().reshape(-1),
+        torch.zeros(initial_n, device=tkwargs['device']),
+        torch.arange(1, N_BATCH + 1, device=tkwargs['device']).repeat_interleave(BATCH_SIZE)
     ]
-).numpy()
+).cpu().numpy()
 
 for i, (train_obj, batch_num, algo) in enumerate([
     (train_obj_random, batch_number_random, "Sobol"),
