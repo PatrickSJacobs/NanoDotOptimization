@@ -33,7 +33,7 @@ from matplotlib.cm import ScalarMappable
 import matplotlib
 
 from botorch.exceptions import BadInitialCandidatesWarning  # Added import
-from botorch.fit import fit_gpytorch_model  # Added import
+from botorch import fit_gpytorch_mll
 
 # ### Set dtype and device
 
@@ -433,9 +433,9 @@ qnehvi_sampler = SobolQMCNormalSampler(sample_shape=torch.Size([MC_SAMPLES]))
 for iteration in range(1, N_BATCH + 1):
     t0 = time.monotonic()
 
-    # Fit the qNEHVI model using fit_gpytorch_model
+    # Fit the qNEHVI model using fit_gpytorch_mll
     try:
-        fit_gpytorch_model(mll_qnehvi)
+        fit_gpytorch_mll(mll_qnehvi)
     except Exception as e:
         print(f"Model fitting failed at iteration {iteration}: {e}")
         break
