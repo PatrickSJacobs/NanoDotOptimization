@@ -357,7 +357,7 @@ def compute_reference_point(train_obj, margin=0.05):
 
 # Instantiate the problem with a temporary reference point
 temporary_ref_point = [0.0, 0.0, 0.0]
-problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=temporary_ref_point).to(**tkwargs)
+problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=temporary_ref_point)
 
 # Generate initial training data
 initial_n = 2 * (4 + 1)  # d=4
@@ -369,7 +369,7 @@ ref_point = compute_reference_point(train_obj_initial, margin=0.05)
 print(f"Computed reference point: {ref_point}")
 
 # Re-instantiate the problem with the actual reference point
-problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=ref_point).to(**tkwargs)
+problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=ref_point)
 
 # Initialize hypervolume calculator now that reference point is set
 hv = Hypervolume(ref_point=problem.ref_point)
@@ -433,7 +433,7 @@ for iteration in range(1, N_BATCH + 1):
     t0 = time.monotonic()
 
     # Fit the qNEHVI model
-    fit_gpytorch_mll(mll_qnehvi)
+    mll_qnehvi(model_qnehvi).maximize()  # Correct way to fit the model
 
     # Optimize acquisition function and get new observations
     try:
