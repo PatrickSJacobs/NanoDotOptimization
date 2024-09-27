@@ -27,7 +27,11 @@ import sys
 import traceback
 import numpy as np
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
-
+from jmetal.algorithm.multiobjective.spea2 import SPEA2
+from jmetal.operator.crossover import SBXCrossover
+from jmetal.operator.mutation import PolynomialMutation
+from jmetal.problem import ZDT1
+from jmetal.util.termination_criterion import StoppingByEvaluations
 
 current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
 main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
@@ -301,7 +305,7 @@ problem = (
     #.add_variable(0.001 * 25, 0.001 * 250)
     .add_variable(0.2938, 0.3038)
     #.add_variable(0.0, 0.0)
-    .add_variable(0.0, 0.01)
+    .add_variable(0.0, 0.0)
     .add_function(c)
     .add_function(b)
     #.add_function(b_var)
@@ -319,6 +323,9 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
+    
+    max_evaluations = 32
+    population_size = 4
 
     '''
     #max_evaluations = 160
@@ -375,10 +382,6 @@ if __name__ == "__main__":
 
     #sys.exit()
     
-    '''
-    
-    max_evaluations = 32
-    population_size = 4
     algorithm = GDE3(
     population_evaluator=MultiprocessEvaluator(processes=16),
     problem=problem,
@@ -390,6 +393,19 @@ if __name__ == "__main__":
     )   
     
     #algorithm.solutions = gde3_initial_population
+    '''
+    
+    print(problem.number_of_variables)
+    print(1.0 / problem.number_of_variables)
+
+    algorithm = SPEA2(
+        problem=problem,
+        population_size=population_size,
+        offspring_population_size=population_size,
+        mutation=PolynomialMutation(probability=1.0 / problem.number_of_variables, distribution_index=20),
+        crossover=SBXCrossover(probability=1.0, distribution_index=20),
+        termination_criterion=StoppingByEvaluations(max=max_evaluations)
+    )
 
     algorithm.run()
     front = algorithm.result()
