@@ -509,9 +509,11 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
     # Unnormalize the candidates to original space
     new_x = unnormalize(candidates.detach(), problem.bounds)
     print(new_x)
-
+    print("kible1")
     # Evaluate objectives at new candidates
     new_obj = problem(new_x)
+    print("kible2")
+
     print(new_obj)
 
 
