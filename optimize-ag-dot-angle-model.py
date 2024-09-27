@@ -32,6 +32,8 @@ from matplotlib import pyplot as plt
 from matplotlib.cm import ScalarMappable
 import matplotlib
 
+from botorch.exceptions import BadInitialCandidatesWarning  # Added import
+
 # ### Set dtype and device
 
 tkwargs = {
@@ -48,19 +50,17 @@ def constraint_function1(obj):
     Since objectives are negated (obj = -f), the constraint becomes:
     -(obj1 + obj2) <= 10  => obj1 + obj2 >= -10
     To fit BoTorch's constraint <=0 format:
-    obj1 + obj2 + 10 >=0  => -(obj1 + obj2 + 10) <=0
+    -(obj1 + obj2 + 10) <=0
     """
     return -(obj[..., 0] + obj[..., 1] + 10)  # <=0 if satisfied
 
 def constraint_function2(obj):
     """
-    Constraint 2: f3 - f4 >= 5
-    Adjusted for 3 objectives (assuming f4 is not present, adjust accordingly).
-    Example for 3 objectives:
-    Let's redefine it as f3 >= 5 (if f4 is absent).
+    Constraint 2: f3 >= 5
+    Adjusted for 3 objectives:
     Since obj3 = -f3:
     obj3 <= -5
-    To fit BoTorch's constraint <=0:
+    To fit BoTorch's constraint <=0 format:
     obj3 + 5 <=0
     """
     return obj[..., 2] + 5  # <=0 if satisfied
@@ -70,35 +70,30 @@ def constraint_function3(obj):
     Constraint 3: f1 * f3 <= 20
     Adjusted for negated objectives:
     -(obj1) * -(obj3) <= 20  => obj1 * obj3 <=20
-    To fit BoTorch's constraint <=0:
+    To fit BoTorch's constraint <=0 format:
     obj1 * obj3 - 20 <=0
     """
     return obj[..., 0] * obj[..., 2] - 20  # <=0 if satisfied
 
 def constraint_function4(obj):
     """
-    Constraint 4: f2^2 + f4^2 <= 25
-    Adjusted for 3 objectives (assuming f4 is not present, redefine accordingly).
-    Example for 3 objectives:
-    f2^2 <=25  => |f2| <=5
+    Constraint 4: |f2| <=5
+    Adjusted for 3 objectives:
     Since obj2 = -f2:
     | -obj2 | <=5  => |obj2| <=5
-    To fit BoTorch's constraint <=0, we can define two constraints:
+    To fit BoTorch's constraint <=0, define two constraints:
     obj2 - 5 <=0 and -obj2 -5 <=0
     """
     return obj[..., 1] - 5, -obj[..., 1] - 5  # Both <=0 if satisfied
 
 def constraint_function5(obj):
     """
-    Constraint 5: f1 - f4 <= 3
+    Constraint 5: f1 <= 3
     Adjusted for 3 objectives:
-    If f4 is absent, redefine accordingly.
-    Example:
-    f1 <= 3
     Since obj1 = -f1:
     -obj1 <=3  => obj1 >= -3
-    To fit BoTorch's constraint <=0:
-    obj1 +3 >=0  => -(obj1 +3) <=0
+    To fit BoTorch's constraint <=0 format:
+    -(obj1 + 3) <=0
     """
     return -(obj[..., 0] + 3)  # <=0 if satisfied
 
@@ -106,8 +101,8 @@ def constraint_function6(obj):
     """
     Constraint 6: f2 + f3 >=8
     Adjusted for negated objectives:
-    -obj2 - obj3 >=8  => obj2 + obj3 <= -8
-    To fit BoTorch's constraint <=0:
+    -(obj2) - obj3 >=8  => obj2 + obj3 <= -8
+    To fit BoTorch's constraint <=0 format:
     obj2 + obj3 +8 <=0
     """
     return obj[..., 1] + obj[..., 2] + 8  # <=0 if satisfied
@@ -318,8 +313,6 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler):
     
     return new_x, new_obj
 
-from botorch.exceptions import BadInitialCandidatesWarning
-
 # ### Perform Bayesian Optimization Loop with qNEHVI Only
 
 # Suppress specific warnings
@@ -341,7 +334,7 @@ hvs_qnehvi, hvs_random = [], []
 
 # ### Generate Initial Training Data and Compute Reference Point
 
-# Define your reference points based on initial feasible samples
+# Define your reference points based on initial objective values
 def compute_reference_point(train_obj, margin=0.05):
     """
     Computes the reference point based on initial objective values.
@@ -362,25 +355,61 @@ def compute_reference_point(train_obj, margin=0.05):
     
     return ref_point
 
-# Compute reference point based on initial objective values
-ref_point = compute_reference_point(train_obj_initial, margin=0.05)
-print(f"Computed reference point: {ref_point}")
-
-# Initialize the custom problem with the computed reference point
-problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=ref_point).to(**tkwargs)
+# Instantiate the problem with a temporary reference point
+temporary_ref_point = [0.0, 0.0, 0.0]
+problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=temporary_ref_point).to(**tkwargs)
 
 # Generate initial training data
 initial_n = 2 * (4 + 1)  # d=4
 train_x_initial, train_obj_initial = generate_initial_data(n=initial_n)
 print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial.shape}")
 
+# Compute reference point based on initial objective values
+ref_point = compute_reference_point(train_obj_initial, margin=0.05)
+print(f"Computed reference point: {ref_point}")
+
+# Re-instantiate the problem with the actual reference point
+problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=ref_point).to(**tkwargs)
 
 # Initialize hypervolume calculator now that reference point is set
 hv = Hypervolume(ref_point=problem.ref_point)
 
 # Compute initial hypervolume for qNEHVI
+def compute_hypervolume(train_x, train_obj, problem, hv):
+    """
+    Computes the hypervolume of the Pareto front.
+
+    Args:
+        train_x (torch.Tensor): Tensor of shape (n_samples, d).
+        train_obj (torch.Tensor): Tensor of shape (n_samples, M).
+        problem (NanoDotProblem): The optimization problem instance.
+        hv (Hypervolume): Hypervolume calculator instance.
+
+    Returns:
+        float: Computed hypervolume.
+    """
+    # Identify feasible points (all constraints <=0)
+    constraint_values = problem.evaluate_constraints(train_obj)
+    is_feasible = (constraint_values <= 0).all(dim=-1)
+    feasible_obj = train_obj[is_feasible]
+
+    if feasible_obj.shape[0] == 0:
+        return 0.0
+
+    # Identify Pareto optimal points
+    pareto_mask = is_non_dominated(feasible_obj)
+    pareto_y = feasible_obj[pareto_mask]
+
+    if pareto_y.shape[0] == 0:
+        return 0.0
+
+    # Compute hypervolume
+    volume = hv.compute(pareto_y)
+    return volume
+
 initial_hv_qnehvi = compute_hypervolume(train_x_initial, train_obj_initial, problem, hv)
 hvs_qnehvi.append(initial_hv_qnehvi)
+print(f"Initial hypervolume for qNEHVI: {initial_hv_qnehvi}")
 
 # Initialize random sampling baseline
 train_x_random, train_obj_random = generate_initial_data(n=initial_n)
@@ -389,6 +418,7 @@ print(f"Initial random sampling data shape: {train_x_random.shape}, {train_obj_r
 # Compute initial hypervolume for random sampling
 initial_hv_random = compute_hypervolume(train_x_random, train_obj_random, problem, hv)
 hvs_random.append(initial_hv_random)
+print(f"Initial hypervolume for random sampling: {initial_hv_random}")
 
 # Initialize models
 mll_qnehvi, model_qnehvi = initialize_model(
