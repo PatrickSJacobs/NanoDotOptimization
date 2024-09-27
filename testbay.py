@@ -255,6 +255,9 @@ hvs_qparego, hvs_qnehvi, hvs_random = [], [], []
 train_x_qparego, train_obj_qparego, train_con_qparego = generate_initial_data(
     n=2 * (d + 1)
 )
+print((train_x_qparego.shape, train_obj_qparego.shape, train_con_qparego.shape))
+print((train_x_qparego, train_obj_qparego, train_con_qparego))
+
 mll_qparego, model_qparego = initialize_model(
     train_x_qparego, train_obj_qparego, train_con_qparego
 )
