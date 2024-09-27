@@ -354,6 +354,7 @@ if __name__ == "__main__":
     parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
     objectives = df1[['c-param', 'b-param', 'b_var']].values
 
+    print(df1[['path', 'sr', 'ht', 'cs', 'theta_deg', 'c-param', 'b-param', 'b_var',]].values)
     # Find the Pareto front
     nds = NonDominatedSorting()
     pareto_front_indices = nds.do(objectives, only_non_dominated_front=True)
