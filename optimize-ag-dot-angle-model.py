@@ -9,45 +9,51 @@ import os
 import warnings
 import pandas as pd
 
-current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
-main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
-folder_name = "opt_%s" % str(current_time)# Folder name for optimization files
-file_home_path = main_home_dir + folder_name + "_processed/" # Folder name for optimization files
-main_work_dir = "/work2/08809/tg881088/" # Home directory for optimization
-file_work_path = main_work_dir + folder_name + "_raw/" # Folder name for optimization files
+current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")  # Getting the current time
+main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
+folder_name = "opt_%s" % str(current_time)  # Folder name for optimization files
+file_home_path = main_home_dir + folder_name + "_processed/"  # Folder name for optimization files
+main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
+file_work_path = main_work_dir + folder_name + "_raw/"  # Folder name for optimization files
 progress_file = file_home_path + "progress.txt"
-os.mkdir(file_home_path)# Making folder name for optimization files
-os.mkdir(file_work_path)# Making folder name for data log
+os.mkdir(file_home_path)  # Making folder name for optimization files
+os.mkdir(file_work_path)  # Making folder name for data log
 file_naught = open(progress_file, 'w')
 file_naught.writelines(["Beginning optimization %s" % "\n"])
 file_naught.close()
 
-#execution_dictionary = {}
+# execution_dictionary = {}
 
 def printing(string):
-
-    file_printout = open(progress_file, 'r').readlines()
+    with open(progress_file, 'r') as f:
+        file_printout = f.readlines()
     lines = file_printout + [f"{str(string)}\n"]
-    file_printer = open(progress_file, 'w')
-    file_printer.writelines(lines)
-    file_printer.close()
+    with open(progress_file, 'w') as f:
+        f.writelines(lines)
     print(string)
     pass
 
 def check_log(filename: str):
     df = pd.read_csv(file_home_path + "calc_log_obj.csv")
-    return list(dict(df.loc[df['filename'] == filename]))
+    # Assuming 'calc_log_obj.csv' has columns that can be converted to a dictionary
+    # Here, we can return the first matching row as a dict
+    row = df.loc[df['filename'] == filename]
+    if not row.empty:
+        return row.to_dict(orient='records')[0]
+    else:
+        return {}
 
 def make_filename(sr, ht, cs, theta_deg):
     display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0,
                                   1)).replace(".", "_")  # angle to be used
 
-    filename = "%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (str(folder_name),
-                                                      str(round(sr * 10000, 1)).replace(".", "_") + "nm",
-                                                      str(round(ht * 10000, 1)).replace(".", "_") + "nm",
-                                                      str(round(cs * 10000, 1)).replace(".", "_") + "nm",
-                                                      display_theta_deg,
-                                                      )  # filename to be used
+    filename = "%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (
+        str(folder_name),
+        str(round(sr * 10000, 1)).replace(".", "_") + "nm",
+        str(round(ht * 10000, 1)).replace(".", "_") + "nm",
+        str(round(cs * 10000, 1)).replace(".", "_") + "nm",
+        display_theta_deg,
+    )  # filename to be used
     return filename
 
 def obj_func_run(x: [float]):
@@ -63,104 +69,91 @@ def obj_func_run(x: [float]):
     ht = x[1]
     cs = x[2]
     theta_deg = x[3]
-    #cs = 0.001 * 250
-    #theta_deg = x[2]
+    # cs = 0.001 * 250
+    # theta_deg = x[2]
 
-    sleep(10)# Sleep to give code time to process parallelization
+    sleep(10)  # Sleep to give code time to process parallelization
 
     # Parameters to be used in current evaluation
-    #printing((sr, ht, cs, theta_deg))
+    # printing((sr, ht, cs, theta_deg))
 
     filename = make_filename(sr, ht, cs, theta_deg)
 
-    #Creating Scheme executable for current optimization; ag-dot-angle0.ctl cannot be used simultaneously with multiple workers)
-    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
-    lines = executable.readlines()
+    # Creating Scheme executable for current optimization; ag-dot-angle0.ctl cannot be used simultaneously with multiple workers)
+    executable_path = os.path.join(main_home_dir, "NanoDotOptimization", "ag-dot-angle0.ctl")
+    with open(executable_path, 'r') as f:
+        lines = f.readlines()
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     new_name = file_home_path + "ag-dot-angle" + code
     new_file = new_name + ".ctl"
-    file0 = open(new_file, 'w')
-    file0.writelines(lines)
-    file0.close()
+    with open(new_file, 'w') as f:
+        f.writelines(lines)
 
     # Creating ticker file to make sure the data is created and stable for processing
     ticker_file = file_home_path + "ticker" + code + ".txt"
-    file2 = open(ticker_file, 'w')
-    file2.write("0")
-    file2.close()
+    with open(ticker_file, 'w') as f:
+        f.write("0")
 
     # Creation of simulation "subjob" file
-    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
-    file1 = open(sbatch_file, 'w')
+    sbatch_file = os.path.join(file_home_path, f"{filename}.txt")
+    with open(sbatch_file, 'w') as f:
+        cell_size = 2 * sr + cs
+        air_file = f"{file_home_path}air-angle_{filename}"
+        metal_file = f"{file_home_path}ag-dot-angle_{filename}"
+        
+        air_raw_path = f"{air_file}.out"
+        metal_raw_path = f"{metal_file}.out"
+        air_data_path = f"{air_file}.dat"
+        metal_data_path = f"{metal_file}.dat"
+        
+        info_file = f"{new_name}.txt"
 
-    air_file = "%sair-angle_%s" % (file_home_path, filename)
-    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
-    
-    air_raw_path = air_file + ".out"
-    metal_raw_path = metal_file + ".out"
-    air_data_path = air_file + ".dat"
-    metal_data_path = metal_file + ".dat"
-    # cell_size = 2*(sr + cs)
-    cell_size = 2 * sr + cs
-    
-    info_file = new_name + ".txt"
+        # Write info file
+        with open(info_file, "w") as info_f:
+            for item in [
+                progress_file,
+                air_data_path,
+                metal_data_path,
+                file_home_path,
+                file_work_path,
+                filename,
+                ticker_file,
+                air_raw_path,
+                metal_raw_path,
+                sr,
+                ht,
+                cs,
+                theta_deg
+            ]:
+                info_f.write(f"{item}\n")
 
-    with open(info_file, "w") as f:
-        for item in [
-            progress_file, 
-            air_data_path, 
-            metal_data_path, 
-            file_home_path, 
-            file_work_path, 
-            filename, 
-            ticker_file, 
-            air_raw_path, 
-            metal_raw_path, 
-            sr, 
-            ht, 
-            cs, 
-            theta_deg
-                    ]:
-            f.write(f"{item}\n")
-
-    file1.writelines(["#!/bin/bash%s" % "\n",
-                      "#SBATCH -J myMPI%s" % "\n",
-                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
-                      "#SBATCH -n 48%s" % "\n",
-                      "#SBATCH -N 1%s" % "\n",
-                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
-                      "#SBATCH --mail-type=all%s" % "\n",
-                      "#SBATCH -p skx%s" % "\n",
-                      "#SBATCH -t 05:20:00%s" % "\n",
-                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
-                      "module load gcc/13.2.0%s" % "\n",
-                      "module load impi/21.11%s" % "\n",
-                      "module load meep/1.28%s" % "\n",
-                      "source ~/.bashrc%s" % "\n",
-                      "conda activate ndo%s" % "\n",
-                      #"echo new_file: %s %s" % (new_file, "\n"),
-                      #"echo air_raw_path: %s %s" % (air_raw_path, "\n"),
-                      #"echo air_data_path: %s %s" % (air_data_path, "\n"),
-                      #"echo metal_raw_path: %s %s" % (metal_raw_path, "\n"),
-                      #"echo metal_data_path: %s %s" % (metal_data_path, "\n"),
-                      #"echo ticker_file: %s %s" % (ticker_file, "\n"),
-                      #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "ibrun -np 48 meep no-metal?=true sy=%s theta_deg=%s %s | tee %s;%s" % (cell_size, theta_deg, new_file, air_raw_path, "\n"),
-                      #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
-                      "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
-                      #"ibrun -np 4 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "mpirun -np 48 meep no-metal?=false sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
-                      "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
-                      "echo %s;%s" % (info_file, "\n"),
-                      #"wait;%s" % ("\n"),
-                      "python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info_file, "\n"),
-                      "rm -r %s %s" % (ticker_file, "\n"),
-                      "echo 1 >> %s %s" % (ticker_file, "\n")
-
-                      ])
-    
-    file1.close()
+        # Write sbatch script
+        f.writelines([
+            "#!/bin/bash\n",
+            "#SBATCH -J myMPI\n",
+            "#SBATCH -o myMPI.o%j\n",
+            "#SBATCH -n 48\n",
+            "#SBATCH -N 1\n",
+            "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu\n",
+            "#SBATCH --mail-type=all\n",
+            "#SBATCH -p skx\n",
+            "#SBATCH -t 05:20:00\n",
+            'echo "SCRIPT $PE_HOSTFILE"\n',
+            "module load gcc/13.2.0\n",
+            "module load impi/21.11\n",
+            "module load meep/1.28\n",
+            "source ~/.bashrc\n",
+            "conda activate ndo\n",
+            # Execute simulation commands
+            f"ibrun -np 48 meep no-metal?=true sy={cell_size} theta_deg={theta_deg} {new_file} | tee {air_raw_path};\n",
+            f"grep flux1: {air_raw_path} > {air_data_path};\n",
+            f"mpirun -np 48 meep no-metal?=false sr={sr} ht={ht} sy={cell_size} theta_deg={theta_deg} {new_file} | tee {metal_raw_path};\n",
+            f"grep flux1: {metal_raw_path} > {metal_data_path};\n",
+            f"echo {info_file};\n",
+            f"python {os.path.join(main_home_dir, 'NanoDotOptimization', 'optimize-ag-dot-angle-evaluate.py')} {info_file};\n",
+            f"rm -r {ticker_file} {air_raw_path} {metal_raw_path} {metal_data_path} {air_data_path} {new_file} {main_home_dir}ag-dot-angle{code}* {file_home_path}ag-dot-angle{code}* \n",
+            f"echo 1 >> {ticker_file} \n"
+        ])
 
     sleep(10)  # Pause to give time for simulation file to be created
     printing(x)
@@ -168,68 +161,61 @@ def obj_func_run(x: [float]):
 
     success = 0
 
-    #(4) Extracting Data From optimization
-    max_time = (100*100)
-    #max_time = (50)
+    # (4) Extracting Data From optimization
+    max_time = 100 * 100  # or 10000
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success == 0:
         try:
-            a = open(ticker_file, "r").read()
-            a = int(a)
+            with open(ticker_file, "r") as f:
+                a = int(f.read())
             if a == 1:
-                #printing(f"files pass:{(air_data_path, metal_data_path)}")
-                success = 1   
+                success = 1
         except:
             pass
-        
+
         if time_count == max_time:
-                raise Exception(f"ticker not existing: {ticker_file}")
+            raise Exception(f"ticker not existing: {ticker_file}")
 
-        time_count = time_count + 1
+        time_count += 1
         time.sleep(1)
-        
-    os.system("ssh login1 rm -r " +
-            ticker_file + " " +
-            air_raw_path + " " +
-            metal_raw_path + " " +
-            metal_data_path + " " +
-            air_data_path + " " +
-            new_file + " " +
-            main_home_dir + "ag-dot-angle" + code + "* " +
-            file_home_path + "ag-dot-angle" + code + "* ")
 
-    #printing(f"finished deleting files; code: {code}")
+    # Remove temporary files
+    os.system("ssh login1 rm -r " +
+              ticker_file + " " +
+              air_raw_path + " " +
+              metal_raw_path + " " +
+              metal_data_path + " " +
+              air_data_path + " " +
+              new_file + " " +
+              main_home_dir + "ag-dot-angle" + code + "* " +
+              file_home_path + "ag-dot-angle" + code + "* ")
 
     # (9) Returning of Result and Continuity of Optimization
-    #printing(f'Executed: {filename}')
-    
     return filename
 
 def get_values(x: [float]):
-
     sr = x[0]
     ht = x[1]
     cs = x[2]
-    #cs = 0.001 * 250
     theta_deg = x[3]
-    #theta_deg = x[2]
-
+    # cs = 0.001 * 250
+    # theta_deg = x[2]
 
     filename = make_filename(sr, ht, cs, theta_deg)
 
     log_answer = check_log(filename)
     if len(log_answer) > 0:
-        #printing(f'Referenced: {filename}')
-        return log_answer[0]
+        # printing(f'Referenced: {filename}')
+        return log_answer
     else:
         obj_func_run(x)
-        return check_log(filename)[0]
+        return check_log(filename)
 
 with open(file_home_path + "calc_log_obj.csv", 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
-        file.close()
+    writer = csv.writer(file)
+    writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time", "step count"])
+    file.close()
 
 ################################################################################################################################################################
 
@@ -240,7 +226,6 @@ from botorch import fit_gpytorch_mll  # Import outside functions
 
 # ### Set dtype and device
 botorch.settings.debug(True)
-
 
 tkwargs = {
     "dtype": torch.double,
@@ -266,13 +251,13 @@ def load_initial_data(file_path):
     required_columns = ["sr", "ht", "cs", "theta_deg", 'b-param', 'c-param', 'b_var']
     if not all(col in df.columns for col in required_columns):
         raise ValueError(f"CSV file must contain columns: {required_columns}")
-    
+
     train_x = torch.tensor(df[["sr", "ht", "cs", "theta_deg"]].values, **tkwargs)
     train_obj = torch.tensor(df[['b-param', 'c-param', 'b_var']].values, **tkwargs)
-    
+
     # **Negate the objectives to convert from minimization to maximization**
     train_obj = -train_obj  # Assuming CSV has objectives for minimization
-    
+
     return train_x, train_obj
 
 
@@ -298,32 +283,12 @@ from botorch.utils.transforms import normalize, unnormalize
 
 train_x_initial = normalize(train_x_initial, norm_bounds)
 
-
 print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial.shape}")
-
-# ### Define Constraint Functions (Separate Functions)
-
-def constraint_f1(obj): return 1 + obj[..., 0]  # <=0 if satisfied
-def constraint_f2(obj): return obj[..., 1]  # <=0 if satisfied
-def constraint_f3(obj): return obj[..., 2]  # <=0 if satisfied
-def constraint_f4(obj): return -obj[..., 0] - 50  # <=0 if satisfied
-def constraint_f5(obj): return -obj[..., 1] - 20  # <=0 if satisfied
-def constraint_f6(obj): return -obj[..., 1] - 13  # <=0 if satisfied
-
-# Compile all constraint functions into a list
-constraints_list = [
-    constraint_f1,
-    constraint_f2,
-    constraint_f3,
-    constraint_f4,
-    constraint_f5,
-    constraint_f6,
-]
 
 # ### Define the Optimization Problem
 
 class NanoDotProblem:
-    def __init__(self, bounds, num_objectives, ref_point, **tkwargs):
+    def __init__(self, bounds, num_objectives, ref_point, penalty=1e6, **tkwargs):
         self.bounds = bounds
         self.num_objectives = num_objectives
         self.dim = bounds.shape[1]
@@ -331,10 +296,11 @@ class NanoDotProblem:
         self.ref_point = torch.tensor(ref_point, **tkwargs)
         # Set maximum hypervolume if known (optional)
         self.max_hv = None  # Replace with actual value if known
+        self.penalty = penalty  # Penalty factor
 
     def __call__(self, x):
         """
-        Evaluates the objectives at x.
+        Evaluates the objectives at x with penalties for violations.
 
         Args:
             x (torch.Tensor): Tensor of shape (..., self.dim)
@@ -342,29 +308,23 @@ class NanoDotProblem:
         Returns:
             torch.Tensor: Tensor of shape (..., self.num_objectives)
         """
-        # Implement your objective functions here
-        # Since we are minimizing, negate the objectives to convert to maximization
-        # Replace the following with actual computations
-        
+        # Retrieve the objective values
         obj_run = get_values(x)
-        
+
+        # Define the objectives (negated for maximization)
         obj1 = -obj_run["b-param"]
         obj2 = -obj_run["c-param"]
         obj3 = -obj_run["b_var"]
 
+        # Apply penalties if any objective exceeds 0
+        mask = (obj1 > 0) | (obj2 > 0) | (obj3 > 0)  # Shape: (batch_size,)
+
+        # Apply penalty by subtracting a large value to make them unattractive
+        obj1 = obj1 - self.penalty * mask.float()
+        obj2 = obj2 - self.penalty * mask.float()
+        obj3 = obj3 - self.penalty * mask.float()
+
         return torch.stack([obj1, obj2, obj3], dim=-1)
-
-    def evaluate_constraints(self, obj):
-        """
-        Evaluates the constraints at given objective values.
-
-        Args:
-            obj (torch.Tensor): Tensor of shape (..., M)
-
-        Returns:
-            List[torch.Tensor]: List of tensors, each of shape (...), representing individual constraints
-        """
-        return [constraint(obj) for constraint in constraints_list]
 
 # ### Compute Reference Point
 
@@ -404,31 +364,23 @@ print(f"hv: {hv}")
 
 from botorch.utils.multi_objective.pareto import is_non_dominated  # Import outside functions
 
-
-def compute_hypervolume(train_obj, problem, hv):
+def compute_hypervolume(train_obj, hv):
     """
     Computes the hypervolume of the Pareto front.
 
     Args:
         train_obj (torch.Tensor): Tensor of shape (n_samples, M).
-        problem (NanoDotProblem): The optimization problem instance.
         hv (Hypervolume): Hypervolume calculator instance.
 
     Returns:
         float: Computed hypervolume.
     """
-    # Identify feasible points (all constraints <=0)
-    constraints = problem.evaluate_constraints(train_obj)  # List of constraint tensors
-    # All constraints must be <=0
-    is_feasible = torch.stack([c <= 0 for c in constraints], dim=-1).all(dim=-1)
-    feasible_obj = train_obj[is_feasible]
-
-    if feasible_obj.shape[0] == 0:
+    if train_obj.shape[0] == 0:
         return 0.0
 
     # Identify Pareto optimal points
-    pareto_mask = is_non_dominated(feasible_obj)
-    pareto_y = feasible_obj[pareto_mask]
+    pareto_mask = is_non_dominated(train_obj)
+    pareto_y = train_obj[pareto_mask]
 
     if pareto_y.shape[0] == 0:
         return 0.0
@@ -438,7 +390,7 @@ def compute_hypervolume(train_obj, problem, hv):
     return volume
 
 # Compute initial hypervolume for qNEHVI
-initial_hv_qnehvi = compute_hypervolume(train_obj_initial, problem, hv)
+initial_hv_qnehvi = compute_hypervolume(train_obj_initial, hv)
 hvs_qnehvi = [initial_hv_qnehvi]
 print(f"Initial hypervolume for qNEHVI: {initial_hv_qnehvi}")
 
@@ -510,7 +462,7 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
     """
     # Normalize training inputs
     train_x_norm = normalize(train_x, problem.bounds)
-    
+
     # Define the qNEHVI acquisition function
     acq_func = qLogNoisyExpectedHypervolumeImprovement(
         model=model,
@@ -519,13 +471,13 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
         sampler=sampler,
         prune_baseline=True,
         objective=IdentityMCMultiOutputObjective(outcomes=list(range(problem.num_objectives))),
-        constraints=constraints_list,  # Pass the list of constraints
+        # constraints=constraints_list,  # Constraints removed
     )
-    
+
     # Define bounds in normalized space
     standard_bounds = torch.zeros(2, problem.dim, **tkwargs)
     standard_bounds[1] = 1
-    
+
     # Optimize the acquisition function to find new candidates
     candidates, _ = optimize_acqf(
         acq_function=acq_func,
@@ -536,17 +488,16 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
         options={"batch_limit": 5, "maxiter": 200},
         sequential=True,
     )
-    
+
     # Unnormalize the candidates to original space
-    new_x = unnormalize(candidates.detach(), bounds=problem.bounds)
-    
+    new_x = unnormalize(candidates.detach(), problem.bounds)
+
     # Evaluate objectives at new candidates
     new_obj = problem(new_x)
-    
+
     return new_x, new_obj
 
 # ### Perform Bayesian Optimization Loop with qNEHVI Only
-
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=BadInitialCandidatesWarning)
@@ -594,7 +545,7 @@ for iteration in range(1, N_BATCH + 1):
     batch_number_qnehvi = np.concatenate([batch_number_qnehvi, new_batch_numbers_qnehvi])
 
     # Compute hypervolume for qNEHVI
-    volume_qnehvi = compute_hypervolume(train_obj_initial, problem, hv)
+    volume_qnehvi = compute_hypervolume(train_obj_initial, hv)
     hvs_qnehvi.append(volume_qnehvi)
 
     # Reinitialize the qNEHVI model for the next iteration
@@ -618,29 +569,23 @@ for iteration in range(1, N_BATCH + 1):
 
 import pandas as pd  # Ensure pandas is imported at the top
 
-def extract_pareto_front(train_obj, problem):
+def extract_pareto_front(train_obj):
     """
     Extracts the Pareto front from the training data.
 
     Args:
         train_obj (torch.Tensor): Tensor of shape (n_samples, M) representing objective values.
-        problem (NanoDotProblem): The optimization problem instance.
 
     Returns:
         torch.Tensor: Tensor containing Pareto optimal objective values.
     """
-    # Identify feasible points (all constraints <=0)
-    constraints = problem.evaluate_constraints(train_obj)  # List of constraint tensors
-    is_feasible = torch.stack([c <= 0 for c in constraints], dim=-1).all(dim=-1)
-    feasible_obj = train_obj[is_feasible]
-
-    if feasible_obj.shape[0] == 0:
+    if train_obj.shape[0] == 0:
         print("No feasible solutions found.")
         return torch.empty(0, train_obj.shape[-1])
 
-    # Identify non-dominated points
-    pareto_mask = is_non_dominated(feasible_obj)
-    pareto_front = feasible_obj[pareto_mask]
+    # Identify Pareto optimal points
+    pareto_mask = is_non_dominated(train_obj)
+    pareto_front = train_obj[pareto_mask]
 
     return pareto_front
 
@@ -665,7 +610,7 @@ def save_pareto_front(pareto_front, filename="pareto_front_qnehvi.csv"):
     print(f"Pareto front saved to {filename}.")
 
 # Extract Pareto front for qNEHVI
-pareto_front_qnehvi = extract_pareto_front(train_obj_initial, problem)
+pareto_front_qnehvi = extract_pareto_front(train_obj_initial)
 
 if pareto_front_qnehvi.numel() > 0:
     print("\nFinal Pareto Front for qNEHVI:")
@@ -676,7 +621,7 @@ if pareto_front_qnehvi.numel() > 0:
     # Optionally, save to a file
     save_pareto_front(pareto_front_qnehvi)
 else:
-    print("\nNo feasible Pareto front found for qNEHVI.")
+    print("\nNo Pareto front found for qNEHVI.")
 
 # ### Plot the Observations Colored by Iteration and Overlay Pareto Front
 
@@ -692,6 +637,9 @@ fig, ax = plt.subplots(figsize=(8, 6))  # Single plot for qNEHVI
 cm = plt.get_cmap("viridis")
 
 # Plot qNEHVI Observations
+# Since it's multi-objective, it's better to plot a pair or use dimensionality reduction
+# For simplicity, we can plot the first two objectives
+
 scatter = ax.scatter(
     -train_obj_initial[:, 0].cpu().numpy(),
     -train_obj_initial[:, 1].cpu().numpy(),
