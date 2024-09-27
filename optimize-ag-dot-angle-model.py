@@ -491,8 +491,6 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
     # Define bounds in normalized space
     standard_bounds = torch.zeros(2, problem.dim, **tkwargs)
     standard_bounds[1] = 1
-    
-    print("farts")
 
     # Optimize the acquisition function to find new candidates
     candidates, _ = optimize_acqf(
@@ -505,10 +503,9 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
         sequential=True,
     )
 
-    print("kible")
     # Unnormalize the candidates to original space
     new_x = unnormalize(candidates.detach(), problem.bounds)
-
+    print(new_x)
     # Evaluate objectives at new candidates
     new_obj = problem(new_x)
 
