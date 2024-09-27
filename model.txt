@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J myMPI               # Job Name
 #SBATCH -o myMPI.o%j	       # Name of the output file (eg. myMPI.oJobID)
-#SBATCH -n 32                # Requests total number of MPI tasks 96
+#SBATCH -n 48                # Requests total number of MPI tasks 96
 #SBATCH -N 1
 #SBATCH --mail-user=pjacobs7@eagles.nccu.edu
 #SBATCH --mail-type=all
@@ -12,6 +12,6 @@ echo "SCRIPT $PE_HOSTFILE"
 source ~/.bashrc
 conda activate ndo
 
-python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-collect.py
+#python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-collect.py
 
 python /home1/08809/tg881088/NanoDotOptimization/optimize-ag-dot-angle-model.py

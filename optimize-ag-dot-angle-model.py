@@ -318,6 +318,8 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler):
     
     return new_x, new_obj
 
+from botorch.exceptions import BadInitialCandidatesWarning
+
 # ### Perform Bayesian Optimization Loop with qNEHVI Only
 
 # Suppress specific warnings
