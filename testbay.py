@@ -114,9 +114,10 @@ def initialize_model(train_x, train_obj, train_con):
 # In[4]:
 
 
-from botorch.acquisition.multi_objective.monte_carlo import (
-    qNoisyExpectedHypervolumeImprovement,
+from botorch.acquisition.multi_objective.logei import (
+    qLogNoisyExpectedHypervolumeImprovement,
 )
+
 from botorch.acquisition.multi_objective.objective import IdentityMCMultiOutputObjective
 from botorch.optim.optimize import optimize_acqf, optimize_acqf_list
 from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
@@ -134,7 +135,7 @@ standard_bounds[1] = 1
 def optimize_qnehvi_and_get_observation(model, train_x, train_obj, train_con, sampler):
     """Optimizes the qNEHVI acquisition function, and returns a new candidate and observation."""
     train_x = normalize(train_x, problem.bounds)
-    acq_func = qNoisyExpectedHypervolumeImprovement(
+    acq_func = qLogNoisyExpectedHypervolumeImprovement(
         model=model,
         ref_point=problem.ref_point.tolist(),  # use known reference point
         X_baseline=train_x,
@@ -166,15 +167,15 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, train_con, sa
 # #### Define a helper function that performs the essential BO step for $q$ParEGO
 # The helper function below similarly initializes $q$ParEGO, optimizes it, and returns the batch $\{x_1, x_2, \ldots x_q\}$ along with the observed function values. 
 # 
-# $q$ParEGO uses random augmented chebyshev scalarization with the `qExpectedImprovement` acquisition function. In the parallel setting ($q>1$), each candidate is optimized in sequential greedy fashion using a different random scalarization (see [1] for details).
+# $q$ParEGO uses random augmented chebyshev scalarization with the `qLogExpectedImprovement` acquisition function. In the parallel setting ($q>1$), each candidate is optimized in sequential greedy fashion using a different random scalarization (see [1] for details).
 # 
-# To do this, we create a list of `qExpectedImprovement` acquisition functions, each with different random scalarization weights. The `optimize_acqf_list` method sequentially generates one candidate per acquisition function and conditions the next candidate (and acquisition function) on the previously selected pending candidates.
+# To do this, we create a list of `qLogExpectedImprovement` acquisition functions, each with different random scalarization weights. The `optimize_acqf_list` method sequentially generates one candidate per acquisition function and conditions the next candidate (and acquisition function) on the previously selected pending candidates.
 
 # In[5]:
 
-
-from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.acquisition.logei import qLogExpectedImprovement
+
 
 
 def optimize_qparego_and_get_observation(model, train_obj, train_con, sampler):
@@ -192,7 +193,7 @@ def optimize_qparego_and_get_observation(model, train_obj, train_con, sampler):
             lambda Z, X: scalarization(Z[..., :-1]),
         )
         train_y = torch.cat([train_obj, train_con], dim=-1)
-        acq_func = qExpectedImprovement(  # pyre-ignore: [28]
+        acq_func = qLogExpectedImprovement(  # pyre-ignore: [28]
             model=model,
             objective=scalarized_objective,
             best_f=scalarized_objective(train_y).max(),
