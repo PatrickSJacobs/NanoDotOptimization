@@ -194,23 +194,43 @@ def obj_func_run(x: [float]):
     # (9) Returning of Result and Continuity of Optimization
     return filename
 
-def get_values(x: [float]):
-    sr = x[0]
-    ht = x[1]
-    cs = x[2]
-    theta_deg = x[3]
-    # cs = 0.001 * 250
-    # theta_deg = x[2]
+import multiprocessing as mp
+
+def get_values_single(xi_list):
+    sr = xi_list[0]
+    ht = xi_list[1]
+    cs = xi_list[2]
+    theta_deg = xi_list[3]
 
     filename = make_filename(sr, ht, cs, theta_deg)
-
     log_answer = check_log(filename)
     if len(log_answer) > 0:
-        # printing(f'Referenced: {filename}')
-        return log_answer
+        obj_run = log_answer
     else:
-        obj_func_run(x)
-        return check_log(filename)
+        obj_func_run(xi_list)
+        obj_run = check_log(filename)
+
+    return obj_run["b-param"], obj_run["c-param"], obj_run["b_var"]
+
+def get_values(x: torch.Tensor):
+    xi_list_batch = x.tolist()  # Convert tensor to list of lists
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        results = pool.map(get_values_single, xi_list_batch)
+
+    # Unpack results
+    b_param_list, c_param_list, b_var_list = zip(*results)
+
+    # Convert lists to tensors
+    b_param_tensor = torch.tensor(b_param_list, **tkwargs)
+    c_param_tensor = torch.tensor(c_param_list, **tkwargs)
+    b_var_tensor = torch.tensor(b_var_list, **tkwargs)
+
+    # Return as a dictionary
+    return {
+        "b-param": b_param_tensor,
+        "c-param": c_param_tensor,
+        "b_var": b_var_tensor
+    }
 
 with open(file_home_path + "calc_log_obj.csv", 'w', newline='') as file:
     writer = csv.writer(file)
@@ -312,7 +332,7 @@ class NanoDotProblem:
         
         print(x)
         obj_run = get_values(x)
-        
+
         # Define the objectives (negated for maximization)
         obj1 = -obj_run["b-param"]
         obj2 = -obj_run["c-param"]
