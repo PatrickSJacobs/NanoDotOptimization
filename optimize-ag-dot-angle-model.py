@@ -517,7 +517,7 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
     standard_bounds = torch.zeros(2, problem.dim, **tkwargs)
     standard_bounds[1] = 1
     
-    print("farts")
+    print("made acq func")
 
     # Optimize the acquisition function to find new candidates
     candidates, _ = optimize_acqf(
@@ -530,17 +530,13 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
         sequential=True,
     )
 
-    print("kible")
+    print("optimized acq func")
     # Unnormalize the candidates to original space
-    new_x = unnormalize(candidates.detach(), problem.bounds)
-    print(new_x)
-    print("kible1")
+    new_x = unnormalize(candidates.detach(), norm_bounds)
+    print(f"new sol: {new_x}")
     # Evaluate objectives at new candidates
     new_obj = problem(new_x)
-    print("kible2")
-
-    print(new_obj)
-
+    print(f"new obj: {new_obj}")
 
     return new_x, new_obj
 
@@ -551,8 +547,10 @@ warnings.filterwarnings("ignore", category=BadInitialCandidatesWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Define BO parameters
-N_BATCH = 20 if not SMOKE_TEST else 1
+#N_BATCH = 20 if not SMOKE_TEST else 1
+N_BATCH = 1 if not SMOKE_TEST else 1
 MC_SAMPLES = 128 if not SMOKE_TEST else 16
+#BATCH_SIZE = 2
 BATCH_SIZE = 2
 NUM_RESTARTS = 10 if not SMOKE_TEST else 2
 RAW_SAMPLES = 512 if not SMOKE_TEST else 4
