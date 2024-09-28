@@ -212,6 +212,8 @@ def get_values_single(xi_list):
 
     return obj_run["b-param"], obj_run["c-param"], obj_run["b_var"]
 
+import torch
+
 def get_values(x: torch.Tensor):
     xi_list_batch = x.tolist()  # Convert tensor to list of lists
     with mp.Pool(processes=mp.cpu_count()) as pool:
@@ -239,7 +241,7 @@ with open(file_home_path + "calc_log_obj.csv", 'w', newline='') as file:
 
 ################################################################################################################################################################
 
-import torch
+
 import botorch.settings
 from botorch.exceptions import BadInitialCandidatesWarning  # Import outside functions
 from botorch import fit_gpytorch_mll  # Import outside functions
