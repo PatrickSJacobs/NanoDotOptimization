@@ -287,7 +287,7 @@ def load_initial_data(file_path):
 bounds = torch.tensor([
     [0.01, 0.01, 0.001 * 25, 0.0],
     #[0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0001]
-    [0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0]
+    [0.001 * 125, 0.001 * 125, 0.001 * 125, 0.0]
 ], **tkwargs)
 
 # Path to your initial data CSV file
