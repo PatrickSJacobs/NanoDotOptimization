@@ -286,7 +286,8 @@ def load_initial_data(file_path):
 # Define the parameter bounds (adjust as per your problem)
 bounds = torch.tensor([
     [0.01, 0.01, 0.001 * 25, 0.0],
-    [0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0001]
+    #[0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0001]
+    [0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0]
 ], **tkwargs)
 
 # Path to your initial data CSV file
@@ -565,6 +566,7 @@ batch_number_qnehvi = np.arange(train_obj_initial.shape[0])  # Initial batch num
 
 for iteration in range(1, N_BATCH + 1):
     t0 = time.monotonic()
+    print(f"Iteration {iteration}")
 
     # Fit the qNEHVI model using fit_gpytorch_mll
     try:
