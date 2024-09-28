@@ -309,8 +309,10 @@ class NanoDotProblem:
             torch.Tensor: Tensor of shape (..., self.num_objectives)
         """
         # Retrieve the objective values
+        
+        print(x)
         obj_run = get_values(x)
-
+        
         # Define the objectives (negated for maximization)
         obj1 = -obj_run["b-param"]
         obj2 = -obj_run["c-param"]
