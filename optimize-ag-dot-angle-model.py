@@ -548,10 +548,10 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Define BO parameters
 #N_BATCH = 20 if not SMOKE_TEST else 1
-N_BATCH = 1 if not SMOKE_TEST else 1
+N_BATCH = 3 if not SMOKE_TEST else 1
 MC_SAMPLES = 128 if not SMOKE_TEST else 16
 #BATCH_SIZE = 2
-BATCH_SIZE = 1
+BATCH_SIZE = 32
 NUM_RESTARTS = 10 if not SMOKE_TEST else 2
 RAW_SAMPLES = 512 if not SMOKE_TEST else 4
 verbose = True
@@ -617,32 +617,39 @@ for iteration in range(1, N_BATCH + 1):
 
 import pandas as pd  # Ensure pandas is imported at the top
 
-def extract_pareto_front(train_obj):
+def extract_pareto_front(train_x, train_obj):
     """
     Extracts the Pareto front from the training data.
 
     Args:
+        train_x (torch.Tensor): Tensor of shape (n_samples, d) representing input parameters.
         train_obj (torch.Tensor): Tensor of shape (n_samples, M) representing objective values.
 
     Returns:
-        torch.Tensor: Tensor containing Pareto optimal objective values.
+        tuple: (pareto_x, pareto_front)
+            - pareto_x: Tensor containing input parameters of Pareto optimal points.
+            - pareto_front: Tensor containing Pareto optimal objective values.
     """
     if train_obj.shape[0] == 0:
         print("No feasible solutions found.")
-        return torch.empty(0, train_obj.shape[-1])
+        empty_tensor = torch.empty(0, train_obj.shape[-1])
+        return empty_tensor, empty_tensor
 
     # Identify Pareto optimal points
     pareto_mask = is_non_dominated(train_obj)
     pareto_front = train_obj[pareto_mask]
+    pareto_x = train_x[pareto_mask]
 
-    return pareto_front
+    return pareto_x, pareto_front
 
-def save_pareto_front(pareto_front, filename="pareto_front_qnehvi.csv"):
+def save_pareto_front(pareto_x, pareto_front, norm_bounds, filename="pareto_front_qnehvi.csv"):
     """
-    Saves the Pareto front to a CSV file.
+    Saves the Pareto front to a CSV file, including both parameters and objectives.
 
     Args:
+        pareto_x (torch.Tensor): Tensor containing normalized input parameters of Pareto optimal points.
         pareto_front (torch.Tensor): Tensor containing Pareto optimal objective values.
+        norm_bounds (torch.Tensor): Tensor containing normalization bounds.
         filename (str): Name of the file to save the Pareto front.
     """
     if pareto_front.numel() == 0:
@@ -652,22 +659,39 @@ def save_pareto_front(pareto_front, filename="pareto_front_qnehvi.csv"):
     # Re-negate objectives to original minimization scale
     pareto_front_original = -pareto_front  # Since obj = -f
 
+    # Unnormalize parameters
+    pareto_x_original = unnormalize(pareto_x, norm_bounds)
+
+    # Convert tensors to numpy arrays
+    pareto_x_np = pareto_x_original.cpu().numpy()
     pareto_front_np = pareto_front_original.cpu().numpy()
-    df_pareto = pd.DataFrame(pareto_front_np, columns=[f"Objective_{i+1}" for i in range(pareto_front_np.shape[-1])])
+
+    # Combine parameters and objectives into a single DataFrame
+    data = np.hstack((pareto_x_np, pareto_front_np))
+    
+    columns = (
+        [f"Parameter_{i+1}" for i in range(pareto_x_np.shape[1])]
+        + [f"Objective_{i+1}" for i in range(pareto_front_np.shape[1])]
+    )
+    
+    #columns = (["sr", "ht", "cs", "theta_deg", 'b-param', 'c-param', 'b_var'])
+    
+    df_pareto = pd.DataFrame(data, columns=columns)
     df_pareto.to_csv(filename, index=False)
     print(f"Pareto front saved to {filename}.")
 
 # Extract Pareto front for qNEHVI
-pareto_front_qnehvi = extract_pareto_front(train_obj_initial)
+pareto_x_qnehvi, pareto_front_qnehvi = extract_pareto_front(train_x_initial, train_obj_initial)
 
 if pareto_front_qnehvi.numel() > 0:
     print("\nFinal Pareto Front for qNEHVI:")
-    # Convert to NumPy for better readability (optional)
+    # Unnormalize parameters
+    pareto_x_qnehvi_original = unnormalize(pareto_x_qnehvi, norm_bounds).cpu().numpy()
     pareto_front_qnehvi_np = -pareto_front_qnehvi.cpu().numpy()  # Re-negate to original minimization
-    for idx, obj in enumerate(pareto_front_qnehvi_np, start=1):
-        print(f"Pareto Point {idx}: {obj}")
-    # Optionally, save to a file
-    save_pareto_front(pareto_front_qnehvi)
+    for idx, (x_vals, obj_vals) in enumerate(zip(pareto_x_qnehvi_original, pareto_front_qnehvi_np), start=1):
+        print(f"Pareto Point {idx}: Parameters: {x_vals}, Objectives: {obj_vals}")
+    # Save to a file
+    save_pareto_front(pareto_x_qnehvi, pareto_front_qnehvi, norm_bounds)
 else:
     print("\nNo Pareto front found for qNEHVI.")
 
