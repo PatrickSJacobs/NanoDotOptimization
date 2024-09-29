@@ -312,7 +312,8 @@ print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial
 
 class NanoDotProblem:
     def __init__(self, bounds, num_objectives, ref_point, penalty=1e6, **tkwargs):
-        self.bounds = bounds
+        #self.bounds = bounds
+        self.bounds = norm_bounds
         self.num_objectives = num_objectives
         self.dim = bounds.shape[1]
         # Define your reference point (must be worse than any feasible objective value)
@@ -449,7 +450,7 @@ def initialize_model(train_x, train_obj, problem):
     norm_bounds = torch.stack([train_x_min, train_x_max])
 
     # Normalize inputs
-    train_x_normalized = normalize(train_x, norm_bounds)
+    train_x_normalized = normalize(train_x, problem.bounds)
     # Define GP models for each objective
     models = []
     for i in range(train_obj.shape[-1]):
@@ -500,7 +501,7 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
     norm_bounds = torch.stack([train_x_min, train_x_max])
 
     # Normalize training inputs
-    train_x_norm = normalize(train_x, norm_bounds)
+    train_x_norm = normalize(train_x, problem.bounds)
 
     # Define the qNEHVI acquisition function
     acq_func = qLogNoisyExpectedHypervolumeImprovement(
@@ -532,7 +533,7 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
 
     print("optimized acq func")
     # Unnormalize the candidates to original space
-    new_x = unnormalize(candidates.detach(), norm_bounds)
+    new_x = unnormalize(candidates.detach(), problem.bounds)
     print(f"new sol: {new_x}")
     # Evaluate objectives at new candidates
     new_obj = problem(new_x)
@@ -551,7 +552,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 N_BATCH = 3 if not SMOKE_TEST else 1
 MC_SAMPLES = 128 if not SMOKE_TEST else 16
 #BATCH_SIZE = 2
-BATCH_SIZE = 32
+BATCH_SIZE = 3
 NUM_RESTARTS = 10 if not SMOKE_TEST else 2
 RAW_SAMPLES = 512 if not SMOKE_TEST else 4
 verbose = True
@@ -660,7 +661,7 @@ def save_pareto_front(pareto_x, pareto_front, norm_bounds, filename="pareto_fron
     pareto_front_original = -pareto_front  # Since obj = -f
 
     # Unnormalize parameters
-    pareto_x_original = unnormalize(pareto_x, norm_bounds)
+    pareto_x_original = unnormalize(pareto_x, problem.bounds)
 
     # Convert tensors to numpy arrays
     pareto_x_np = pareto_x_original.cpu().numpy()
@@ -686,7 +687,7 @@ pareto_x_qnehvi, pareto_front_qnehvi = extract_pareto_front(train_x_initial, tra
 if pareto_front_qnehvi.numel() > 0:
     print("\nFinal Pareto Front for qNEHVI:")
     # Unnormalize parameters
-    pareto_x_qnehvi_original = unnormalize(pareto_x_qnehvi, norm_bounds).cpu().numpy()
+    pareto_x_qnehvi_original = unnormalize(pareto_x_qnehvi, problem.bounds).cpu().numpy()
     pareto_front_qnehvi_np = -pareto_front_qnehvi.cpu().numpy()  # Re-negate to original minimization
     for idx, (x_vals, obj_vals) in enumerate(zip(pareto_x_qnehvi_original, pareto_front_qnehvi_np), start=1):
         print(f"Pareto Point {idx}: Parameters: {x_vals}, Objectives: {obj_vals}")
