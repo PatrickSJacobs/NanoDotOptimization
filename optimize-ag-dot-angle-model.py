@@ -162,7 +162,7 @@ def obj_func_run(x: [float]):
     success = 0
 
     # (4) Extracting Data From optimization
-    max_time = 100 * 100  # or 10000
+    max_time = 60*60*10  # or 10000
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success == 0:
@@ -549,7 +549,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Define BO parameters
 #N_BATCH = 20 if not SMOKE_TEST else 1
-N_BATCH = 3 if not SMOKE_TEST else 1
+N_BATCH = 2 if not SMOKE_TEST else 1
 MC_SAMPLES = 128 if not SMOKE_TEST else 16
 #BATCH_SIZE = 2
 BATCH_SIZE = 3
