@@ -68,7 +68,9 @@ def obj_func_run(x: [float]):
     sr = x[0]
     ht = x[1]
     cs = x[2]
-    theta_deg = x[3]
+    theta_deg = 0.0
+
+    #theta_deg = x[3]
     # cs = 0.001 * 250
     # theta_deg = x[2]
 
@@ -270,11 +272,13 @@ def load_initial_data(file_path):
             - train_obj (torch.Tensor): Tensor of shape (n_samples, M).
     """
     df = pd.read_csv(file_path)
-    required_columns = ["sr", "ht", "cs", "theta_deg", 'b-param', 'c-param', 'b_var']
+    #required_columns = ["sr", "ht", "cs", "theta_deg", 'b-param', 'c-param', 'b_var']
+    required_columns = ["sr", "ht", "cs", 'b-param', 'c-param', 'b_var']
+
     if not all(col in df.columns for col in required_columns):
         raise ValueError(f"CSV file must contain columns: {required_columns}")
 
-    train_x = torch.tensor(df[["sr", "ht", "cs", "theta_deg"]].values, **tkwargs)
+    train_x = torch.tensor(df[["sr", "ht", "cs"]].values, **tkwargs)
     train_obj = torch.tensor(df[['b-param', 'c-param', 'b_var']].values, **tkwargs)
 
     # **Negate the objectives to convert from minimization to maximization**
@@ -285,9 +289,9 @@ def load_initial_data(file_path):
 
 # Define the parameter bounds (adjust as per your problem)
 bounds = torch.tensor([
-    [0.01, 0.01, 0.001 * 25, 0.0],
+    [0.01, 0.01, 0.001 * 25],
     #[0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0001]
-    [0.001 * 125, 0.001 * 125, 0.001 * 125, 0.0]
+    [0.001 * 125, 0.001 * 125, 0.001 * 125]
 ], **tkwargs)
 
 # Path to your initial data CSV file
