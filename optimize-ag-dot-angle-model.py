@@ -148,7 +148,7 @@ def obj_func_run(x: [float]):
             # Execute simulation commands
             f"ibrun -np 48 meep no-metal?=true sy={cell_size} theta_deg={theta_deg} {new_file} | tee {air_raw_path};\n",
             f"grep flux1: {air_raw_path} > {air_data_path};\n",
-            f"mpirun -np 48 meep no-metal?=false sr={sr} ht={ht} sy={cell_size} theta_deg={theta_deg} {new_file} | tee {metal_raw_path};\n",
+            f"ibrun -np 48 meep no-metal?=false sr={sr} ht={ht} sy={cell_size} theta_deg={theta_deg} {new_file} | tee {metal_raw_path};\n",
             f"grep flux1: {metal_raw_path} > {metal_data_path};\n",
             f"echo {info_file};\n",
             f"python {os.path.join(main_home_dir, 'NanoDotOptimization', 'optimize-ag-dot-angle-evaluate.py')} {info_file};\n",
