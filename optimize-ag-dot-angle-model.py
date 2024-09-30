@@ -68,7 +68,8 @@ def obj_func_run(x: [float]):
     sr = x[0]
     ht = x[1]
     cs = x[2]
-    theta_deg = x[3]
+    #theta_deg = x[3]
+    theta_deg = 0.0
     # cs = 0.001 * 250
     # theta_deg = x[2]
 
