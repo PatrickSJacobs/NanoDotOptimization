@@ -293,7 +293,7 @@ def main():
             b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
 
             # Check for finite values
-            if any(not math.isfinite(x) or x < 0 for x in [sr, ht, cs, theta_deg, b, c, b_var, c_var, count]):
+            if any(not math.isfinite(x) or x < 0 for x in [sr, ht, cs, b, c, b_var, c_var, count]) or ((theta_deg % 360) > 45):
                 continue
 
             # Append the row to the DataFrame

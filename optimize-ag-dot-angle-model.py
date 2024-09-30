@@ -72,7 +72,7 @@ def obj_func_run(x: [float]):
     # cs = 0.001 * 250
     # theta_deg = x[2]
 
-    sleep(10)  # Sleep to give code time to process parallelization
+    #sleep(10)  # Sleep to give code time to process parallelization
 
     # Parameters to be used in current evaluation
     # printing((sr, ht, cs, theta_deg))
@@ -155,14 +155,14 @@ def obj_func_run(x: [float]):
             f"echo 1 >> {ticker_file} \n"
         ])
 
-    sleep(10)  # Pause to give time for simulation file to be created
+    #sleep(10)  # Pause to give time for simulation file to be created
     printing(x)
     os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
 
     success = 0
 
     # (4) Extracting Data From optimization
-    max_time = 60*60*10  # or 10000
+    max_time = 60*60  # or 10000
     time_count = 0
     # Wait for data to be stable and ready for processing
     while success == 0:
@@ -178,7 +178,7 @@ def obj_func_run(x: [float]):
             raise Exception(f"ticker not existing: {ticker_file}")
 
         time_count += 1
-        time.sleep(1)
+        time.sleep(10)
 
     # Remove temporary files
     os.system("ssh login1 rm -r " +
@@ -298,6 +298,8 @@ train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
 # Calculate bounds for train_x_initial before normalization
 train_x_min = torch.min(train_x_initial, dim=0).values
 train_x_max = torch.max(train_x_initial, dim=0).values
+
+print((train_x_min, train_x_max))
 
 # Create the bounds tensor for normalization based on the min and max values of the data
 norm_bounds = torch.stack([train_x_min, train_x_max])
