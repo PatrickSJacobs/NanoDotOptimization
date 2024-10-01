@@ -302,17 +302,8 @@ initial_data_path = main_work_dir + "ag-dot-angle-pretraining.csv"  # Replace wi
 train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
 
 # Calculate bounds for train_x_initial before normalization
-train_x_min = torch.min(train_x_initial, dim=0).values
-train_x_max = torch.max(train_x_initial, dim=0).values
-
-print(train_x_min)
-print(train_x_max)
-
-train_x_min = list(train_x_min)
-train_x_max = list(train_x_max)
-
-print(train_x_min)
-print(train_x_max)
+train_x_min = list(torch.min(train_x_initial, dim=0).values)
+train_x_max = list(torch.max(train_x_initial, dim=0).values)
 
 bounds = torch.tensor([
     train_x_min,
@@ -551,7 +542,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Define BO parameters
 #N_BATCH = 20 if not SMOKE_TEST else 1
-N_BATCH = 2 if not SMOKE_TEST else 1
+N_BATCH = 1 if not SMOKE_TEST else 1
 MC_SAMPLES = 128 if not SMOKE_TEST else 16
 #BATCH_SIZE = 2
 BATCH_SIZE = 2
@@ -646,7 +637,7 @@ def extract_pareto_front(train_x, train_obj):
 
     return pareto_x, pareto_front
 
-def save_pareto_front(pareto_x, pareto_front, norm_bounds, filename="pareto_front_qnehvi.csv"):
+def save_pareto_front(pareto_x, pareto_front, filename="pareto_front_qnehvi.csv"):
     """
     Saves the Pareto front to a CSV file, including both parameters and objectives.
 
@@ -695,7 +686,7 @@ if pareto_front_qnehvi.numel() > 0:
     for idx, (x_vals, obj_vals) in enumerate(zip(pareto_x_qnehvi_original, pareto_front_qnehvi_np), start=1):
         print(f"Pareto Point {idx}: Parameters: {x_vals}, Objectives: {obj_vals}")
     # Save to a file
-    save_pareto_front(pareto_x_qnehvi, pareto_front_qnehvi, norm_bounds)
+    save_pareto_front(pareto_x_qnehvi, pareto_front_qnehvi)
 else:
     print("\nNo Pareto front found for qNEHVI.")
 
