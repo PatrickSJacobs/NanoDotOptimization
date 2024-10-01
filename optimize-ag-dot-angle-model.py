@@ -288,11 +288,13 @@ def load_initial_data(file_path):
 
 
 # Define the parameter bounds (adjust as per your problem)
+'''
 bounds = torch.tensor([
     [0.01, 0.01, 0.001 * 25],
     #[0.001 * 125, 0.001 * 125, 0.001 * 400, 0.0001]
     [0.001 * 125, 0.001 * 125, 0.001 * 125]
 ], **tkwargs)
+'''
 
 # Path to your initial data CSV file
 initial_data_path = main_work_dir + "ag-dot-angle-pretraining.csv"  # Replace with your actual file path
@@ -303,25 +305,31 @@ train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
 train_x_min = torch.min(train_x_initial, dim=0).values
 train_x_max = torch.max(train_x_initial, dim=0).values
 
-print((train_x_min, train_x_max))
-
-# Create the bounds tensor for normalization based on the min and max values of the data
-norm_bounds = torch.stack([train_x_min, train_x_max])
+bounds = torch.tensor([
+    train_x_min,
+    train_x_max
+], **tkwargs)
 
 from botorch.utils.transforms import normalize, unnormalize
 
-train_x_initial = normalize(train_x_initial, norm_bounds)
+train_x_initial = normalize(train_x_initial, bounds)
+
+# Sanity check
+if torch.any(train_x_initial < 0) or torch.any(train_x_initial > 1):
+    raise ValueError("Normalized input features are out of bounds [0, 1].")
+else:
+    print("All input features are within the [0, 1] range.")
 
 print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial.shape}")
 
 # ### Define the Optimization Problem
 
 class NanoDotProblem:
-    def __init__(self, bounds, num_objectives, ref_point, penalty=1e6, **tkwargs):
+    def __init__(self, norm_bounds, num_objectives, ref_point, penalty=1e6, **tkwargs):
         #self.bounds = bounds
-        self.bounds = bounds
+        self.bounds = norm_bounds
         self.num_objectives = num_objectives
-        self.dim = bounds.shape[1]
+        self.dim = norm_bounds.shape[1]
         # Define your reference point (must be worse than any feasible objective value)
         self.ref_point = torch.tensor(ref_point, **tkwargs)
         # Set maximum hypervolume if known (optional)
@@ -374,7 +382,7 @@ def compute_reference_point(train_obj, margin=0.05):
 
 
 # Define the optimization problem
-problem = NanoDotProblem(bounds=bounds, num_objectives=3, ref_point=compute_reference_point(train_obj_initial, margin=0.05))
+problem = NanoDotProblem(norm_bounds=bounds, num_objectives=3, ref_point=compute_reference_point(train_obj_initial, margin=0.05))
 
 # ### Initialize the Hypervolume Calculator
 
@@ -440,21 +448,18 @@ def initialize_model(train_x, train_obj, problem):
             - mll (gpytorch.mlls.SumMarginalLogLikelihood): Marginal log likelihood.
             - model (ModelListGP): Multi-output GP model.
     """
-    
-    train_x_min = torch.min(train_x, dim=0).values
-    train_x_max = torch.max(train_x, dim=0).values
+    # Sanity check to ensure all inputs are within [0, 1]
+    if torch.any(train_x < 0) or torch.any(train_x > 1):
+        raise ValueError("Normalized input features are out of bounds [0, 1].")
+    else:
+        print("All input features are within the [0, 1] range.")
 
-    # Create the bounds tensor for normalization based on the min and max values of the data
-    norm_bounds = torch.stack([train_x_min, train_x_max])
-
-    # Normalize inputs
-    train_x_normalized = normalize(train_x, problem.bounds)
     # Define GP models for each objective
     models = []
     for i in range(train_obj.shape[-1]):
         models.append(
             SingleTaskGP(
-                train_x_normalized, train_obj[..., i:i+1], outcome_transform=Standardize(m=1)
+                train_x, train_obj[..., i:i+1], outcome_transform=Standardize(m=1)
             )
         )
     model = ModelListGP(*models)
@@ -491,21 +496,11 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
             - new_x (torch.Tensor): Tensor of shape (BATCH_SIZE, d).
             - new_obj (torch.Tensor): Tensor of shape (BATCH_SIZE, M).
     """
-    
-    train_x_min = torch.min(train_x, dim=0).values
-    train_x_max = torch.max(train_x, dim=0).values
-
-    # Create the bounds tensor for normalization based on the min and max values of the data
-    norm_bounds = torch.stack([train_x_min, train_x_max])
-
-    # Normalize training inputs
-    train_x_norm = normalize(train_x, problem.bounds)
-
     # Define the qNEHVI acquisition function
     acq_func = qLogNoisyExpectedHypervolumeImprovement(
         model=model,
         ref_point=problem.ref_point.tolist(),
-        X_baseline=train_x_norm,
+        X_baseline=train_x,
         sampler=sampler,
         prune_baseline=True,
         objective=IdentityMCMultiOutputObjective(outcomes=list(range(problem.num_objectives))),
@@ -582,10 +577,11 @@ for iteration in range(1, N_BATCH + 1):
         break
 
     # Update training data for qNEHVI
-    train_x_initial = torch.cat([train_x_initial, new_x_qnehvi])
-    
-    
+    # Normalize the new candidates
+    normalized_new_x = normalize(new_x_qnehvi, problem.bounds)
+    train_x_initial = torch.cat([train_x_initial, normalized_new_x])
     train_obj_initial = torch.cat([train_obj_initial, new_obj_qnehvi])
+
 
     # Update batch numbers for qNEHVI
     new_batch_numbers_qnehvi = np.full((BATCH_SIZE,), iteration)
