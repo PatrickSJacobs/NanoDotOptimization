@@ -136,7 +136,7 @@ def obj_func_calc(wvls, R_meep):
 
     printing("finished obj_eval")
 
-    return b, c**2 * 10 - 10, b_var * 100, c_var * 100
+    return abs(b), abs(c**2 * 10 - 10), abs(b_var * 100), abs(c_var * 100)
 
 '''
 success = 0

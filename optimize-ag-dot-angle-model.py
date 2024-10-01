@@ -348,14 +348,6 @@ class NanoDotProblem:
         obj2 = -obj_run["c-param"]
         obj3 = -obj_run["b_var"]
 
-        # Apply penalties if any objective exceeds 0
-        mask = (obj1 > 0) | (obj2 > 0) | (obj3 > 0)  # Shape: (batch_size,)
-
-        # Apply penalty by subtracting a large value to make them unattractive
-        obj1 = obj1 - self.penalty * mask.float()
-        obj2 = obj2 - self.penalty * mask.float()
-        obj3 = obj3 - self.penalty * mask.float()
-
         return torch.stack([obj1, obj2, obj3], dim=-1)
 
 # ### Compute Reference Point

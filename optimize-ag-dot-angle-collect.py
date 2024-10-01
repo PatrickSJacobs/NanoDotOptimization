@@ -101,7 +101,7 @@ def obj_func_calc(wvls, R_meep):
     b_var = popv[0][0]
     c_var = popv[1][1]
     
-    return b, c**2 * 10 - 10, b_var * 100, c_var * 100
+    return abs(b), abs(c**2 * 10 - 10), abs(b_var * 100), abs(c_var * 100)
 
 def date_to_scalar(year, month, day):
     """Convert date components to a scalar."""
