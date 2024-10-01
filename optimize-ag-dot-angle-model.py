@@ -305,6 +305,15 @@ train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
 train_x_min = torch.min(train_x_initial, dim=0).values
 train_x_max = torch.max(train_x_initial, dim=0).values
 
+print(train_x_min)
+print(train_x_max)
+
+train_x_min = list(train_x_min)
+train_x_max = list(train_x_max)
+
+print(train_x_min)
+print(train_x_max)
+
 bounds = torch.tensor([
     train_x_min,
     train_x_max
