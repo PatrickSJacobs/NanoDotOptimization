@@ -542,10 +542,10 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Define BO parameters
 #N_BATCH = 20 if not SMOKE_TEST else 1
-N_BATCH = 1 if not SMOKE_TEST else 1
+N_BATCH = 20 if not SMOKE_TEST else 1
 MC_SAMPLES = 128 if not SMOKE_TEST else 16
 #BATCH_SIZE = 2
-BATCH_SIZE = 1
+BATCH_SIZE = 32
 NUM_RESTARTS = 10 if not SMOKE_TEST else 2
 RAW_SAMPLES = 512 if not SMOKE_TEST else 4
 verbose = True
