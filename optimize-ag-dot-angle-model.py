@@ -582,7 +582,6 @@ for iteration in range(1, N_BATCH + 1):
     train_x_initial = torch.cat([train_x_initial, normalized_new_x])
     train_obj_initial = torch.cat([train_obj_initial, new_obj_qnehvi])
 
-
     # Update batch numbers for qNEHVI
     new_batch_numbers_qnehvi = np.full((BATCH_SIZE,), iteration)
     batch_number_qnehvi = np.concatenate([batch_number_qnehvi, new_batch_numbers_qnehvi])
