@@ -319,7 +319,7 @@ print(f"Initial training data shape: {train_x_initial.shape}, {train_obj_initial
 class NanoDotProblem:
     def __init__(self, bounds, num_objectives, ref_point, penalty=1e6, **tkwargs):
         #self.bounds = bounds
-        self.bounds = norm_bounds
+        self.bounds = bounds
         self.num_objectives = num_objectives
         self.dim = bounds.shape[1]
         # Define your reference point (must be worse than any feasible objective value)
