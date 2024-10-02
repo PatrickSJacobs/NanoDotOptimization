@@ -298,12 +298,12 @@ def b_var_constraint(x: [float]):
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
-    #.add_variable(0.001 * 5, 0.001 * 125)
-    .add_variable(0.055, 0.06)
-    #.add_variable(0.001 * 50, 0.001 * 100)
-    .add_variable(0.065, 0.075)
-    #.add_variable(0.001 * 25, 0.001 * 250)
-    .add_variable(0.2938, 0.3038)
+    .add_variable(0.001 * 5, 0.001 * 125)
+    #.add_variable(0.055, 0.06)
+    .add_variable(0.001 * 50, 0.001 * 100)
+    #.add_variable(0.065, 0.075)
+    .add_variable(0.001 * 25, 0.001 * 500)
+    #.add_variable(0.2938, 0.3038)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 0.0)
     .add_function(c)
@@ -324,12 +324,12 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
     
-    max_evaluations = 2
-    population_size = 1
+    max_evaluations = 8
+    population_size = 4
 
-    '''
+   
     #max_evaluations = 160
-    max_evaluations = 32    
+    #max_evaluations = 32    
     
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
@@ -407,6 +407,7 @@ if __name__ == "__main__":
         termination_criterion=StoppingByEvaluations(max=max_evaluations)
     )
 
+    '''
     algorithm.run()
     front = algorithm.result()
     print(front)
