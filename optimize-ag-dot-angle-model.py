@@ -537,7 +537,17 @@ def optimize_qnehvi_and_get_observation(model, train_x, train_obj, sampler, prob
     print(f"new sol: {new_x}")
     # Evaluate objectives at new candidates
     new_obj = problem(new_x)
-    print(f"new obj: {new_obj}")
+    print(f"New objectives: {new_obj}")
+
+    # Check for inf or nan in new_obj
+    if not torch.isfinite(new_obj).all():
+        print("Warning: new_obj contains inf or nan values.")
+        # Remove data points with inf or nan values
+        valid_indices = torch.isfinite(new_obj).all(dim=1)
+        new_x = new_x[valid_indices]
+        new_obj = new_obj[valid_indices]
+        if new_obj.shape[0] == 0:
+            raise ValueError("All new objective values contain inf or nan.")
 
     return new_x, new_obj
 

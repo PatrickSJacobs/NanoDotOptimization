@@ -7,6 +7,8 @@ import statistics
 from scipy.signal import find_peaks
 from pathlib import Path
 
+logshift = lambda x: np.log(x + 1)
+
 def list_files_in_directory(directory):
     # Create a Path object for the directory
     path = Path(directory)
@@ -112,6 +114,7 @@ for file in files:
     plt.plot(xs, y_line, '--', color='red')
     plt.title(f"{file.split('/')[-1]}")
     #plt.ylim(0, 1)
-    plt.suptitle(f"b = {abs(b):.2f}, c = {abs(c**2 * 10 - 10):.2f}, b_var = {abs(b_var * 100):.2f}, c_var = {abs(c_var * 100):.2f}")
+    plt.suptitle(f"b = {logshift(abs(b)):.2f}, c = {logshift(abs(c**2 * 10 - 10)):.2f}, b_var = {logshift(abs(b_var * 100)):.2f}, c_var = {logshift(abs(c_var * 100)):.2f}")
 # Add the second subtitle using fig.text()
     pyplot.show()
+

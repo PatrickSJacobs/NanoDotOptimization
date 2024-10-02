@@ -12,6 +12,7 @@ import traceback
 import time
 import statistics
 
+logshift = lambda x: np.log(x + 1)
 
 info_file = sys.argv[1]
 #no_metal = True
@@ -49,6 +50,7 @@ def printing(string):
     file_printer.close()
     print(string)
     pass
+
 
 
 def obj_func_calc(wvls, R_meep):
@@ -136,8 +138,8 @@ def obj_func_calc(wvls, R_meep):
 
     printing("finished obj_eval")
 
-    #return b, c**2 * 10 - 10, b_var * 100, c_var * 100
-    return abs(b), np.log(abs(c)), np.log(abs(b_var)) * 100, np.log(abs(c_var)) * 100
+    return logshift(abs(b)), logshift(abs(c**2 * 10 - 10)), logshift(abs(b_var * 100)), logshift(abs(c_var * 100))
+    #return abs(b), np.log(abs(c)), np.log(abs(b_var)) * 100, np.log(abs(c_var)) * 100
 
 '''
 success = 0

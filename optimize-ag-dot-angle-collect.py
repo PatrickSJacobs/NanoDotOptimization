@@ -17,6 +17,9 @@ import statistics
 
 # [Your other code goes here]
 
+logshift = lambda x: np.log(x + 1)
+
+
 def obj_func_calc(wvls, R_meep):
     '''
     (6) Objective Function Execution
@@ -101,8 +104,8 @@ def obj_func_calc(wvls, R_meep):
     b_var = popv[0][0]
     c_var = popv[1][1]
     
-    #return abs(b), abs(c**2 * 10 - 10), abs(b_var * 100), abs(c_var * 100)
-    return abs(b), np.log(abs(c)), np.log(abs(b_var)) * 100, np.log(abs(c_var)) * 100
+    return logshift(abs(b)), logshift(abs(c**2 * 10 - 10)), logshift(abs(b_var * 100)), logshift(abs(c_var * 100))
+    #return abs(b), np.log(abs(c)), np.log(abs(b_var)) * 100, np.log(abs(c_var)) * 100
 
 
 def date_to_scalar(year, month, day):
@@ -321,13 +324,13 @@ def main():
     dataset_df.to_csv(training_file, index=False)
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
-    num_points = 150
+    num_points = 200
     # Prune the dataset
     df_final = prune_dataset(
         dataset_df, 
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
-        { "c-param": 200000, "b-param": 200000, "b_var": 200000, }
+        { "c-param": 2000, "b-param": 2000, "b_var": 2000, }
 
         )
 
