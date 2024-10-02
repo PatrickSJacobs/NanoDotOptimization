@@ -302,12 +302,19 @@ initial_data_path = main_work_dir + "ag-dot-angle-pretraining.csv"  # Replace wi
 train_x_initial, train_obj_initial = load_initial_data(initial_data_path)
 
 # Calculate bounds for train_x_initial before normalization
-train_x_min = list(torch.min(train_x_initial, dim=0).values)
-train_x_max = list(torch.max(train_x_initial, dim=0).values)
+#train_x_min = list(torch.min(train_x_initial, dim=0).values)
+#train_x_max = list(torch.max(train_x_initial, dim=0).values)
 
+'''
 bounds = torch.tensor([
     train_x_min,
     train_x_max
+], **tkwargs)
+'''
+
+bounds = torch.tensor([
+    [0.001, 0.001, 0.001],
+    [1.0, 1.0, 1.0],
 ], **tkwargs)
 
 from botorch.utils.transforms import normalize, unnormalize
@@ -567,6 +574,8 @@ for iteration in range(1, N_BATCH + 1):
         print(f"Model fitting failed at iteration {iteration}: {e}")
         break
 
+   
+    '''
     # Optimize acquisition function and get new observations
     try:
         new_x_qnehvi, new_obj_qnehvi = optimize_qnehvi_and_get_observation(
@@ -574,7 +583,12 @@ for iteration in range(1, N_BATCH + 1):
         )
     except Exception as e:
         print(f"Acquisition optimization failed at iteration {iteration}: {e}")
-        break
+        break 
+    '''
+    # Optimize acquisition function and get new observations
+    new_x_qnehvi, new_obj_qnehvi = optimize_qnehvi_and_get_observation(
+            model_qnehvi, train_x_initial, train_obj_initial, qnehvi_sampler, problem, BATCH_SIZE, NUM_RESTARTS, RAW_SAMPLES
+        )
 
     # Update training data for qNEHVI
     # Normalize the new candidates

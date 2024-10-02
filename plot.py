@@ -98,6 +98,7 @@ for file in files:
     b, c = popt
     b_var = popv[0][0]
     c_var = popv[1][1]
+    
     #print((b, c - 1000))
 
     # calculate the output for the range
@@ -111,6 +112,6 @@ for file in files:
     plt.plot(xs, y_line, '--', color='red')
     plt.title(f"{file.split('/')[-1]}")
     #plt.ylim(0, 1)
-    plt.suptitle(f"b = {b:.2f}, c = {c:.2f}, b_var = {b_var:.2f}, c_var = {c_var:.2f}")
+    plt.suptitle(f"b = {abs(b):.2f}, c = {abs(c**2 * 10 - 10):.2f}, b_var = {abs(b_var * 100):.2f}, c_var = {abs(c_var * 100):.2f}")
 # Add the second subtitle using fig.text()
     pyplot.show()
