@@ -332,7 +332,7 @@ def main():
         dataset_df, 
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
-        { "c-param": 0.3, "b-param": 0.3, "b_var": 0.3, }
+        { "c-param": 4, "b-param": 4, "b_var": 4, }
 
         )
 
