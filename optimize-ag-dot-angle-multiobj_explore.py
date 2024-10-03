@@ -325,8 +325,8 @@ if __name__ == "__main__":
         file.close()
     
     #max_evaluations = 8
-    population_size = 3
-    max_evaluations = 3
+    population_size = 6
+    max_evaluations = 6
     
     '''
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
