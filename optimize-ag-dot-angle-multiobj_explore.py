@@ -324,12 +324,9 @@ if __name__ == "__main__":
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()
     
-    max_evaluations = 8
-    population_size = 4
-
-   
-    #max_evaluations = 160
-    #max_evaluations = 32    
+    #max_evaluations = 8
+    population_size = 24
+    max_evaluations = 120
     
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
