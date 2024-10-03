@@ -104,8 +104,8 @@ def obj_func_calc(wvls, R_meep):
     b_var = popv[0][0]
     c_var = popv[1][1]
     
-    return logshift(abs(b)), logshift(abs(c**2 * 10 - 10)), logshift(abs(b_var * 100)), logshift(abs(c_var * 100))
-    #return abs(b), np.log(abs(c)), np.log(abs(b_var)) * 100, np.log(abs(c_var)) * 100
+    #return logshift(abs(b)), logshift(abs(c**2 * 10 - 10)), logshift(abs(b_var * 100)), logshift(abs(c_var * 100))
+    return abs(b), abs(c),abs(b_var) * 100, abs(c_var) * 100
 
 
 def date_to_scalar(year, month, day):
