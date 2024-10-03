@@ -310,11 +310,11 @@ problem = (
     .add_function(b)
     #.add_function(b_var)
     #.add_function(c_var)
-    .add_constraint(b_lower_constraint)
-    .add_constraint(b_upper_constraint)
-    .add_constraint(c_lower_constraint)
-    .add_constraint(c_upper_constraint)
-    .add_constraint(b_var_constraint)
+    #.add_constraint(b_lower_constraint)
+    #.add_constraint(b_upper_constraint)
+    #.add_constraint(c_lower_constraint)
+    #.add_constraint(c_upper_constraint)
+    #.add_constraint(b_var_constraint)
 )
 
 if __name__ == "__main__":
