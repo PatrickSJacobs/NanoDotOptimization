@@ -389,7 +389,7 @@ if __name__ == "__main__":
     #dominance_comparator=DominanceComparator(),
     )   
     
-    #algorithm.solutions = gde3_initial_population
+    algorithm.solutions = gde3_initial_population
     '''
     
     print(problem.number_of_variables)
