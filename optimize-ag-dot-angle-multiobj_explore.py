@@ -328,6 +328,7 @@ if __name__ == "__main__":
     population_size = 24
     max_evaluations = 24
     
+    '''
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
 
@@ -355,24 +356,25 @@ if __name__ == "__main__":
 
     #df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
     df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
-
+    '''
+    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
     parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
-    objectives = df1[['c-param', 'b-param', 'b_var']].values
+   # objectives = df1[['c-param', 'b-param', 'b_var']].values
 
-    print(df1[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',]].values)
+    #print(df1[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',]].values)
     # Find the Pareto front
-    nds = NonDominatedSorting()
-    pareto_front_indices = nds.do(objectives, only_non_dominated_front=True)
+    #nds = NonDominatedSorting()
+    #pareto_front_indices = nds.do(objectives, only_non_dominated_front=True)
 
     # Extract Pareto front solutions
-    pareto_parameters = parameters[pareto_front_indices]
-    pareto_objectives = objectives[pareto_front_indices]
+    #pareto_parameters = parameters[pareto_front_indices]
+    #pareto_objectives = objectives[pareto_front_indices]
 
     # Select m diverse solutions
    
     
     # Prepare the selected solutions for GDE3
-    gde3_initial_population = pareto_parameters
+    gde3_initial_population = parameters
 
     print("\nInitial population for GDE3:")
     print(gde3_initial_population)
