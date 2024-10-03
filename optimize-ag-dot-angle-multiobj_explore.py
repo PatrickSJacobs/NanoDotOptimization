@@ -326,7 +326,7 @@ if __name__ == "__main__":
     
     #max_evaluations = 8
     population_size = 24
-    max_evaluations = 120
+    max_evaluations = 24
     
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from sklearn.cluster import KMeans
