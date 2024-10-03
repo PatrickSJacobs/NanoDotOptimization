@@ -139,7 +139,7 @@ def obj_func_calc(wvls, R_meep):
     printing("finished obj_eval")
 
     #return logshift(abs(b)), logshift(abs(c**2 * 10 - 10)), logshift(abs(b_var * 100)), logshift(abs(c_var * 100))
-    return abs(b), abs(c),abs(b_var) * 100, abs(c_var) * 100
+    return abs(b), abs(c), abs(b_var) * 100, abs(c_var) * 100
 
 '''
 success = 0

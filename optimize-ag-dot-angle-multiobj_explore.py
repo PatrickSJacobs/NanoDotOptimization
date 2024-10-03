@@ -298,23 +298,23 @@ def b_var_constraint(x: [float]):
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
-    .add_variable(0.001 * 5, 0.001 * 125)
-    #.add_variable(0.055, 0.06)
-    .add_variable(0.001 * 50, 0.001 * 100)
-    #.add_variable(0.065, 0.075)
-    .add_variable(0.001 * 25, 0.001 * 500)
-    #.add_variable(0.2938, 0.3038)
+    #.add_variable(0.001 * 5, 0.001 * 125)
+    .add_variable(0.055, 0.06)
+    #.add_variable(0.001 * 50, 0.001 * 100)
+    .add_variable(0.065, 0.075)
+    #.add_variable(0.001 * 25, 0.001 * 500)
+    .add_variable(0.2938, 0.3038)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 0.0)
     .add_function(c)
     .add_function(b)
     #.add_function(b_var)
     #.add_function(c_var)
-    #.add_constraint(b_lower_constraint)
-    #.add_constraint(b_upper_constraint)
-    #.add_constraint(c_lower_constraint)
-    #.add_constraint(c_upper_constraint)
-    #.add_constraint(b_var_constraint)
+    .add_constraint(b_lower_constraint)
+    .add_constraint(b_upper_constraint)
+    .add_constraint(c_lower_constraint)
+    .add_constraint(c_upper_constraint)
+    .add_constraint(b_var_constraint)
 )
 
 if __name__ == "__main__":
@@ -377,7 +377,7 @@ if __name__ == "__main__":
     gde3_initial_population = parameters
 
     print("\nInitial population for GDE3:")
-    print(gde3_initial_population)
+    #print(gde3_initial_population)
 
     #sys.exit()
     
@@ -391,8 +391,9 @@ if __name__ == "__main__":
     #dominance_comparator=DominanceComparator(),
     )   
     
-    algorithm.solutions = gde3_initial_population
     '''
+    algorithm.solutions = gde3_initial_population
+    
     
     print(problem.number_of_variables)
     print(1.0 / problem.number_of_variables)
