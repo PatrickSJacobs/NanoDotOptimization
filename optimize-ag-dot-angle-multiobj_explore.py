@@ -308,7 +308,7 @@ problem = (
     .add_variable(0.0, 0.0)
     .add_function(c)
     .add_function(b)
-    #.add_function(b_var)
+    .add_function(b_var)
     #.add_function(c_var)
     .add_constraint(b_lower_constraint)
     .add_constraint(b_upper_constraint)
