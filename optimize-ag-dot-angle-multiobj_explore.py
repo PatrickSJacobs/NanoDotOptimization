@@ -377,7 +377,7 @@ if __name__ == "__main__":
     gde3_initial_population = parameters
 
     print("\nInitial population for GDE3:")
-    #print(gde3_initial_population)
+    print(gde3_initial_population)
 
     #sys.exit()
     
