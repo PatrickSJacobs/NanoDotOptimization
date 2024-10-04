@@ -325,7 +325,7 @@ if __name__ == "__main__":
         file.close()
     
     #max_evaluations = 8
-    max_evaluations = 60
+    max_evaluations = 72
     population_size = 6
 
     
