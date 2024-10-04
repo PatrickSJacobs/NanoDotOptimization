@@ -391,10 +391,10 @@ if __name__ == "__main__":
     #dominance_comparator=DominanceComparator(),
     )   
     
-    '''
+   
     algorithm.solutions = gde3_initial_population
     
-    
+    '''
     print(problem.number_of_variables)
     print(1.0 / problem.number_of_variables)
 

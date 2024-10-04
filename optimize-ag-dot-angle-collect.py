@@ -326,7 +326,7 @@ def main():
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
     #num_points = 150
-    num_points = 24
+    num_points = 6
 
     # Prune the dataset
     df_final = prune_dataset(
@@ -334,7 +334,7 @@ def main():
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
         #{ "c-param": 2, "b-param": 2, "b_var": 2, }
-        { "c-param": 10, "b-param": 30, "b_var": 20, }
+        { "c-param": 15, "b-param": 20, "b_var": 80, }
 
         )
 
