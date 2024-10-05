@@ -302,7 +302,7 @@ problem = (
     #.add_variable(0.055, 0.06)
     .add_variable(0.001 * 40, 0.001 * 110)
     #.add_variable(0.065, 0.075)
-    .add_variable(0.300, 0.001 * 700)
+    .add_variable(0.300, 0.001 * 900)
     #.add_variable(0.2938, 0.3038)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 0.0)

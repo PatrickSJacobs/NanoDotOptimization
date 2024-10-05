@@ -103,11 +103,12 @@ def obj_func_calc(wvls, R_meep):
 
         ys_fixed = [ys[i] for i in index_list]
 
-        L = []
-        for (wvl, freq) in zip([xs[i] for i in index_list], np.ceil(np.array(ys_fixed) / np.min(ys_fixed))):
-            L += [wvl for i in range(int(freq))]
+        weights = np.ceil(np.array(ys_fixed) / np.min(ys_fixed))
+        weights = np.clip(weights, 0, 1000)  # Limit weights to prevent excessive memory usage
 
-        maxi = statistics.mean(L)
+        L = np.repeat([xs[i] for i in index_list], weights.astype(int))
+
+        maxi = statistics.mean(L) if len(L) > 0 else xs[ys.index(mam)]
 
     else:
         maxi = xs[ys.index(mam)]
@@ -188,9 +189,6 @@ if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
                 
             except:
                 pass
-
-        wvls = wvls[: len(wvls) - 2]
-        R_meep = R_meep[: len(R_meep) - 2]
 
         #print(wvls)
         #print(R_meep)
