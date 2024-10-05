@@ -219,6 +219,7 @@ if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
         print(f"air_raw_path: {air_raw_path}")
         print(f"metal_raw_path: {metal_raw_path}")
         traceback.print_exc()
+        os.system("scancel -u tg881088")
         sys.exit()
 
 else:
