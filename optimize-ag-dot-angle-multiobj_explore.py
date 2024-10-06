@@ -421,5 +421,6 @@ if __name__ == "__main__":
         printing(f'             Objectives={front[sol].objectives}')
 
     printing(f"Computing time: {algorithm.total_computing_time}")
+    os.system("scancel -u tg881088")
 
 
