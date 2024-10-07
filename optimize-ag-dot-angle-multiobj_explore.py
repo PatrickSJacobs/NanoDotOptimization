@@ -281,7 +281,7 @@ def c_constraint(x: [float]):
 
 def b_var_constraint(x: [float]):
 
-    return 13 - get_values(x, "b_var")
+    return 30 - get_values(x, "b_var")
 
 
 #bounds = {'sr': (0.001 * 5, 0.001 * 125), 'ht': (0.001 * 50, 0.001 * 100), 'cs': (0.001 * 25, 0.001 * 250), 'theta_deg': (0.0, 0.0)}# Bounds for optimization
@@ -298,12 +298,12 @@ def b_var_constraint(x: [float]):
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
-    .add_variable(0.045, 0.001 * 125)
-    #.add_variable(0.055, 0.06)
+    .add_variable(0.06, 0.001 * 125)
+    #.add_variable(0.045, 0.001 * 125)
     .add_variable(0.001 * 30, 0.001 * 110)
     #.add_variable(0.065, 0.075)
-    .add_variable(0.100, 0.001 * 900)
-    #.add_variable(0.2938, 0.3038)
+    #.add_variable(0.100, 0.001 * 900)
+    .add_variable(0.2938, 0.5)
     #.add_variable(0.0, 0.0)
     .add_variable(0.0, 0.0)
     .add_function(c)
