@@ -346,6 +346,7 @@ def main():
     df_final.to_csv(pruned_training_file, index=False)
 
     print(f"Final pruned dataset contains {len(df_final)} records.")
+    print(main_work_dir + "ag-dot-angle-pretraining.csv")
 
 if __name__ == "__main__":
     main()
