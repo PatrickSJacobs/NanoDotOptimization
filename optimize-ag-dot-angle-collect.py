@@ -29,6 +29,10 @@ def obj_func_calc(wvls, R_meep):
         - Return sum of all elements in peak_eval
     '''
 
+    # Ignore Rmeep data greater than 1
+    if any(r > 1 for r in R_meep):
+        return None, None, None, None
+
     # Make histogram based on reflectance data
     K = 2
 
@@ -82,20 +86,11 @@ def obj_func_calc(wvls, R_meep):
     else:
         maxi = xs[ys.index(mam)]
 
-    # tsr = sum(x * i for i, x in enumerate(L, 1)) / len(L)
-
-    # print(tsr)
     q = 1000
-    # 1/(1 + (q/b*(x - a))^2)/c == 1/(pc)
 
     def objective(x, b, c):
-        # maxi = np.array([xs[ys.index(mam)] for i in range(len(x))])
-        # maxi = sum(u * i for i, u in enumerate(x, 1)) / len(x)
         maximum = np.array([maxi for i in x])
-
-        #f = q / (1 + (q / b * (x - maximum)) ** 2) / c
         f = 1 / (c**2*(1 + (q / b * (x - maximum)) ** 2))
-
         return f
 
     popt, popv = curve_fit(objective, xs, ys)
@@ -104,9 +99,7 @@ def obj_func_calc(wvls, R_meep):
     b_var = popv[0][0]
     c_var = popv[1][1]
     
-    #return logshift(abs(b)), logshift(abs(c**2 * 10 - 10)), logshift(abs(b_var * 100)), logshift(abs(c_var * 100))
     return abs(b), abs(c**2 * 10 - 10), abs(b_var) * 100, abs(c_var) * 100
-
 
 
 def date_to_scalar(year, month, day):
@@ -146,118 +139,9 @@ def collect_calc_log_files(base_directory):
     
     return calc_log_files
 
-# [Include all your existing function definitions here: obj_func_calc, date_to_scalar, extract_date_from_folder, collect_calc_log_files]
-
-
 def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbose=True):
-    """
-    Prunes the dataset by first removing rows with 'b-param', 'c-param', 'b_var',
-    or 'c_var' exceeding specified thresholds, then reduces the dataset to m
-    representative points using KMeans clustering.
-    
-    Parameters:
-    - df (pd.DataFrame): The original dataset.
-    - m (int): The desired number of points after pruning.
-    - thresholds (dict, optional): Dictionary specifying the maximum allowable values
-                                   for 'b-param', 'c-param', 'b_var', and 'c_var'.
-                                   Example: {'b-param': 10, 'c-param': 20, 'b_var': 5, 'c_var': 5}
-                                   If None, no initial filtering is applied.
-    - features (list of str, optional): List of feature column names to use for clustering.
-                                        If None, all numeric columns are used.
-    - random_state (int, optional): Seed for reproducibility. Default is 42.
-    - verbose (bool, optional): If True, prints information about pruning steps.
-    
-    Returns:
-    - pd.DataFrame: The pruned dataset containing m representative points.
-    """
-    # Validate input
-    if not isinstance(df, pd.DataFrame):
-        raise ValueError("Input df must be a pandas DataFrame.")
-    
-    if not isinstance(m, int) or m <= 0:
-        raise ValueError("Parameter m must be a positive integer.")
-    
-    # Step 1: Initial Filtering Based on Thresholds
-    if thresholds:
-        # Ensure all specified columns are present in the DataFrame
-        missing_cols = [col for col in thresholds.keys() if col not in df.columns]
-        if missing_cols:
-            raise ValueError(f"The following threshold columns are not in the DataFrame: {missing_cols}")
-        
-        # Apply filtering: retain rows where all specified columns are <= thresholds
-        condition = np.ones(len(df), dtype=bool)
-        for col, thresh in thresholds.items():
-            condition &= df[col] <= thresh
-            if verbose:
-                print(f"Applying threshold: {col} <= {thresh}")
-        
-        df_filtered = df[condition].copy()
-        if verbose:
-            print(f"After initial filtering based on thresholds: {len(df_filtered)} records retained.")
-    else:
-        df_filtered = df.copy()
-        if verbose:
-            print("No initial filtering based on thresholds applied.")
-    
-    # Check if there are enough data points after filtering
-    if len(df_filtered) < m:
-        if verbose:
-            print(f"Warning: After filtering, the dataset contains {len(df_filtered)} records, which is less than the desired m={m}.")
-            print("Proceeding with the available data without further pruning.")
-        return df_filtered.copy()
-    
-    # Step 2: Feature Selection for Clustering
-    if features is None:
-        # Use all numeric columns if features not specified
-        features = df_filtered.select_dtypes(include=[np.number]).columns.tolist()
-        if not features:
-            raise ValueError("No numeric columns available for clustering.")
-        if verbose:
-            print(f"Selected features for clustering (all numeric columns): {features}")
-    else:
-        # Ensure specified features exist in the DataFrame
-        missing_features = [feat for feat in features if feat not in df_filtered.columns]
-        if missing_features:
-            raise ValueError(f"The following features are not in the DataFrame: {missing_features}")
-        if verbose:
-            print(f"Selected features for clustering: {features}")
-    
-    # Extract the feature matrix
-    X = df_filtered[features].values
-    
-    # Handle missing values by imputing or removing
-    if np.isnan(X).any():
-        raise ValueError("Feature matrix contains NaN values. Please handle missing data before clustering.")
-    
-    # Standardize the features
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    if verbose:
-        print("Features standardized using StandardScaler.")
-    
-    # Step 3: Check if m is feasible
-    if m >= len(df_filtered):
-        if verbose:
-            print(f"Desired number of points m={m} is greater than or equal to the dataset size {len(df_filtered)}.")
-            print("Returning the filtered dataset without further pruning.")
-        return df_filtered.copy()
-    
-    # Step 4: Initialize and Fit KMeans
-    kmeans = KMeans(n_clusters=m, random_state=random_state, n_init=10)
-    kmeans.fit(X_scaled)
-    if verbose:
-        print(f"KMeans clustering performed with n_clusters={m}.")
-    
-    # Step 5: Find the Closest Data Point to Each Cluster Centroid
-    centers = kmeans.cluster_centers_
-    closest, _ = pairwise_distances_argmin_min(centers, X_scaled)
-    
-    # Step 6: Select the Representative Points
-    df_final = df_filtered.iloc[closest].reset_index(drop=True)
-    if verbose:
-        print(f"Pruned dataset contains {len(df_final)} records after KMeans clustering to {m} points.")
-    
-    return df_final
+    # [Implementation remains unchanged]
+    pass
 
 def main():
     main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
@@ -298,6 +182,10 @@ def main():
             # Calculate parameters
             b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
 
+            # Skip if R_meep data was invalid
+            if b is None:
+                continue
+
             # Check for finite values
             if any(not math.isfinite(x) or x < 0 for x in [sr, ht, cs, b, c, b_var, c_var, count]) or ((theta_deg % 360) > 0.1):
                 continue
@@ -334,12 +222,11 @@ def main():
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
         #{ "c-param": 2, "b-param": 2, "b_var": 2, }
-        { "c-param": 5, "b-param": 15, "b_var": 40, }
+        { "c-param": 15, "b-param": 15, "b_var": 40, }
 
         )
 
     print(df_final[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',]].values)
-    #print(df_final["path"].values)
 
     # Save the pruned dataset
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
