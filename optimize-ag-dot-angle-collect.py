@@ -39,7 +39,7 @@ def obj_func_calc(wvls, R_meep):
     xs = xs[: len(xs) - K]
     ys = ys[: len(ys) - K]
     
-    if any(r > 1 for r in ys):
+    if any(r > 1.1 for r in ys):
         return None, None, None, None
 
     mam = max(ys)
