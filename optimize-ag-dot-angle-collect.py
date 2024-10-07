@@ -28,8 +28,7 @@ def obj_func_calc(wvls, R_meep):
         - Calculate vector peak_eval = [norm(mean(1), variance(1), 1/height(1)), norm(mean(2), variance(2), 1/height(2)), ..., norm(mean(n), variance(n), 1/height(n))]
         - Return sum of all elements in peak_eval
     '''
-    if any(r > 1 for r in R_meep):
-        return None, None, None, None
+    
     
     # Make histogram based on reflectance data
     K = 2
@@ -39,6 +38,9 @@ def obj_func_calc(wvls, R_meep):
 
     xs = xs[: len(xs) - K]
     ys = ys[: len(ys) - K]
+    
+    if any(r > 1 for r in ys):
+        return None, None, None, None
 
     mam = max(ys)
     ind = []
