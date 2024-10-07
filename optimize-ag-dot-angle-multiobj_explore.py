@@ -326,7 +326,7 @@ if __name__ == "__main__":
     
     #max_evaluations = 8
     max_evaluations = 72
-    population_size = 6
+    population_size = 8
 
     
     '''
