@@ -104,7 +104,7 @@ def obj_func_calc(wvls, R_meep):
         ys_fixed = [ys[i] for i in index_list]
 
         weights = np.ceil(np.array(ys_fixed) / np.min(ys_fixed))
-        weights = np.clip(weights, 0, 1000)  # Limit weights to prevent excessive memory usage
+        weights = np.clip(weights, 0, 3000)  # Limit weights to prevent excessive memory usage
 
         L = np.repeat([xs[i] for i in index_list], weights.astype(int))
 
@@ -166,7 +166,9 @@ while success == 0:
     time.sleep(1)
 '''     
 
-b, c, b_var, c_var = 1E6, 1E6, 1E6, 1E6
+#b, c, b_var, c_var = 1E6, 1E6, 1E6, 1E6
+b, c, b_var, c_var = np.inf, np.inf, np.inf, np.inf
+
 # Check if data is good and data file exists, if not error
 if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
     df = None
@@ -210,8 +212,11 @@ if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
         printing("came out of obj")
 
         #execution_dictionary[filename] = {"b": b, "c": c, "b_var": b_var, "c_var": c_var}
-        
+     
     except Exception as e:
+        traceback.print_exc()
+        
+        ''' 
         print("An error occurred:")
         print(f"air_data_path: {air_data_path}")
         print(f"metal_data_path: {metal_data_path}")
@@ -221,6 +226,7 @@ if os.path.isfile(metal_data_path) and os.path.isfile(air_data_path):
         traceback.print_exc()
         os.system("scancel -u tg881088")
         sys.exit()
+        '''
 
 else:
     printing(f"({metal_data_path}): It isn't a file! Error in variables {[sr, ht, cs, theta_deg]} ")
