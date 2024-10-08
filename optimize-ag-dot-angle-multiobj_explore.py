@@ -273,15 +273,19 @@ def c_lower_constraint(x: [float]): return get_values(x, "c-param")
 def b_lower_constraint(x: [float]): return get_values(x, "b-param") - 1  # b-param should be >= 1
 def b_upper_constraint(x: [float]): return 50 - get_values(x, "b-param")  # b-param should be <= 60
 
-'''
+
 def c_constraint(x: [float]):
 
     return 15 - get_values(x, "c-param")
-'''
+
 
 def b_var_constraint(x: [float]):
 
     return 30 - get_values(x, "b_var")
+
+def c_var_constraint(x: [float]):
+
+    return 1 - get_values(x, "c_var")
 
 
 #bounds = {'sr': (0.001 * 5, 0.001 * 125), 'ht': (0.001 * 50, 0.001 * 100), 'cs': (0.001 * 25, 0.001 * 250), 'theta_deg': (0.0, 0.0)}# Bounds for optimization
@@ -311,10 +315,12 @@ problem = (
     .add_function(b_var)
     #.add_function(c_var)
     .add_constraint(b_lower_constraint)
-    .add_constraint(b_upper_constraint)
+    #.add_constraint(b_upper_constraint)
     .add_constraint(c_lower_constraint)
-    .add_constraint(c_upper_constraint)
+    #.add_constraint(c_upper_constraint)
     .add_constraint(b_var_constraint)
+    .add_constraint(c_var_constraint)
+
 )
 
 if __name__ == "__main__":
