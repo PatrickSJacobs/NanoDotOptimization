@@ -333,7 +333,7 @@ def main():
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
     #num_points = 150
-    num_points = 3000
+    num_points = 8
 
     # Prune the dataset
     df_final = prune_dataset(
