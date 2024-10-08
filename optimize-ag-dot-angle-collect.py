@@ -341,7 +341,7 @@ def main():
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
         #{ "c-param": 2, "b-param": 2, "b_var": 2, }
-        { "c-param": 5.7, "b-param": 35, "b_var": 62, "c_var": 0.8, }
+        { "c-param": 6, "b-param": 35, "b_var": 62, "c_var": 0.8, }
 
         )
 
