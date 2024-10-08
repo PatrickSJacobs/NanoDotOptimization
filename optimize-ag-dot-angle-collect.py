@@ -341,11 +341,11 @@ def main():
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
         #{ "c-param": 2, "b-param": 2, "b_var": 2, }
-        { "c-param": 15, "b-param": 15, "b_var": 40, }
+        { "c-param": 15, "b-param": 15, "b_var": 40, "c_var": 40, }
 
         )
 
-    print(df_final[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',]].values)
+    print(df_final[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',  "c_var",]].values)
     #print(df_final["path"].values)
 
     # Save the pruned dataset
