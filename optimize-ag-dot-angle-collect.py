@@ -1,13 +1,11 @@
-# Standard Library Imports
 import csv
 import math
 import os
 import re
-from pathlib import Path
-import csv
 import shutil
+from pathlib import Path
+from multiprocessing import Pool, cpu_count
 
-# Third-Party Imports
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
@@ -17,10 +15,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import pairwise_distances_argmin_min
 import statistics
 
-# [Your other code goes here]
-
 logshift = lambda x: np.log(x + 1)
-
 
 def obj_func_calc(wvls, R_meep):
     '''
@@ -113,47 +108,27 @@ def obj_func_calc(wvls, R_meep):
     #return logshift(abs(b)), logshift(abs(c**2 * 10 - 10)), logshift(abs(b_var * 100)), logshift(abs(c_var * 100))
     return abs(b), abs(c**2 * 10 - 10), abs(b_var) * 100, abs(c_var) * 100
 
-
-
 def date_to_scalar(year, month, day):
-    """Convert date components to a scalar."""
     return year * 10000 + month * 100 + day
 
 def extract_date_from_folder(folder_name):
-    """Extracts the date from folder name in the form opt_MM_DD_YYYY."""
-    # Match pattern 'opt_MM_DD_YYYY'
     match = re.search(r'opt_(\d{2})_(\d{2})_(\d{4})__', folder_name)
     if match:
-        month, day, year = map(int, match.groups())  # Extract as integers
+        month, day, year = map(int, match.groups())
         return date_to_scalar(year, month, day)
-    return None  # Return None if no date found
+    return None
 
 def collect_calc_log_files(base_directory):
-    """Collects files with 'calc_log' in their name, along with a date scalar from the folder name."""
     base_dir = Path(base_directory)
-    
-    # Collect all directories with "opt_" in their name
     opt_dirs = [dir for dir in base_dir.glob('opt_*') if dir.is_dir()]
-    
     calc_log_files = []
-    
-    # Loop through each "opt_" directory
     for opt_dir in opt_dirs:
-        # Extract date scalar from the folder name
         date_scalar = extract_date_from_folder(opt_dir.name)
-        
-        if date_scalar is not None:  # If a valid date was extracted
-            # Find files containing "calc_log" within each "opt_" directory
+        if date_scalar is not None:
             calc_files = list(opt_dir.glob('**/*calc_log*'))
-            
-            # Add each file and its corresponding date scalar to the list
             for file in calc_files:
                 calc_log_files.append([str(file), date_scalar])
-    
     return calc_log_files
-
-# [Include all your existing function definitions here: obj_func_calc, date_to_scalar, extract_date_from_folder, collect_calc_log_files]
-
 
 def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbose=True):
     """
@@ -265,120 +240,79 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
     
     return df_final
 
-def copy_csv_files(paths, destination_folder):
-        # Ensure the destination folder exists
-        if os.path.exists(destination_folder):
-            shutil.rmtree(destination_folder)
-    
-        # Ensure the destination folder exists
-        os.makedirs(destination_folder)
+def copy_csv_file(file_path, destination_folder):
+    if os.path.isfile(file_path):
+        try:
+            shutil.copy(file_path, destination_folder)
+            print(f"Copied: {file_path}")
+        except Exception as e:
+            print(f"Failed to copy {file_path}: {e}")
+    else:
+        print(f"File does not exist: {file_path}")
 
-        for path in paths:
-                file_path = path[0]
-                if os.path.isfile(file_path):
-                    try:
-                        shutil.copy(file_path, destination_folder)
-                        print(f"Copied: {file_path}")
-                    except Exception as e:
-                        print(f"Failed to copy {file_path}: {e}")
-                else:
-                    print(f"File does not exist: {file_path}")
-            
+def copy_csv_files(paths, destination_folder):
+    if os.path.exists(destination_folder):
+        shutil.rmtree(destination_folder)
+    os.makedirs(destination_folder)
+    with Pool(processes=cpu_count()) as pool:
+        pool.starmap(copy_csv_file, [(path[0], destination_folder) for path in paths])
+
+def process_file(file_set):
+    path, date = file_set
+    scaling_factor = 10000 if date >= 20231127 else 1000
+    try:
+        sr = float(path.split('_sr_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
+        ht = float(path.split('_ht_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
+        cs = 0.4 - 2 * sr
+        try:
+            cs_split = path.split('_cs_')[1]
+            cs = float(cs_split.split('nm_')[0].replace("_", ".")) / scaling_factor
+        except IndexError:
+            pass
+        theta_deg = float(path.split('_deg_')[1].split('.csv')[0].replace("_", ".")) % 360
+        data = pd.read_csv(path)
+        wvls = data["wvl"].tolist()
+        R_meep = data["refl"].tolist()
+        b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
+        if b is None:
+            return None
+        if any(not math.isfinite(x) or x < 0 for x in [sr, ht, cs, b, c, b_var, c_var]) or ((theta_deg % 360) > 0.1):
+            return None
+        return {
+            "path": path,
+            "sr": sr,
+            "ht": ht,
+            "cs": cs,
+            "theta_deg": theta_deg,
+            "b-param": b,
+            "c-param": c,
+            "b_var": b_var,
+            "c_var": c_var
+        }
+    except Exception as e:
+        print(f"Error processing file {path}: {e}")
+        return None
 
 def main():
-    main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
-    main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
-
+    main_home_dir = "/home1/08809/tg881088/"
+    main_work_dir = "/work2/08809/tg881088/"
     training_file = main_work_dir + "ag-dot-angle-pretraining-unpruned.csv"
-
-    # Initialize an empty DataFrame
-    columns = ["path", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "count"]
-    dataset_df = pd.DataFrame(columns=columns)
-    
-    count = 0
-    
-    for file_set in collect_calc_log_files(main_work_dir):
-        path, date = file_set
-        count += 1
-        scaling_factor = 10000 if date >= 20231127 else 1000
-
-        try:
-            # Parse parameters from the file path
-            sr = float(path.split('_sr_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
-            ht = float(path.split('_ht_')[1].split('nm_')[0].replace("_", ".")) / scaling_factor
-            cs = 0.4 - 2 * sr
-
-            try:
-                cs_split = path.split('_cs_')[1]
-                cs = float(cs_split.split('nm_')[0].replace("_", ".")) / scaling_factor
-            except IndexError:
-                pass  # cs remains as 0.4 - 2 * sr if '_cs_' not found
-
-            theta_deg = float(path.split('_deg_')[1].split('.csv')[0].replace("_", ".")) % 360
-
-            # Read reflectance data
-            data = pd.read_csv(path)
-            wvls = data["wvl"].tolist()
-            R_meep = data["refl"].tolist()
-
-            # Calculate parameters
-            b, c, b_var, c_var = obj_func_calc(wvls, R_meep)
-
-            if b is None:
-                continue
-
-            # Check for finite values
-            if any(not math.isfinite(x) or x < 0 for x in [sr, ht, cs, b, c, b_var, c_var, count]) or ((theta_deg % 360) > 0.1):
-                continue
-
-            # Append the row to the DataFrame
-            
-            dataset_df =  pd.concat([dataset_df, 
-                                     pd.DataFrame([{
-                "path": path,
-                "sr": sr,
-                "ht": ht,
-                "cs": cs,
-                "theta_deg": theta_deg,
-                "b-param": b,
-                "c-param": c,
-                "b_var": b_var,
-                "c_var": c_var,
-                "count": count
-            }])], ignore_index=True)
-        except Exception as e:
-            print(f"Error processing file {path}: {e}")
-            continue
-
-    # Save the collected data to CSV
+    calc_log_files = collect_calc_log_files(main_work_dir)
+    with Pool(processes=cpu_count()) as pool:
+        results = pool.map(process_file, calc_log_files)
+    dataset_df = pd.DataFrame([res for res in results if res is not None])
     dataset_df.to_csv(training_file, index=False)
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
-
-    #num_points = 150
     num_points = 5000
-
-    # Prune the dataset
     df_final = prune_dataset(
-        dataset_df, 
-        num_points, 
-        #{ "c-param": 100, "b_var": 11, }
-        #{ "c-param": 2, "b-param": 2, "b_var": 2, }
-        { "c-param": 15, "b-param": 20, "b_var": 200, "c_var": 0.8, }
-
-        )
-
+        dataset_df,
+        num_points,
+        {"c-param": 15, "b-param": 20, "b_var": 200, "c_var": 0.8}
+    )
     copy_csv_files(df_final[['path']].values, main_work_dir + "ag-dot-angle-pretraining-folder/")
-    print(main_work_dir + "ag-dot-angle-pretraining-folder/")
-    
-    print(df_final[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',  "c_var",]].values)
-    #print(df_final["path"].values)
-
-    # Save the pruned dataset
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
     df_final.to_csv(pruned_training_file, index=False)
-
     print(f"Final pruned dataset contains {len(df_final)} records.")
-    print(main_work_dir + "ag-dot-angle-pretraining.csv")
 
 if __name__ == "__main__":
     main()
