@@ -71,6 +71,9 @@ def obj_func_calc(wvls, R_meep):
     xs = xs[: len(xs) - K]
     ys = ys[: len(ys) - K]
 
+    if any(r > 1.0 for r in ys):
+        return np.inf, np.inf, np.inf, np.inf
+    
     mam = max(ys)
     ind = []
     maxis = []
@@ -112,6 +115,9 @@ def obj_func_calc(wvls, R_meep):
 
     else:
         maxi = xs[ys.index(mam)]
+        
+    if maxi < 0.60:
+        return np.inf, np.inf, np.inf, np.inf
 
     # tsr = sum(x * i for i, x in enumerate(L, 1)) / len(L)
 
