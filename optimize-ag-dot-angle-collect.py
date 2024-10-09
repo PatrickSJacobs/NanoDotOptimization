@@ -4,6 +4,8 @@ import math
 import os
 import re
 from pathlib import Path
+import csv
+import shutil
 
 # Third-Party Imports
 import numpy as np
@@ -263,6 +265,26 @@ def prune_dataset(df, m, thresholds=None, features=None, random_state=42, verbos
     
     return df_final
 
+def copy_csv_files(paths, destination_folder):
+        # Ensure the destination folder exists
+        if os.path.exists(destination_folder):
+            shutil.rmtree(destination_folder)
+    
+        # Ensure the destination folder exists
+        os.makedirs(destination_folder)
+
+        for path in paths:
+                file_path = path[0]
+                if os.path.isfile(file_path):
+                    try:
+                        shutil.copy(file_path, destination_folder)
+                        print(f"Copied: {file_path}")
+                    except Exception as e:
+                        print(f"Failed to copy {file_path}: {e}")
+                else:
+                    print(f"File does not exist: {file_path}")
+            
+
 def main():
     main_home_dir = "/home1/08809/tg881088/"  # Home directory for optimization
     main_work_dir = "/work2/08809/tg881088/"  # Home directory for optimization
@@ -333,7 +355,7 @@ def main():
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
 
     #num_points = 150
-    num_points = 8
+    num_points = 5000
 
     # Prune the dataset
     df_final = prune_dataset(
@@ -341,10 +363,13 @@ def main():
         num_points, 
         #{ "c-param": 100, "b_var": 11, }
         #{ "c-param": 2, "b-param": 2, "b_var": 2, }
-        { "c-param": 6.5, "b-param": 35, "b_var": 62, "c_var": 0.8, }
+        { "c-param": 15, "b-param": 20, "b_var": 200, "c_var": 0.8, }
 
         )
 
+    copy_csv_files(df_final[['path']].values, main_work_dir + "ag-dot-angle-pretraining-folder/")
+    print(main_work_dir + "ag-dot-angle-pretraining-folder/")
+    
     print(df_final[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',  "c_var",]].values)
     #print(df_final["path"].values)
 
