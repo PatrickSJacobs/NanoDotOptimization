@@ -393,7 +393,7 @@ if __name__ == "__main__":
     population_evaluator=MultiprocessEvaluator(processes=16),
     problem=problem,
     population_size=population_size,  # Reduced population size
-    cr=0.1,              # Lower crossover probability
+    cr=0.9,              # Lower crossover probability
     f=0.1,               # Lower scaling factor
     termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
     #dominance_comparator=DominanceComparator(),
