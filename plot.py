@@ -16,7 +16,7 @@ def list_files_in_directory(directory):
     # List all files in the directory
     return [str(file) for file in path.iterdir() if file.is_file()]
 
-directory_path = '/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/data/possible_candidates/opt_10_08_2024__12_01_24_raw/'
+directory_path = '/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/data/possible_candidates/ag-dot-angle-pretraining-folder/'
 files = list_files_in_directory(directory_path)
 
 for file in files:
