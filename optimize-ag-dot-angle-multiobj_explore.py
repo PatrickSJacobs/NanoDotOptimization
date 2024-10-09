@@ -304,7 +304,6 @@ problem = (
     .set_name("Testing")
     #.add_variable(0.06, 0.001 * 125)
     .add_variable(0.01, 0.001 * 125)
-
     #.add_variable(0.045, 0.001 * 125)
     .add_variable(0.001 * 30, 0.001 * 110)
     #.add_variable(0.065, 0.075)
