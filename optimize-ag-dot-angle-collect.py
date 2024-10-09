@@ -83,7 +83,7 @@ def obj_func_calc(wvls, R_meep):
     else:
         maxi = xs[ys.index(mam)]
         
-    if maxi < 0.60:
+    if maxi < 0.55:
         return None, None, None, None
 
     # tsr = sum(x * i for i, x in enumerate(L, 1)) / len(L)
@@ -306,7 +306,7 @@ def main():
     dataset_df = pd.DataFrame([res for res in results if res is not None])
     dataset_df.to_csv(training_file, index=False)
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
-    num_points = 5000
+    num_points = 8
     df_final = prune_dataset(
         dataset_df,
         num_points,
