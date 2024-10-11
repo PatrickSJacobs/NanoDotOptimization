@@ -310,7 +310,7 @@ def main():
     df_final = prune_dataset(
         dataset_df,
         num_points,
-        {"c-param": 15, "b-param": 15, "b_var": 30, "c_var": 0.8}
+        {"c-param": 15, "b-param": 20, "b_var": 30, "c_var": 0.8}
     )
     copy_csv_files(df_final[['path']].values, main_work_dir + "ag-dot-angle-pretraining-folder/")
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
