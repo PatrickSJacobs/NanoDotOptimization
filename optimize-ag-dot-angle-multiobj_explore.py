@@ -393,7 +393,7 @@ if __name__ == "__main__":
     population_evaluator=MultiprocessEvaluator(processes=16),
     problem=problem,
     population_size=population_size,  # Reduced population size
-    cr=0.9,              # Lower crossover probability
+    cr=0.1,              # Lower crossover probability
     f=0.1,               # Lower scaling factor
     termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
     #dominance_comparator=DominanceComparator(),
@@ -422,7 +422,7 @@ if __name__ == "__main__":
 
     for sol in range(len(front)):
         vars = front[sol].variables
-        print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
+        #print(f'(Solution #{sol + 1}): Variables={front[sol].variables}; Objectives={front[sol].objectives}')
         printing(f'(Solution #{sol + 1}): (Filename - {make_filename(float(vars[0]), float(vars[1]), float(vars[2]), float(vars[3]))})')
         printing(f'             Variables={vars}')
         printing(f'             Objectives={front[sol].objectives}')
