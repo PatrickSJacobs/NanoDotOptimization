@@ -17,13 +17,13 @@ def list_files_in_directory(directory):
     # List all files in the directory
     return [str(file) for file in path.iterdir() if file.is_file()]
 
-directory_path = '/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/data/possible_candidates/ok/'
+directory_path = '/Users/calaeuscaelum/Documents/Development/Tang_Project/NanoDotOptimization/data/possible_candidates/yu/'
 files = list_files_in_directory(directory_path)
 
 
 
 # Create a PdfPages object
-with PdfPages('Best_NanoDot_Plots.pdf') as pdf:
+with PdfPages('data/Best_NanoDot_Plots.pdf') as pdf:
     for fi in range(len(files)):
         file = files[fi]
         # define the true objective function

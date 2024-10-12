@@ -83,7 +83,7 @@ def obj_func_calc(wvls, R_meep):
     else:
         maxi = xs[ys.index(mam)]
         
-    if maxi < 0.5 or maxi > 0.7:
+    if maxi < 0.55 or maxi > 0.7:
         return None, None, None, None
 
     # tsr = sum(x * i for i, x in enumerate(L, 1)) / len(L)
@@ -310,7 +310,7 @@ def main():
     df_final = prune_dataset(
         dataset_df,
         num_points,
-        {"c-param": 20, "b-param": 3, "b_var": 30, "c_var": 2}
+        {"c-param": 15, "b-param": 15, "b_var": 30, "c_var": 2}
     )
     copy_csv_files(df_final[['path']].values, main_work_dir + "ag-dot-angle-pretraining-folder/")
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
