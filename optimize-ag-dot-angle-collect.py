@@ -306,11 +306,11 @@ def main():
     dataset_df = pd.DataFrame([res for res in results if res is not None])
     dataset_df.to_csv(training_file, index=False)
     print(f"Collected dataset contains {len(dataset_df)} records before pruning.")
-    num_points = 8
+    num_points = 1000
     df_final = prune_dataset(
         dataset_df,
         num_points,
-        {"c-param": 15, "b-param": 28, "b_var": 30, "c_var": 0.8}
+        {"c-param": 3, "b-param": 20, "b_var": 30, "c_var": 0.8}
     )
     copy_csv_files(df_final[['path']].values, main_work_dir + "ag-dot-angle-pretraining-folder/")
     pruned_training_file = main_work_dir + "ag-dot-angle-pretraining.csv"
