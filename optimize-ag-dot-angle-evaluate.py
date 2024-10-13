@@ -107,7 +107,7 @@ def obj_func_calc(wvls, R_meep):
         ys_fixed = [ys[i] for i in index_list]
 
         weights = np.ceil(np.array(ys_fixed) / np.min(ys_fixed))
-        weights = np.clip(weights, 0, 3000)  # Limit weights to prevent excessive memory usage
+        weights = np.clip(weights, 0, 4000)  # Limit weights to prevent excessive memory usage
 
         L = np.repeat([xs[i] for i in index_list], weights.astype(int))
 

@@ -382,7 +382,17 @@ if __name__ == "__main__":
    
     
     # Prepare the selected solutions for GDE3
-    gde3_initial_population = parameters
+    #gde3_initial_population = parameters
+    gde3_initial_population = [
+        [0.0157, 0.0602, 0.4537, 0.0],
+        [0.0177, 0.0602, 0.4537, 0.0],
+        [0.0167, 0.0612, 0.4537, 0.0],
+        [0.0167, 0.0592, 0.4537, 0.0],
+        [0.0167, 0.0602, 0.4547, 0.0],
+        [0.0167, 0.0602, 0.4527, 0.0],
+        [0.0167, 0.0602, 0.4537, 0.0],
+        [0.0157, 0.0592, 0.4547, 0.0]
+        ]
 
     print("\nInitial population for GDE3:")
     print(gde3_initial_population)
@@ -398,6 +408,7 @@ if __name__ == "__main__":
     termination_criterion=StoppingByEvaluations(max_evaluations=max_evaluations),
     #dominance_comparator=DominanceComparator(),
     )   
+    
     
    
     algorithm.solutions = gde3_initial_population
