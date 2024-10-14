@@ -295,22 +295,34 @@ def c_var_constraint(x: [float]):
     .add_variable(0.001 * 50, 0.001 * 100)
     .add_variable(0.001 * 25, 0.001 * 250)
     #.add_variable(0.001 * 250, 0.001 * 250)
+    #.add_variable(0.065, 0.075)
+    .add_variable(0.100, 0.001 * 900)
     #.add_variable(0.0, 0.0)
-    .add_variable(0.0, 0.0)'''
+    .add_variable(0.0, 0.0)
     
     
+    
+    .add_variable(0.01, 0.001 * 125)
+    .add_variable(0.001 * 30, 0.001 * 110)
+    .add_variable(0.100, 0.001 * 900)
+    .add_variable(0.0, 0.0)
+    
+    '''
+    
+df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
+#parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
+parameters = df1[['sr', 'ht', 'cs']].values
+
+
+lower_bounds = np.min(parameters, axis=0)
+upper_bounds = np.max(parameters, axis=0)
 
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
-    #.add_variable(0.06, 0.001 * 125)
-    .add_variable(0.01, 0.001 * 125)
-    #.add_variable(0.045, 0.001 * 125)
-    .add_variable(0.001 * 30, 0.001 * 110)
-    #.add_variable(0.065, 0.075)
-    .add_variable(0.100, 0.001 * 900)
-    #.add_variable(0.2938, 0.5)
-    #.add_variable(0.0, 0.0)
+    .add_variable(lower_bounds[0], upper_bounds[0])
+    .add_variable(lower_bounds[1], upper_bounds[1])
+    .add_variable(lower_bounds[2], upper_bounds[2])
     .add_variable(0.0, 0.0)
     .add_function(c)
     .add_function(b)
@@ -336,38 +348,6 @@ if __name__ == "__main__":
     max_evaluations = 72
     population_size = 8
 
-    
-    '''
-    from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
-    from sklearn.cluster import KMeans
-
-    def select_diverse_solutions(pareto_parameters, pareto_objectives, m):
-        # Combine parameters and objectives for clustering
-        combined = np.hstack((pareto_parameters, pareto_objectives))
-        
-        # Normalize the data
-        combined_normalized = (combined - np.min(combined, axis=0)) / (np.max(combined, axis=0) - np.min(combined, axis=0))
-        
-        # Perform K-means clustering
-        kmeans = KMeans(n_clusters=m, random_state=42)
-        kmeans.fit(combined_normalized)
-        
-        # Select the solution closest to each cluster center
-        selected_indices = []
-        for i in range(m):
-            cluster_points = combined_normalized[kmeans.labels_ == i]
-            center = kmeans.cluster_centers_[i]
-            distances = np.linalg.norm(cluster_points - center, axis=1)
-            closest_point_index = np.argmin(distances)
-            selected_indices.append(np.where((combined_normalized == cluster_points[closest_point_index]).all(axis=1))[0][0])
-        
-        return selected_indices
-
-    #df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
-    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
-    '''
-    df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
-    parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
    # objectives = df1[['c-param', 'b-param', 'b_var']].values
 
     #print(df1[['path', 'sr', 'ht', 'cs', 'theta_deg', 'b-param', 'c-param', 'b_var',]].values)
@@ -384,19 +364,9 @@ if __name__ == "__main__":
     
     # Prepare the selected solutions for GDE3
     #gde3_initial_population = parameters
-    gde3_initial_population = np.array([
-        np.array([0.0157, 0.0602, 0.4537, 0.0]),
-        np.array([0.0177, 0.0602, 0.4537, 0.0]),
-        np.array([0.0167, 0.0612, 0.4537, 0.0]),
-        np.array([0.0167, 0.0592, 0.4537, 0.0]),
-        np.array([0.0167, 0.0602, 0.4547, 0.0]),
-        np.array([0.0167, 0.0602, 0.4527, 0.0]),
-        np.array([0.0167, 0.0602, 0.4537, 0.0]),
-        np.array([0.0157, 0.0592, 0.4547, 0.0])
-        ])
 
-    print("\nInitial population for GDE3:")
-    print(gde3_initial_population)
+    #print("\nInitial population for GDE3:")
+    #print(gde3_initial_population)
 
     #sys.exit()
     
@@ -412,7 +382,7 @@ if __name__ == "__main__":
     
     
    
-    algorithm.solutions = gde3_initial_population
+    #algorithm.solutions = gde3_initial_population
     
     '''
     print(problem.number_of_variables)
