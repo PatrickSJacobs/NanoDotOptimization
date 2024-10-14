@@ -259,10 +259,11 @@ def runtest(x: [float]):
     c = get_values(x, "c-param")
     b_var = get_values(x, "b_var")
     
+    printing('\n')
     printing(f'(Solution: (Filename - {make_filename(float(x[0]), float(x[1]), float(x[2]), float(x[3]))})')
     printing(f'             Variables={x}')
     printing(f'             Objectives={[b, c, b_var]}')
-    printing('\n')
+    
 
 if __name__ == "__main__":
 
