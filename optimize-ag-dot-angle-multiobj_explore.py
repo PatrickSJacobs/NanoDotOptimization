@@ -45,6 +45,7 @@ os.mkdir(file_work_path)# Making folder name for data log
 file_naught = open(progress_file, 'w')
 file_naught.writelines(["Beginning optimization %s" % "\n"])
 file_naught.close()
+logging_file = file_home_path + "calc_log_obj.csv"
 
 #execution_dictionary = {}
 
@@ -59,7 +60,7 @@ def printing(string):
     pass
 
 def check_log(filename: str, param: str):
-    df = pd.read_csv(file_home_path + "calc_log_obj.csv")
+    df = pd.read_csv(logging_file)
     return list(dict(df.loc[df['filename'] == filename])[param])
 
 def make_filename(sr, ht, cs, theta_deg):
@@ -326,7 +327,7 @@ problem = (
 
 if __name__ == "__main__":
 
-    with open(file_home_path + "calc_log_obj.csv", 'w', newline='') as file:
+    with open(logging_file, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
         file.close()

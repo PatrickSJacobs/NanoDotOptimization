@@ -1,315 +1,291 @@
-from ag_dot_angle_obj import (
-    obj_func_run,
-    current_time,
-    main_home_dir,
-    folder_name,
-    file_home_path,
-    main_work_dir,
-    file_work_path,
-    progress_file,
-)
-import os
+
+from jmetal.core.problem import OnTheFlyFloatProblem
+from jmetal.algorithm.multiobjective.gde3 import GDE3
+#from jmetal.util.evaluator import MultiprocessEvaluator
+#from jmetal.util.termination_criterion import StoppingByEvaluations
+from jmetal.util.comparator import DominanceComparator
+#from jmetal.util.solution import get_non_dominated_solutions
+#from jmetal.algorithm.multiobjective.nsgaii import NSGAII
+#from jmetal.operator import PolynomialMutation, SBXCrossover
+#from jmetal.problem.multiobjective.zdt import ZDT1Modified
+from jmetal.util.evaluator import MultiprocessEvaluator
+#from jmetal.util.solution import print_function_values_to_file, print_variables_to_file
+from jmetal.util.termination_criterion import StoppingByEvaluations
+from multiprocessing import Pool
+#from multiprocessing import cpu_count
+from datetime import datetime
+import time
+import string
+import random
+from time import sleep
 import csv
+import numpy as np
 import pandas as pd
+import os
+from scipy.optimize import curve_fit
+import statistics
+from scipy.signal import find_peaks
 import sys
+import traceback
+import numpy as np
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+from jmetal.algorithm.multiobjective.spea2 import SPEA2
+from jmetal.operator.crossover import SBXCrossover
+from jmetal.operator.mutation import PolynomialMutation
+from jmetal.problem import ZDT1
+from jmetal.util.termination_criterion import StoppingByEvaluations
+
+current_time = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")# Getting the current time
+main_home_dir = "/home1/08809/tg881088/" # Home directory for optimization
+folder_name = "opt_%s" % str(current_time)# Folder name for optimization files
+file_home_path = main_home_dir + folder_name + "_processed/" # Folder name for optimization files
+main_work_dir = "/work2/08809/tg881088/" # Home directory for optimization
+file_work_path = main_work_dir + folder_name + "_raw/" # Folder name for optimization files
+progress_file = file_home_path + "progress.txt"
+os.mkdir(file_home_path)# Making folder name for optimization files
+os.mkdir(file_work_path)# Making folder name for data log
+file_naught = open(progress_file, 'w')
+file_naught.writelines(["Beginning optimization %s" % "\n"])
+file_naught.close()
+logging_file = file_home_path + "calc_log_obj.csv"
+
+#execution_dictionary = {}
 
 def printing(string):
-    with open(progress_file, 'a') as file_printer:
-        file_printer.write(f"{str(string)}\n")
+
+    file_printout = open(progress_file, 'r').readlines()
+    lines = file_printout + [f"{str(string)}\n"]
+    file_printer = open(progress_file, 'w')
+    file_printer.writelines(lines)
+    file_printer.close()
     print(string)
+    pass
 
 def check_log(filename: str, param: str):
-    df = pd.read_csv(os.path.join(file_home_path, "calc_log_obj.csv"))
-    return df.loc[df['filename'] == filename, param].tolist()
+    df = pd.read_csv(logging_file)
+    return list(dict(df.loc[df['filename'] == filename])[param])
 
 def make_filename(sr, ht, cs, theta_deg):
-    display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0, 1)).replace(".", "_")
-    filename = "%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (
-        str(folder_name),
-        str(round(sr * 10000, 1)).replace(".", "_") + "nm",
-        str(round(ht * 10000, 1)).replace(".", "_") + "nm",
-        str(round(cs * 10000, 1)).replace(".", "_") + "nm",
-        display_theta_deg,
-    )
+    display_theta_deg = str(round(theta_deg if theta_deg > 0 else theta_deg + 360.0,
+                                  1)).replace(".", "_")  # angle to be used
+
+    filename = "%s_sr_%s_ht_%s_cs_%s_theta_deg_%s" % (str(folder_name),
+                                                      str(round(sr * 10000, 1)).replace(".", "_") + "nm",
+                                                      str(round(ht * 10000, 1)).replace(".", "_") + "nm",
+                                                      str(round(cs * 10000, 1)).replace(".", "_") + "nm",
+                                                      display_theta_deg,
+                                                      )  # filename to be used
     return filename
 
-import torch
-from botorch.utils.multi_objective.pareto import is_non_dominated
-from botorch.models import MultiTaskGP
-from botorch.fit import fit_gpytorch_mll
-from botorch.models.transforms import Standardize
-from botorch.acquisition.multi_objective.monte_carlo import qNoisyExpectedHypervolumeImprovement
-from botorch.sampling.normal import SobolQMCNormalSampler
-from botorch.optim import optimize_acqf
-from botorch.models.transforms.input import Normalize as InputNormalize
-from gpytorch.mlls import ExactMarginalLogLikelihood
+def obj_func_run(x: [float]):
+    """
+    (3) Running the Optimization with Test Values
+        - Given the test parameters, construct a optimization to get the reflectance from the situation with respect to the parameters
+        - Optimization is performed and the worker waits until the data is ready for extraction
+        - The data is extracted, logged, and sent to obj_func_calc which performs the final processing of the wavelength and reflectance data
+        - The objective function results are logged and any unnecessary files are deleted.
+        - The objective function results are sent back to the optimizer
+    """
+    sr = x[0]
+    ht = x[1]
+    cs = x[2]
+    theta_deg = x[3]
+    #cs = 0.001 * 250
+    #theta_deg = x[2]
+
+    sleep(10)# Sleep to give code time to process parallelization
+
+    # Parameters to be used in current evaluation
+    #printing((sr, ht, cs, theta_deg))
+
+    filename = make_filename(sr, ht, cs, theta_deg)
+
+    #Creating Scheme executable for current optimization; ag-dot-angle0.ctl cannot be used simultaneously with multiple workers)
+    executable = open(main_home_dir + "NanoDotOptimization/ag-dot-angle0.ctl", 'r')
+    lines = executable.readlines()
+    code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    new_name = file_home_path + "ag-dot-angle" + code
+    new_file = new_name + ".ctl"
+    file0 = open(new_file, 'w')
+    file0.writelines(lines)
+    file0.close()
+
+    # Creating ticker file to make sure the data is created and stable for processing
+    ticker_file = file_home_path + "ticker" + code + ".txt"
+    file2 = open(ticker_file, 'w')
+    file2.write("0")
+    file2.close()
+
+    # Creation of simulation "subjob" file
+    sbatch_file = file_home_path + "/" + str(filename) + ".txt"
+    file1 = open(sbatch_file, 'w')
+
+    air_file = "%sair-angle_%s" % (file_home_path, filename)
+    metal_file = "%sag-dot-angle_%s" % (file_home_path, filename)
+    
+    air_raw_path = air_file + ".out"
+    metal_raw_path = metal_file + ".out"
+    air_data_path = air_file + ".dat"
+    metal_data_path = metal_file + ".dat"
+    # cell_size = 2*(sr + cs)
+    cell_size = 2 * sr + cs
+    
+    info_file = new_name + ".txt"
+
+    with open(info_file, "w") as f:
+        for item in [
+            progress_file, 
+            air_data_path, 
+            metal_data_path, 
+            file_home_path, 
+            file_work_path, 
+            filename, 
+            ticker_file, 
+            air_raw_path, 
+            metal_raw_path, 
+            sr, 
+            ht, 
+            cs, 
+            theta_deg
+                    ]:
+            f.write(f"{item}\n")
+
+    file1.writelines(["#!/bin/bash%s" % "\n",
+                      "#SBATCH -J myMPI%s" % "\n",
+                      "#SBATCH -o myMPI.%s%s" % ("o%j", "\n"),
+                      "#SBATCH -n 48%s" % "\n",
+                      "#SBATCH -N 1%s" % "\n",
+                      "#SBATCH --mail-user=pjacobs7@eagles.nccu.edu%s" % "\n",
+                      "#SBATCH --mail-type=all%s" % "\n",
+                      "#SBATCH -p skx%s" % "\n",
+                      "#SBATCH -t 05:20:00%s" % "\n",
+                      'echo "SCRIPT $PE_HOSTFILE"%s' % "\n",
+                      "module load gcc/13.2.0%s" % "\n",
+                      "module load impi/21.11%s" % "\n",
+                      "module load meep/1.28%s" % "\n",
+                      "source ~/.bashrc%s" % "\n",
+                      "conda activate ndo%s" % "\n",
+                      #"echo new_file: %s %s" % (new_file, "\n"),
+                      #"echo air_raw_path: %s %s" % (air_raw_path, "\n"),
+                      #"echo air_data_path: %s %s" % (air_data_path, "\n"),
+                      #"echo metal_raw_path: %s %s" % (metal_raw_path, "\n"),
+                      #"echo metal_data_path: %s %s" % (metal_data_path, "\n"),
+                      #"echo ticker_file: %s %s" % (ticker_file, "\n"),
+                      #"ibrun -np 4 meep no-metal?=true theta_deg=%s %s | tee %s%s" % (theta_deg, new_file, air_raw_path, "\n"),
+                      "ibrun -np 48 meep no-metal?=true sy=%s theta_deg=%s %s | tee %s;%s" % (cell_size, theta_deg, new_file, air_raw_path, "\n"),
+                      #"meep no-metal?=true theta_deg=%s %s | tee %s;%s" % (theta_deg, new_file, air_raw_path, "\n"),
+                      "grep flux1: %s > %s;%s" % (air_raw_path, air_data_path, "\n"),
+                      #"ibrun -np 4 meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      "mpirun -np 48 meep no-metal?=false sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      #"meep sr=%s ht=%s sy=%s theta_deg=%s %s |tee %s;%s" % (sr, ht, cell_size, theta_deg, new_file, metal_raw_path, "\n"),
+                      "grep flux1: %s > %s;%s" % (metal_raw_path, metal_data_path, "\n"),
+                      "echo %s;%s" % (info_file, "\n"),
+                      #"wait;%s" % ("\n"),
+                      "python %s %s;%s" % (main_home_dir + "NanoDotOptimization/optimize-ag-dot-angle-evaluate.py", info_file, "\n"),
+                      "rm -r %s %s" % (ticker_file, "\n"),
+                      "echo 1 >> %s %s" % (ticker_file, "\n")
+
+                      ])
+    
+    file1.close()
+
+    sleep(10)  # Pause to give time for simulation file to be created
+    printing(x)
+    os.system("ssh login1 sbatch " + sbatch_file)  # Execute the simulation file
+
+    success = 0
+
+    #(4) Extracting Data From optimization
+    max_time = (100*100)
+    #max_time = (50)
+    time_count = 0
+    # Wait for data to be stable and ready for processing
+    while success == 0:
+        try:
+            a = open(ticker_file, "r").read()
+            a = int(a)
+            if a == 1:
+                #printing(f"files pass:{(air_data_path, metal_data_path)}")
+                success = 1   
+        except:
+            pass
+        
+        if time_count == max_time:
+                raise Exception(f"ticker not existing: {ticker_file}")
+
+        time_count = time_count + 1
+        time.sleep(1)
+        
+    os.system("ssh login1 rm -r " +
+            ticker_file + " " +
+            air_raw_path + " " +
+            metal_raw_path + " " +
+            metal_data_path + " " +
+            air_data_path + " " +
+            new_file + " " +
+            main_home_dir + "ag-dot-angle" + code + "* " +
+            file_home_path + "ag-dot-angle" + code + "* ")
+
+    #printing(f"finished deleting files; code: {code}")
+
+    # (9) Returning of Result and Continuity of Optimization
+    #printing(f'Executed: {filename}')
+    
+    return filename
 
 def get_values(x: [float], param: str):
-    sr, ht, cs, theta_deg = x
+
+    sr = x[0]
+    ht = x[1]
+    cs = x[2]
+    #cs = 0.001 * 250
+    theta_deg = x[3]
+    #theta_deg = x[2]
+
+
     filename = make_filename(sr, ht, cs, theta_deg)
+
     log_answer = check_log(filename, param)
-    if log_answer:
-        printing(f'Referenced: {filename}')
+    if len(log_answer) > 0:
+        #printing(f'Referenced: {filename}')
         return log_answer[0]
     else:
         obj_func_run(x)
         return check_log(filename, param)[0]
+    
+def runtest(x: [float]):
 
-# Define constraints as functions (accepting posterior samples Y)
-'''
-def c1(samples):
-    return 5 - samples[..., 0]  # c-param <= 5
-
-def c2(samples):
-    return samples[..., 1] - 1  # b-param >= 1
-
-def c3(samples):
-    return 50 - samples[..., 1]  # b-param <= 50
-
-def c4(samples):
-    return 10 - samples[..., 2]  # b_var <= 10
-'''
-
-def c1(samples):
-    return samples[..., 0]  # c-param <= 5
-
-def c2(samples):
-    return samples[..., 1]  # b-param >= 1
-
-def c3(samples):
-    return samples[..., 1]  # b-param <= 50
-
-def c4(samples):
-    return samples[..., 2]  # b_var <= 10
-
-constraints = [c1, c2, c3, c4]
-
-# Define the function to evaluate the candidate
-def evaluate_candidate(candidate):
-    x = candidate.squeeze(0).tolist()
-    x_input = [x[0], x[1], x[2], x[3]]
-    y0 = get_values(x_input, 'c-param')
-    y1 = get_values(x_input, 'b-param')
-    y2 = get_values(x_input, 'b_var')
-    y = torch.tensor([[y0, y1, y2]], dtype=torch.double)
-    return y
+    sol = get_values(x, "b-param")
+    printing(f'(Solution: (Filename - {make_filename(float(x[0]), float(x[1]), float(x[2]), float(x[3]))})')
+    printing(f'             Variables={x}')
+    printing(f'             Objectives={sol}')
+    printing('\n')
 
 if __name__ == "__main__":
-    # Load pretraining data from CSV file
-    calc_log_obj_path = os.path.join(file_home_path, "calc_log_obj.csv")
-    if not os.path.exists(calc_log_obj_path):
-        with open(calc_log_obj_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(
-                ["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var", "execution time",
-                 "step count"])
 
-    pretraining_data_path = os.path.join(main_work_dir, 'ag-dot-angle-pretraining.csv')  # Replace with your CSV file path
-    df = pd.read_csv(pretraining_data_path)
+    with open(logging_file, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["filename", "sr", "ht", "cs", "theta_deg", "b-param", "c-param", "b_var", "c_var","execution time", "step count"])
+        file.close()
+    
+    test_population = [
+        np.array([0.0157, 0.0602, 0.4537, 0.0]),
+        np.array([0.0177, 0.0602, 0.4537, 0.0]),
+        np.array([0.0167, 0.0612, 0.4537, 0.0]),
+        np.array([0.0167, 0.0592, 0.4537, 0.0]),
+        np.array([0.0167, 0.0602, 0.4547, 0.0]),
+        np.array([0.0167, 0.0602, 0.4527, 0.0]),
+        np.array([0.0167, 0.0602, 0.4537, 0.0]),
+        np.array([0.0157, 0.0592, 0.4547, 0.0])
+        ]
 
-    # Inputs
-    train_X = torch.tensor(df[['sr', 'ht', 'cs', 'theta_deg']].values, dtype=torch.double)
+    # Determine the number of available CPU cores for parallel processing
+    #NUM_PROCESSES = cpu_count()
 
-    # Outputs
-    train_Y = torch.tensor(df[['c-param', 'b-param', 'b_var']].values, dtype=torch.double)
-
-    # Bounds
-    bounds = torch.tensor([
-        [0.005, 0.05, 0.025, 0.0],   # Lower bounds for sr, ht, cs, theta_deg
-        [0.125, 0.1, 0.25, 90.0]     # Upper bounds for sr, ht, cs, theta_deg
-    ], dtype=torch.double)
-
-    # Normalize the training inputs using InputNormalize
-    input_transform = InputNormalize(d=4, bounds=bounds)
-    train_X_normalized = input_transform(train_X)
-
-    num_iterations = 4  # Number of optimization iterations
-
-    # Define the number of tasks (objectives)
-    num_tasks = train_Y.shape[-1]
-    printing(f"Number of tasks: {num_tasks}")
-
-    # Prepare the training data for MultiTaskGP
-    task_indices = torch.arange(num_tasks, dtype=torch.long)  # [0, 1, 2]
-    tasks = task_indices.unsqueeze(0).repeat(train_X_normalized.shape[0], 1)  # [N, num_tasks]
-
-    # Expand train_X_normalized to include task indices
-    train_X_expanded = train_X_normalized.unsqueeze(1).repeat(1, num_tasks, 1)  # [N, num_tasks, D]
-    train_X_expanded = torch.cat([train_X_expanded, tasks.unsqueeze(-1)], dim=-1)  # [N, num_tasks, D+1]
-    train_X_expanded = train_X_expanded.view(-1, train_X_expanded.shape[-1])  # [N*num_tasks, D+1]
-
-    # Expand train_Y accordingly
-    train_Y_expanded = train_Y.transpose(0, 1).reshape(-1, 1)  # [N*num_tasks, 1]
-
-    task_feature = train_X_expanded.shape[1] - 1  # Index of the task feature
-
-    def initialize_model(train_X_expanded, train_Y_expanded):
-        model = MultiTaskGP(
-            train_X=train_X_expanded,
-            train_Y=train_Y_expanded,
-            task_feature=task_feature,
-            rank=num_tasks,  # Set rank to the number of tasks
-            outcome_transform=Standardize(m=1),
-        )
-        mll = ExactMarginalLogLikelihood(model.likelihood, model)
-        return mll, model
-
-    # **Mapping from task indices to positions**
-    task_to_index = {task.item(): idx for idx, task in enumerate(task_indices)}
-
-    # **Modified constraint_wrapper to return individual wrapped constraints**
-    def constraint_wrapper(constraints, task_feature):
-        wrapped_constraints = []
-        for idx, c in enumerate(constraints):
-            def wrapped_constraint(samples, X, c=c, idx=idx):
-                # samples: [num_samples, q, 1]
-                # X: [num_samples, q, D+1]
-                # Extract task indices from X
-                task_idx = X[..., task_feature].long().squeeze(-1)  # [num_samples, q]
-                # Initialize output tensor
-                num_tasks = len(task_indices)
-                outputs = torch.zeros(samples.shape[:-2] + (num_tasks,), device=samples.device)
-                # Assign samples to the correct position in outputs
-                for i in range(num_tasks):
-                    mask = task_idx == task_indices[i]
-                    outputs[mask, i] = samples[mask, 0, 0]
-                # Apply constraint
-                return c(outputs)
-            wrapped_constraints.append(wrapped_constraint)
-        return wrapped_constraints
-
-    # Wrap constraints
-    constraints_wrapped = constraint_wrapper(constraints, task_feature=task_feature)
-
-    for iteration in range(num_iterations):
-        # Initialize and fit the MultiTaskGP model
-        mll, model = initialize_model(train_X_expanded, train_Y_expanded)
-        fit_gpytorch_mll(mll)
-        print("Model fitted")
-
-        # Compute feasibility mask using model predictions
-        with torch.no_grad():
-            posterior = model.posterior(train_X_expanded)
-            mean = posterior.mean.view(-1, num_tasks)
-
-        is_feasible = (c1(mean) >= 0) & (c2(mean) >= 0) & (c3(mean) >= 0) & (c4(mean) >= 0)
-        is_feasible = is_feasible.all(dim=-1)
-
-        if is_feasible.sum() == 0:
-            printing("No feasible observations found.")
-            break
-
-        feasible_Y = mean[is_feasible]
-        feasible_X = train_X_normalized[is_feasible]
-
-        # Extract Pareto-optimal points to use as baseline
-        pareto_mask = is_non_dominated(feasible_Y)
-        pareto_Y = feasible_Y[pareto_mask]
-        pareto_X = feasible_X[pareto_mask]
-
-        # Limit the number of baseline points to avoid high dimensionality
-        max_baseline_points = 50
-        if pareto_X.shape[0] > max_baseline_points:
-            indices = torch.randperm(pareto_X.shape[0])[:max_baseline_points]
-            X_baseline = pareto_X[indices]
-        else:
-            X_baseline = pareto_X
-
-        # Expand X_baseline to include task indices
-        tasks_baseline = task_indices.unsqueeze(0).repeat(X_baseline.shape[0], 1)  # [B, num_tasks]
-        X_baseline_expanded = X_baseline.unsqueeze(1).repeat(1, num_tasks, 1)  # [B, num_tasks, D]
-        X_baseline_expanded = torch.cat(
-            [X_baseline_expanded, tasks_baseline.unsqueeze(-1)], dim=-1
-        )  # [B, num_tasks, D+1]
-        X_baseline_expanded = X_baseline_expanded.view(-1, X_baseline_expanded.shape[-1])  # [B*num_tasks, D+1]
-
-        # Define reference point for hypervolume calculation
-        ref_point = feasible_Y.min(dim=0).values - 0.1 * (
-            feasible_Y.max(dim=0).values - feasible_Y.min(dim=0).values
-        )
-        ref_point = ref_point.tolist()
-        printing(f"ref_point: {ref_point}")
-
-        # Define the acquisition function using qNEHVI
-        sampler = SobolQMCNormalSampler(sample_shape=torch.Size([128]))
-        acq_func = qNoisyExpectedHypervolumeImprovement(
-            model=model,
-            ref_point=ref_point,
-            X_baseline=X_baseline_expanded,
-            #constraints=constraints_wrapped,
-            sampler=sampler,
-            prune_baseline=True,
-            cache_root=False,
-        )
-
-        # Optimize the acquisition function to get the next candidate
-        candidate_expanded, acq_value = optimize_acqf(
-            acq_function=acq_func,
-            bounds=torch.stack([
-                torch.zeros(train_X_expanded.shape[-1]),
-                torch.ones(train_X_expanded.shape[-1]),
-            ]),
-            q=1,
-            num_restarts=5,
-            raw_samples=20,  # For initialization
-        )
-
-        # Extract candidate without task indices
-        candidate_normalized = candidate_expanded[..., :-1]
-
-        # Denormalize the candidate
-        candidate = input_transform.untransform(candidate_normalized)
-
-        # Evaluate the candidate
-        y_new = evaluate_candidate(candidate)
-
-        # Update training data
-        train_X = torch.cat([train_X, candidate], dim=0)
-        train_Y = torch.cat([train_Y, y_new], dim=0)
-
-        # Normalize the new candidate
-        candidate_normalized = input_transform(candidate)
-        train_X_normalized = torch.cat([train_X_normalized, candidate_normalized], dim=0)
-
-        # Update expanded training data
-        # Repeat for each task
-        candidate_expanded = candidate_normalized.unsqueeze(1).repeat(1, num_tasks, 1)  # [1, num_tasks, D]
-        tasks_candidate = task_indices.unsqueeze(0)  # [1, num_tasks]
-        candidate_expanded = torch.cat(
-            [candidate_expanded, tasks_candidate.unsqueeze(-1)], dim=-1
-        )  # [1, num_tasks, D+1]
-        candidate_expanded = candidate_expanded.view(-1, candidate_expanded.shape[-1])  # [num_tasks, D+1]
-
-        y_new_expanded = y_new.transpose(0, 1).reshape(-1, 1)  # [num_tasks, 1]
-
-        train_X_expanded = torch.cat([train_X_expanded, candidate_expanded], dim=0)
-        train_Y_expanded = torch.cat([train_Y_expanded, y_new_expanded], dim=0)
-
-        # Print progress
-        printing(f"Iteration {iteration + 1}/{num_iterations}")
-        printing(f"Candidate: {candidate}")
-        printing(f"Objective values: {y_new}")
-
-    # After optimization, process the results
-    with torch.no_grad():
-        posterior = model.posterior(train_X_expanded)
-        mean = posterior.mean.view(-1, num_tasks)
-
-    is_feasible = (c1(mean) >= 0) & (c2(mean) >= 0) & (c3(mean) >= 0) & (c4(mean) >= 0)
-    is_feasible = is_feasible.all(dim=-1)
-
-    # Get feasible train_Y and train_X
-    feasible_Y = mean[is_feasible]
-    feasible_X = train_X[is_feasible]
-
-    # Extract the Pareto front
-    pareto_mask = is_non_dominated(feasible_Y)
-    pareto_front = feasible_Y[pareto_mask]
-    pareto_points = feasible_X[pareto_mask]
-
-    # Save Pareto front to CSV
-    pareto_df = pd.DataFrame(
-        torch.cat([pareto_points, pareto_front], dim=1).numpy(),
-        columns=['sr', 'ht', 'cs', 'theta_deg', 'c-param', 'b-param', 'b_var']
-    )
-    pareto_df.to_csv(os.path.join(file_home_path, 'pareto_front.csv'), index=False)
+    #print(f"NUM_PROCESSES: {NUM_PROCESSES}")
+    #with Pool(processes=NUM_PROCESSES) as pool:
+    with Pool(processes=len(test_population)) as pool:
+        # Compute integrals for all data points in parallel
+        int1 = np.array(pool.map(runtest, test_population))
+    
+    os.system("scancel -u tg881088")
