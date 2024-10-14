@@ -149,7 +149,7 @@
 )))
 
 
-(define-param resolu 100)
+(define-param resolu 92)
 (set-param! resolution resolu)
 
 (set! pml-layers (list (make pml (direction X) (thickness dpml))))
