@@ -149,12 +149,12 @@
 )))
 
 
-(define-param resolu 92)
+(define-param resolu 95)
 (set-param! resolution resolu)
 
 (set! pml-layers (list (make pml (direction X) (thickness dpml))))
 
-(define-param nfreq 300) ; number of frequencies at which to compute flux             
+(define-param nfreq 350) ; number of frequencies at which to compute flux             
 (define trans ; transmitted flux                                                
       (add-flux fcen df nfreq
                 (if no-metal?
