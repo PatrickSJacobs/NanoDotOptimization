@@ -83,9 +83,11 @@ def obj_func_calc(wvls, R_meep):
     else:
         maxi = xs[ys.index(mam)]
         
+    '''
     if maxi < 0.55 or maxi > 0.7:
         return None, None, None, None
-
+    '''
+    
     # tsr = sum(x * i for i, x in enumerate(L, 1)) / len(L)
 
     # print(tsr)
