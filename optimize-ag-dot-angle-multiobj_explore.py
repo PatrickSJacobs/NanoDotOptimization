@@ -316,6 +316,9 @@ parameters = df1[['sr', 'ht', 'cs']].values
 
 lower_bounds = np.min(parameters, axis=0)
 upper_bounds = np.max(parameters, axis=0)
+print(lower_bounds, upper_bounds)
+
+
 
 problem = (
     OnTheFlyFloatProblem()
@@ -338,6 +341,7 @@ problem = (
 )
 
 if __name__ == "__main__":
+    sys.exit()
 
     with open(logging_file, 'w', newline='') as file:
         writer = csv.writer(file)
