@@ -309,23 +309,21 @@ def c_var_constraint(x: [float]):
     
     '''
     
-df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
+#df1 = pd.read_csv(main_work_dir + "ag-dot-angle-pretraining.csv")
 #parameters = df1[['sr', 'ht', 'cs', 'theta_deg']].values
-parameters = df1[['sr', 'ht', 'cs']].values
+#parameters = df1[['sr', 'ht', 'cs']].values
 
 
-lower_bounds = np.min(parameters, axis=0)
-upper_bounds = np.max(parameters, axis=0)
-print(lower_bounds, upper_bounds)
-
-
+#lower_bounds = np.min(parameters, axis=0)
+#upper_bounds = np.max(parameters, axis=0)
+#print(lower_bounds, upper_bounds)
 
 problem = (
     OnTheFlyFloatProblem()
     .set_name("Testing")
-    .add_variable(lower_bounds[0], upper_bounds[0])
-    .add_variable(lower_bounds[1], upper_bounds[1])
-    .add_variable(lower_bounds[2], upper_bounds[2])
+    .add_variable(0.0560, 0.1160)
+    .add_variable(0.1092, 0.1092)
+    .add_variable(0.5866, 0.5866)
     .add_variable(0.0, 0.0)
     .add_function(c)
     .add_function(b)
@@ -349,7 +347,8 @@ if __name__ == "__main__":
         file.close()
     
     #max_evaluations = 8
-    max_evaluations = 72
+    #max_evaluations = 72
+    max_evaluations = 48
     population_size = 8
 
    # objectives = df1[['c-param', 'b-param', 'b_var']].values
