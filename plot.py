@@ -130,7 +130,7 @@ with PdfPages('data/Best_NanoDot_Plots.pdf') as pdf:
         #p = [ys[i] for i in ind]
         plt.plot(u, p, "x")
         plt.plot(xs, y_line, '--', color='red')
-        plt.title(f"sr = {sr:.4f} nm, ht = {ht:.4f} nm, cs = {cs:.4f} nm, theta_deg = {theta_deg:.1f}° ")
+        plt.title(f"sr = {sr*1000:.4f} nm, ht = {ht*1000:.4f} nm, cs = {cs*1000:.4f} nm")
         
         #plt.ylim(0, 1)
         #plt.suptitle(f"b = {logshift(abs(b)):.2f}, c = {logshift(abs(c**2 * 10 - 10)):.2f}, b_var = {logshift(abs(b_var * 100)):.2f}, c_var = {logshift(abs(c_var * 100)):.2f}")
