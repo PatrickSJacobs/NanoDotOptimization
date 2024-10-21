@@ -349,7 +349,7 @@ if __name__ == "__main__":
     #max_evaluations = 8
     #max_evaluations = 72
     max_evaluations = 48
-    population_size = 6
+    population_size = 4
 
    # objectives = df1[['c-param', 'b-param', 'b_var']].values
 
